@@ -9,17 +9,10 @@ const topicSchema = new mongoose.Schema({
         type: String,
         required: true,
     },
-    space: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "Space",
-        required: true,
+    createdAt: {
+         type: Date,
+    default: Date.now,
     },
-    createdBy: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "User",
-        required: true,
-    },
-
 });
 
 export const Topic = mongoose.model("Topics", topicSchema);

@@ -5,11 +5,7 @@ dotenv.config();
 import { connectDB } from "./config/db.js";
 
 // Routes
-import spaceRoutes from "./routes/Space.js";
 import topicRoutes from "./routes/Topic.js";
-
-// Middleware
-import { protect } from "./middleware/authMiddleware.js";
 
 connectDB();
 
@@ -21,8 +17,7 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 // Routes
-app.use("/api/spaces", protect, spaceRoutes);   // Space routes
-app.use("/api/topics", protect, topicRoutes);   // Topic routes
+app.use("/api/topics", topicRoutes);   // Topic routes
 
 // Default route
 app.get("/", (req, res) => {
