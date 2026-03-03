@@ -7,6 +7,7 @@ import { connectDB } from "./config/db.js";
 // Routes
 import topicRoutes from "./routes/Topic.js";
 import spaceRoutes from "./routes/Space.js";
+import postRoutes from "./routes/Post.js"
 
 connectDB();
 
@@ -19,6 +20,7 @@ app.use(express.urlencoded({ extended: true }));
 
 // Routes
 app.use("/api/topics", topicRoutes);   // Topic routes
+app.use("/api/posts", postRoutes)
 
 // Default route
 app.get("/", (req, res) => {
