@@ -6,6 +6,7 @@ import { connectDB } from "./config/db.js";
 
 // Routes
 import topicRoutes from "./routes/Topic.js";
+import spaceRoutes from "./routes/Space.js";
 
 connectDB();
 
@@ -25,6 +26,8 @@ app.get("/", (req, res) => {
 });
 
 // Simple error handler
+app.use("/api/spaces", spaceRoutes);
+
 app.use((err, req, res, next) => {
   console.error(err.stack);
   res.status(500).send("Something broke!");
