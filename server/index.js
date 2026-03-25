@@ -8,6 +8,7 @@ import { connectDB } from "./config/db.js";
 import topicRoutes from "./routes/Topic.js";
 import spaceRoutes from "./routes/Space.js";
 import postRoutes from "./routes/Post.js"
+import commentRoutes from "./routes/commentRoutes.js";
 
 connectDB();
 
@@ -21,6 +22,7 @@ app.use(express.urlencoded({ extended: true }));
 // Routes
 app.use("/api/topics", topicRoutes);   // Topic routes
 app.use("/api/posts", postRoutes)
+app.use("/api/comments", commentRoutes)
 
 // Default route
 app.get("/", (req, res) => {
