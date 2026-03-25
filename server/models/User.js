@@ -17,4 +17,4 @@ const userSchema = new mongoose.Schema({
     interests: [String],
 })
 
-export const User = momgoose.model("User", userSchema)
+export const User = mongoose.model("User", userSchema)
