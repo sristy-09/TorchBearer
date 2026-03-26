@@ -25,7 +25,6 @@ export const createTopic = async (req, res) => {
       message: "Topic created successfully",
       data: newTopic,
     });
-
   } catch (error) {
     return res.status(500).json({
       success: false,
@@ -34,7 +33,6 @@ export const createTopic = async (req, res) => {
     });
   }
 };
-
 
 /* =========================================
    2. GET ALL Topics
@@ -48,7 +46,6 @@ export const getAllTopics = async (req, res) => {
       count: topics.length,
       data: topics,
     });
-
   } catch (error) {
     return res.status(500).json({
       success: false,
@@ -57,7 +54,6 @@ export const getAllTopics = async (req, res) => {
     });
   }
 };
-
 
 /* =========================================
    3. GET SINGLE Topic
@@ -79,7 +75,6 @@ export const getSingleTopic = async (req, res) => {
       success: true,
       data: topic,
     });
-
   } catch (error) {
     return res.status(500).json({
       success: false,
@@ -88,7 +83,6 @@ export const getSingleTopic = async (req, res) => {
     });
   }
 };
-
 
 /* =========================================
    4. UPDATE Topic
@@ -101,7 +95,7 @@ export const updateTopic = async (req, res) => {
     const updatedTopic = await Topic.findByIdAndUpdate(
       id,
       { title, description },
-      { new: true, runValidators: true }
+      { returnDocument: "after", runValidators: true },
     );
 
     if (!updatedTopic) {
@@ -116,7 +110,6 @@ export const updateTopic = async (req, res) => {
       message: "Topic updated successfully",
       data: updatedTopic,
     });
-
   } catch (error) {
     return res.status(500).json({
       success: false,
@@ -125,7 +118,6 @@ export const updateTopic = async (req, res) => {
     });
   }
 };
-
 
 /* =========================================
    5. DELETE Topic
@@ -147,7 +139,6 @@ export const deleteTopic = async (req, res) => {
       success: true,
       message: "Topic deleted successfully",
     });
-
   } catch (error) {
     return res.status(500).json({
       success: false,
