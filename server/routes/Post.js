@@ -5,15 +5,16 @@ import {
   getPostById,
   updatePost,
   deletePost,
+  likePost
 } from "../controllers/postController.js";
 
 const router = express.Router();
 
-// CRUD Routes
-router.post("/", createPost);       // Create
-router.get("/", getPosts);          // Read All
-router.get("/:id", getPostById);    // Read One
-router.put("/:id", updatePost);     // Update
-router.delete("/:id", deletePost);  // Delete
+router.post("/", createPost);       
+router.get("/", getPosts);          
+router.get("/:id", getPostById);    
+router.put("/:id", updatePost);     
+router.delete("/:id", deletePost); 
+router.put("/:id/like", likePost) 
 
 export default router;
