@@ -4,10 +4,11 @@ class APIFunctionality {
     this.queryStr = queryStr;
   }
 
+  // Search by `title` keyword (case-insensitive)
   search() {
     const keyword = this.queryStr.keyword
       ? {
-          name: {
+          title: {
             $regex: this.queryStr.keyword,
             $options: "i",
           },
@@ -17,13 +18,26 @@ class APIFunctionality {
     return this;
   }
 
+  // Filter by any field except reserved query params
   filter() {
     const queryCopy = { ...this.queryStr };
 
     const removeFields = ["keyword", "page", "limit"];
     removeFields.forEach((key) => delete queryCopy[key]);
+
     this.query = this.query.find(queryCopy);
     return this;
   }
+
+  // Pagination
+  paginate(defaultLimit = 10) {
+    const page = Number(this.queryStr.page) || 1;
+    const limit = Number(this.queryStr.limit) || defaultLimit;
+    const skip = (page - 1) * limit;
+
+    this.query = this.query.skip(skip).limit(limit);
+    return this;
+  }
 }
+
 export default APIFunctionality;
