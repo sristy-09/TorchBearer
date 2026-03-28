@@ -8,19 +8,33 @@ const postSchema = new mongoose.Schema({
 
   content: {
     type: String,
-    required: true
+    required: true,
   },
+
   description: {
     type: String,
   },
 
-  image:{
+  image: {
     type: String,
+  },
+
+  // 🔗 Reference to Topic
+  topic: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "Topic",
+    required: true,
+  },
+
+  // 🔗 Optional: direct reference to Space (for faster queries)
+  space: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "Space",
   },
 
   author: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: "User"
+    ref: "User",
   },
 
   likes: [
@@ -29,6 +43,7 @@ const postSchema = new mongoose.Schema({
       ref: "User",
     },
   ],
+
   createdAt: {
     type: Date,
     default: Date.now,
