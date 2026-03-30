@@ -1,118 +1,295 @@
-import { User } from "../models/userModel.js";
-import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
+import { User } from "../models/User.js";
 
-// Create a new user
-export const createUser = async (req, res) => {
-    try {
-        const user = new User(req.body);
-        await user.save();
-        res.status(201).json(user);
-    } catch (err) {
-        res.status(400).json({ error: err.message });
-    }
+/* ─── Helper: sign a JWT and send it back ───────────────────── */
+const signToken = (id) =>
+  jwt.sign({ id }, process.env.JWT_SECRET, {
+    expiresIn: process.env.JWT_EXPIRES_IN || "7d",
+  });
+
+const sendTokenResponse = (user, statusCode, res) => {
+  const token = signToken(user._id);
+
+  // Strip password from response even though select:false handles most cases
+  user.password = undefined;
+
+  res.status(statusCode).json({
+    success: true,
+    token,
+    data: { user },
+  });
 };
 
-// Get all users
-export const getUsers = async (req, res) => {
-    try {
-        const users = await User.find();
-        res.status(200).json(users);
-    } catch (err) {
-        res.status(500).json({ error: err.message });
+/* =========================================
+   1. REGISTER
+   POST /api/auth/register
+   Body: { name, email, password, role, batchYear,
+           registrationNumber, department, skills, interests }
+   ========================================= */
+export const register = async (req, res) => {
+  try {
+    const {
+      name,
+      email,
+      password,
+      role,
+      batchYear,
+      registrationNumber,
+      department,
+      skills,
+      interests,
+    } = req.body;
+
+    // Check if email already taken
+    const existingUser = await User.findOne({ email });
+    if (existingUser) {
+      return res.status(409).json({
+        success: false,
+        message: "An account with this email already exists.",
+      });
     }
+
+    const user = await User.create({
+      name,
+      email,
+      password, // hashed automatically by pre-save hook in model
+      role,
+      batchYear,
+      registrationNumber,
+      department,
+      skills,
+      interests,
+    });
+
+    sendTokenResponse(user, 201, res);
+  } catch (error) {
+    // Mongoose validation errors → cleaner message
+    if (error.name === "ValidationError") {
+      const messages = Object.values(error.errors).map((e) => e.message);
+      return res.status(400).json({
+        success: false,
+        message: messages.join(". "),
+      });
+    }
+    res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
 };
 
-// Get a user by ID
-export const getUserById = async (req, res) => {
-    try {
-        const user = await User.findById(req.params.id);
-        if (!user) return res.status(404).json({ error: "User not found" });
-        res.status(200).json(user);
-    } catch (err) {
-        res.status(500).json({ error: err.message });
-    }
-};
-
-// Update a user by ID
-export const updateUser = async (req, res) => {
-    try {
-        const user = await User.findByIdAndUpdate(req.params.id, req.body, { new: true });
-        if (!user) return res.status(404).json({ error: "User not found" });
-        res.status(200).json(user);
-    } catch (err) {
-        res.status(400).json({ error: err.message });
-    }
-};
-
-// Delete a user by ID
-export const deleteUser = async (req, res) => {
-    try {
-        const user = await User.findByIdAndDelete(req.params.id);
-        if (!user) return res.status(404).json({ error: "User not found" });
-        res.status(200).json({ message: "User deleted successfully" });
-    } catch (err) {
-        res.status(500).json({ error: err.message });
-    }
-};
-export const signup = async (req, res) => {
-    try {
-        const { name, email, password, role } = req.body;
-
-        // check if user exists
-        const existingUser = await User.findOne({ email });
-        if (existingUser) {
-            return res.status(400).json({ error: "User already exists" });
-        }
-
-        // hash password
-        const hashedPassword = await bcrypt.hash(password, 10);
-
-        const user = new User({
-            name,
-            email,
-            password: hashedPassword,
-            role
-        });
-
-        await user.save();
-
-        res.status(201).json({ message: "User registered successfully" });
-
-    } catch (err) {
-        res.status(500).json({ error: err.message });
-    }
-};
-
+/* =========================================
+   2. LOGIN
+   POST /api/auth/login
+   Body: { email, password }
+   ========================================= */
 export const login = async (req, res) => {
-    try {
-        const { email, password } = req.body;
+  try {
+    const { email, password } = req.body;
 
-        const user = await User.findOne({ email });
-        if (!user) {
-            return res.status(400).json({ error: "Invalid email or password" });
-        }
-
-        // compare password
-        const isMatch = await bcrypt.compare(password, user.password);
-        if (!isMatch) {
-            return res.status(400).json({ error: "Invalid email or password" });
-        }
-
-        // generate token
-        const token = jwt.sign(
-            { id: user._id, role: user.role },
-            "secretkey",   // later move to .env
-            { expiresIn: "1d" }
-        );
-
-        res.status(200).json({
-            message: "Login successful",
-            token,
-            user
-        });
-
-    } catch (err) {
-        res.status(500).json({ error: err.message });
+    if (!email || !password) {
+      return res.status(400).json({
+        success: false,
+        message: "Email and password are required.",
+      });
     }
+
+    // Explicitly select password since it's select:false in the model
+    const user = await User.findOne({ email }).select("+password");
+
+    if (!user || !(await user.comparePassword(password))) {
+      return res.status(401).json({
+        success: false,
+        message: "Invalid email or password.",
+      });
+    }
+
+    sendTokenResponse(user, 200, res);
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
+/* =========================================
+   3. GET ME  (current logged-in user)
+   GET /api/auth/me
+   Requires: protect middleware
+   ========================================= */
+export const getMe = async (req, res) => {
+  try {
+    // req.user is attached by the protect middleware
+    const user = await User.findById(req.user._id);
+
+    res.status(200).json({
+      success: true,
+      data: { user },
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
+/* =========================================
+   4. UPDATE PROFILE
+   PUT /api/auth/update-profile
+   Requires: protect middleware
+   Body: { name, department, batchYear, registrationNumber,
+           skills, interests, avatar }
+   ========================================= */
+export const updateProfile = async (req, res) => {
+  try {
+    // Fields that are safe to update via this route
+    const allowedFields = [
+      "name",
+      "department",
+      "batchYear",
+      "registrationNumber",
+      "skills",
+      "interests",
+      "avatar",
+    ];
+
+    const updates = {};
+    allowedFields.forEach((field) => {
+      if (req.body[field] !== undefined) {
+        updates[field] = req.body[field];
+      }
+    });
+
+    const updatedUser = await User.findByIdAndUpdate(req.user._id, updates, {
+      new: true,
+      runValidators: true,
+    });
+
+    res.status(200).json({
+      success: true,
+      message: "Profile updated successfully.",
+      data: { user: updatedUser },
+    });
+  } catch (error) {
+    if (error.name === "ValidationError") {
+      const messages = Object.values(error.errors).map((e) => e.message);
+      return res.status(400).json({
+        success: false,
+        message: messages.join(". "),
+      });
+    }
+    res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
+/* =========================================
+   5. CHANGE PASSWORD
+   PUT /api/auth/change-password
+   Requires: protect middleware
+   Body: { currentPassword, newPassword }
+   ========================================= */
+export const changePassword = async (req, res) => {
+  try {
+    const { currentPassword, newPassword } = req.body;
+
+    if (!currentPassword || !newPassword) {
+      return res.status(400).json({
+        success: false,
+        message: "Current password and new password are required.",
+      });
+    }
+
+    if (newPassword.length < 6) {
+      return res.status(400).json({
+        success: false,
+        message: "New password must be at least 6 characters.",
+      });
+    }
+
+    // Fetch user with password
+    const user = await User.findById(req.user._id).select("+password");
+
+    // Verify current password
+    const isMatch = await user.comparePassword(currentPassword);
+    if (!isMatch) {
+      return res.status(401).json({
+        success: false,
+        message: "Current password is incorrect.",
+      });
+    }
+
+    user.password = newPassword; // pre-save hook will hash it
+    await user.save();
+
+    sendTokenResponse(user, 200, res); // issue a fresh token
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
+/* =========================================
+   6. GET ALL USERS  (alumni-only or admin use)
+   GET /api/auth/users
+   Requires: protect middleware
+   Query params: ?role=alumni  ?department=CS  ?keyword=John
+   ========================================= */
+export const getAllUsers = async (req, res) => {
+  try {
+    const { role, department, keyword } = req.query;
+
+    const filter = {};
+
+    if (role) filter.role = role;
+    if (department) filter.department = department;
+    if (keyword) filter.name = { $regex: keyword, $options: "i" };
+
+    const users = await User.find(filter).sort({ createdAt: -1 });
+
+    res.status(200).json({
+      success: true,
+      count: users.length,
+      data: { users },
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
+/* =========================================
+   7. GET SINGLE USER by ID
+   GET /api/auth/users/:id
+   Requires: protect middleware
+   ========================================= */
+export const getUserById = async (req, res) => {
+  try {
+    const user = await User.findById(req.params.id);
+
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found.",
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      data: { user },
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
 };

@@ -7,9 +7,9 @@ import { connectDB } from "./config/db.js";
 // Routes
 import topicRoutes from "./routes/Topic.js";
 import spaceRoutes from "./routes/Space.js";
-import postRoutes from "./routes/Post.js"
+import postRoutes from "./routes/Post.js";
 import commentRoutes from "./routes/commentRoutes.js";
-import userRoutes from "./routes/userRoutes.js";
+import userRoutes from "./routes/User.js";
 
 connectDB();
 
@@ -21,18 +21,16 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 // Routes
-app.use("/api/topics", topicRoutes);   // Topic routes
-app.use("/api/posts", postRoutes)
-app.use("/api/comments", commentRoutes)
+app.use("/api/spaces", spaceRoutes); // Space routes
+app.use("/api/topics", topicRoutes); // Topic routes
+app.use("/api/posts", postRoutes);
+app.use("/api/comments", commentRoutes);
 app.use("/api/users", userRoutes);
 
 // Default route
 app.get("/", (req, res) => {
   res.send("TorchBearer API is running...");
 });
-
-// Simple error handler
-app.use("/api/spaces", spaceRoutes);
 
 app.use((err, req, res, next) => {
   console.error(err.stack);
