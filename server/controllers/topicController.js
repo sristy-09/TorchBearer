@@ -1,23 +1,40 @@
 import { Topic } from "../models/Topics.js";
+import { Space } from "../models/Spaces.js";
+import APIFunctionality from "../utils/apiFunctionality.js";
 
 /* =========================================
-   1. CREATE Topic
-========================================= */
+   1. CREATE Topic  (must belong to a Space)
+   Body: { title, description, spaceId }
+   ========================================= */
 export const createTopic = async (req, res) => {
   try {
-    const { title, description } = req.body;
+    const { title, description, spaceId } = req.body;
 
-    // Validation
-    if (!title || !description) {
+    if (!title || !description || !spaceId) {
       return res.status(400).json({
         success: false,
-        message: "Title and Description are required",
+        message: "Title, description, and spaceId are required",
+      });
+    }
+
+    // Verify the parent Space exists
+    const space = await Space.findById(spaceId);
+    if (!space) {
+      return res.status(404).json({
+        success: false,
+        message: "Parent space not found",
       });
     }
 
     const newTopic = await Topic.create({
       title,
       description,
+      space: spaceId,
+    });
+
+    // Keep Space.topics array in sync
+    await Space.findByIdAndUpdate(spaceId, {
+      $push: { topics: newTopic._id },
     });
 
     return res.status(201).json({
@@ -35,11 +52,22 @@ export const createTopic = async (req, res) => {
 };
 
 /* =========================================
-   2. GET ALL Topics
-========================================= */
+   2. GET ALL Topics  (search + filter + paginate)
+   Query params:
+     ?keyword=alumni        → search by title
+     ?space=<spaceId>       → filter by space
+     ?page=1&limit=10       → pagination
+   ========================================= */
 export const getAllTopics = async (req, res) => {
   try {
-    const topics = await Topic.find().sort({ createdAt: -1 });
+    const api = new APIFunctionality(Topic.find(), req.query)
+      .search()
+      .filter()
+      .paginate();
+
+    const topics = await api.query
+      .populate("space", "title")
+      .sort({ createdAt: -1 });
 
     return res.status(200).json({
       success: true,
@@ -57,12 +85,12 @@ export const getAllTopics = async (req, res) => {
 
 /* =========================================
    3. GET SINGLE Topic
-========================================= */
+   ========================================= */
 export const getSingleTopic = async (req, res) => {
   try {
-    const { id } = req.params;
-
-    const topic = await Topic.findById(id);
+    const topic = await Topic.findById(req.params.id)
+      .populate("space", "title description")
+      .populate("posts");
 
     if (!topic) {
       return res.status(404).json({
@@ -86,16 +114,15 @@ export const getSingleTopic = async (req, res) => {
 
 /* =========================================
    4. UPDATE Topic
-========================================= */
+   ========================================= */
 export const updateTopic = async (req, res) => {
   try {
-    const { id } = req.params;
     const { title, description } = req.body;
 
     const updatedTopic = await Topic.findByIdAndUpdate(
-      id,
+      req.params.id,
       { title, description },
-      { returnDocument: "after", runValidators: true },
+      { new: true, runValidators: true },
     );
 
     if (!updatedTopic) {
@@ -121,12 +148,10 @@ export const updateTopic = async (req, res) => {
 
 /* =========================================
    5. DELETE Topic
-========================================= */
+   ========================================= */
 export const deleteTopic = async (req, res) => {
   try {
-    const { id } = req.params;
-
-    const deletedTopic = await Topic.findByIdAndDelete(id);
+    const deletedTopic = await Topic.findByIdAndDelete(req.params.id);
 
     if (!deletedTopic) {
       return res.status(404).json({
@@ -134,6 +159,11 @@ export const deleteTopic = async (req, res) => {
         message: "Topic not found",
       });
     }
+
+    // Remove topic reference from its parent Space
+    await Space.findByIdAndUpdate(deletedTopic.space, {
+      $pull: { topics: deletedTopic._id },
+    });
 
     return res.status(200).json({
       success: true,
