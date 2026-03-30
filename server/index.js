@@ -25,7 +25,7 @@ app.use("/api/spaces", spaceRoutes); // Space routes
 app.use("/api/topics", topicRoutes); // Topic routes
 app.use("/api/posts", postRoutes);
 app.use("/api/comments", commentRoutes);
-app.use("/api/users", userRoutes);
+app.use("/api/auth", userRoutes);
 
 // Default route
 app.get("/", (req, res) => {
