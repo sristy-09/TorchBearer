@@ -1,4 +1,5 @@
 import { Space } from "../models/Spaces.js";
+import APIFunctionality from "../utils/apiFunctionality.js";
 
 /* =========================================
    1. CREATE Space
@@ -7,7 +8,6 @@ export const createSpace = async (req, res) => {
   try {
     const { title, description } = req.body;
 
-    // validation
     if (!title) {
       return res.status(400).json({
         success: false,
@@ -15,17 +15,12 @@ export const createSpace = async (req, res) => {
       });
     }
 
-    const newSpace = new Space({
-      title,
-      description,
-    });
-
-    const savedSpace = await newSpace.save();
+    const newSpace = await Space.create({ title, description });
 
     res.status(201).json({
       success: true,
       message: "Space created successfully",
-      data: savedSpace,
+      data: newSpace,
     });
   } catch (error) {
     res.status(500).json({
@@ -37,11 +32,19 @@ export const createSpace = async (req, res) => {
 };
 
 /* =========================================
-   2. GET All Spaces
+   2. GET All Spaces  (search + filter + paginate)
+   Query params:
+     ?keyword=engineering   → search by title
+     ?page=1&limit=10       → pagination
    ========================================= */
 export const getAllSpaces = async (req, res) => {
   try {
-    const spaces = await Space.find().sort({ createdAt: -1 });
+    const api = new APIFunctionality(Space.find(), req.query)
+      .search()
+      .filter()
+      .paginate();
+
+    const spaces = await api.query.sort({ createdAt: -1 });
 
     res.status(200).json({
       success: true,
@@ -62,9 +65,7 @@ export const getAllSpaces = async (req, res) => {
    ========================================= */
 export const getSingleSpace = async (req, res) => {
   try {
-    const { id } = req.params;
-
-    const space = await Space.findById(id);
+    const space = await Space.findById(req.params.id).populate("topics");
 
     if (!space) {
       return res.status(404).json({
@@ -91,13 +92,12 @@ export const getSingleSpace = async (req, res) => {
    ========================================= */
 export const updateSpace = async (req, res) => {
   try {
-    const { id } = req.params;
     const { title, description } = req.body;
 
     const updatedSpace = await Space.findByIdAndUpdate(
-      id,
+      req.params.id,
       { title, description },
-      { returnDocument: "after", runValidators: true },
+      { new: true, runValidators: true },
     );
 
     if (!updatedSpace) {
@@ -126,9 +126,7 @@ export const updateSpace = async (req, res) => {
    ========================================= */
 export const deleteSpace = async (req, res) => {
   try {
-    const { id } = req.params;
-
-    const deletedSpace = await Space.findByIdAndDelete(id);
+    const deletedSpace = await Space.findByIdAndDelete(req.params.id);
 
     if (!deletedSpace) {
       return res.status(404).json({
