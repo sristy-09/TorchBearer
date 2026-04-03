@@ -1,3 +1,4 @@
+import { success } from "zod";
 import { Post } from "../models/Post.js";
 import { Topic } from "../models/Topics.js";
 import APIFunctionality from "../utils/apiFunctionality.js";
@@ -8,18 +9,20 @@ import APIFunctionality from "../utils/apiFunctionality.js";
    ========================================= */
 export const createPost = async (req, res) => {
   try {
-    const { title, content, description, image, userId, topicId } = req.body;
+    const { title, content, description, image, topicId } = req.body;
 
-    if (!title || !content || !userId || !topicId) {
+    if (!title || !content || !topicId) {
       return res.status(400).json({
-        message: "title, content, userId, and topicId are required",
+        message: "title, content and topicId are required",
       });
     }
 
     // Verify parent Topic exists and grab its spaceId
     const topic = await Topic.findById(topicId);
     if (!topic) {
-      return res.status(404).json({ message: "Parent topic not found" });
+      return res
+        .status(404)
+        .json({ success: false, message: "Parent topic not found" });
     }
 
     const newPost = await Post.create({
@@ -27,7 +30,7 @@ export const createPost = async (req, res) => {
       content,
       description,
       image,
-      author: userId,
+      author: req.user._id,
       topic: topicId,
       space: topic.space, // denormalized from topic's parent space
     });
@@ -37,9 +40,23 @@ export const createPost = async (req, res) => {
       $push: { posts: newPost._id },
     });
 
-    res.status(201).json(newPost);
+    const populated = await newPost.populate([
+      { path: "author", select: "name role" },
+      { path: "topic", select: "title" },
+      { path: "space", select: "title" },
+    ]);
+
+    res.status(201).json({
+      success: true,
+      message: "Post created successfully",
+      data: populated,
+    });
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    res.status(500).json({
+      success: false,
+      message: "Error creating post",
+      error: error.message,
+    });
   }
 };
 
@@ -49,6 +66,7 @@ export const createPost = async (req, res) => {
      ?keyword=alumni        → search by title
      ?topic=<topicId>       → filter by topic
      ?space=<spaceId>       → filter by space
+     ?author=<userId>       → filter by author
      ?page=1&limit=10       → pagination
    ========================================= */
 export const getPosts = async (req, res) => {
@@ -64,9 +82,17 @@ export const getPosts = async (req, res) => {
       .populate("space", "title")
       .sort({ createdAt: -1 });
 
-    res.status(200).json(posts);
+    res.status(200).json({
+      success: true,
+      count: posts.length,
+      data: posts,
+    });
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    res.status(500).json({
+      success: false,
+      message: "Error fetching posts",
+      error: error.message,
+    });
   }
 };
 
@@ -81,12 +107,18 @@ export const getPostById = async (req, res) => {
       .populate("space", "title");
 
     if (!post) {
-      return res.status(404).json({ message: "Post not found" });
+      return res
+        .status(404)
+        .json({ success: false, message: "Post not found" });
     }
 
-    res.status(200).json(post);
+    res.status(200).json({ success: true, data: post });
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    res.status(500).json({
+      success: false,
+      message: "Error fetching post",
+      error: error.message,
+    });
   }
 };
 
@@ -95,6 +127,20 @@ export const getPostById = async (req, res) => {
    ========================================= */
 export const updatePost = async (req, res) => {
   try {
+    const post = await Post.findById(req.params.id);
+    if (!post) {
+      return res
+        .status(404)
+        .json({ success: false, message: "Post not found" });
+    }
+
+    // Ownership check
+    if (post.author.toString() !== req.user._id.toString()) {
+      return res
+        .status(403)
+        .json({ success: false, message: "Unauthorized to update this post" });
+    }
+
     // Prevent overwriting relational fields via update
     const { title, content, description, image } = req.body;
 
@@ -102,15 +148,24 @@ export const updatePost = async (req, res) => {
       req.params.id,
       { title, content, description, image },
       { new: true, runValidators: true },
-    );
+    )
+      .populate("author", "name role")
+      .populate("topic", "title")
+      .populate("space", "title");
 
-    if (!updatedPost) {
-      return res.status(404).json({ message: "Post not found" });
-    }
-
-    res.status(200).json(updatedPost);
+    res.status(200).json({
+      success: true,
+      message: "Post updated successfully",
+      data: updatedPost,
+    });
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    res
+      .status(500)
+      .json({
+        success: false,
+        message: "Error updating post",
+        error: error.message,
+      });
   }
 };
 
@@ -119,20 +174,40 @@ export const updatePost = async (req, res) => {
    ========================================= */
 export const deletePost = async (req, res) => {
   try {
-    const deletedPost = await Post.findByIdAndDelete(req.params.id);
+    const post = await Post.findByIdAndDelete(req.params.id);
 
-    if (!deletedPost) {
-      return res.status(404).json({ message: "Post not found" });
+    if (!post) {
+      return res
+        .status(404)
+        .json({ success: false, message: "Post not found" });
     }
 
+    // Ownership check
+    if (post.author.toString() !== req.user._id.toString()) {
+      return res.status(403).json({
+        success: false,
+        message: "Not authorized. You can only delete your own posts.",
+      });
+    }
+
+    await post.deleteOne();
+
     // Remove post reference from its parent Topic
-    await Topic.findByIdAndUpdate(deletedPost.topic, {
-      $pull: { posts: deletedPost._id },
+    await Topic.findByIdAndUpdate(post.topic, {
+      $pull: { posts: post._id },
     });
 
-    res.status(200).json({ message: "Post deleted successfully" });
+    res
+      .status(200)
+      .json({ success: true, message: "Post deleted successfully" });
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    res
+      .status(500)
+      .json({
+        success: false,
+        message: "Error deleting post",
+        error: error.message,
+      });
   }
 };
 
@@ -142,30 +217,36 @@ export const deletePost = async (req, res) => {
    ========================================= */
 export const likePost = async (req, res) => {
   try {
-    const { userId } = req.body;
-
-    if (!userId) {
-      return res.status(400).json({ message: "userId is required" });
-    }
-
     const post = await Post.findById(req.params.id);
+
     if (!post) {
-      return res.status(404).json({ message: "Post not found" });
+      return res.status(404).json({
+        success: false,
+        message: "Post not found",
+      });
     }
 
+    const userId = req.user._id.toString();
     const alreadyLiked = post.likes.some((id) => id.toString() === userId);
 
     if (alreadyLiked) {
-      // Unlike
       post.likes = post.likes.filter((id) => id.toString() !== userId);
     } else {
-      // Like
-      post.likes.push(userId);
+      post.likes.push(req.user._id);
     }
 
     await post.save();
-    res.json({ likesCount: post.likes.length, likes: post.likes });
-  } catch (err) {
-    res.status(500).json({ message: err.message });
+
+    res.status(200).json({
+      success: true,
+      liked: !alreadyLiked,
+      likesCount: post.likes.length,
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: "Error updating like",
+      error: error.message,
+    });
   }
 };

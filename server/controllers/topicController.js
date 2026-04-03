@@ -30,6 +30,7 @@ export const createTopic = async (req, res) => {
       title,
       description,
       space: spaceId,
+      createdBy: req.user._id, // req.user is set by auth middleware
     });
 
     // Keep Space.topics array in sync
@@ -37,10 +38,15 @@ export const createTopic = async (req, res) => {
       $push: { topics: newTopic._id },
     });
 
+    const populated = await newTopic.populate([
+      { path: "createdBy", select: "name role" },
+      { path: "space", select: "title" },
+    ]);
+
     return res.status(201).json({
       success: true,
       message: "Topic created successfully",
-      data: newTopic,
+      data: populated,
     });
   } catch (error) {
     return res.status(500).json({
@@ -67,6 +73,7 @@ export const getAllTopics = async (req, res) => {
 
     const topics = await api.query
       .populate("space", "title")
+      .populate("createdBy", "name role")
       .sort({ createdAt: -1 });
 
     return res.status(200).json({
@@ -90,7 +97,11 @@ export const getSingleTopic = async (req, res) => {
   try {
     const topic = await Topic.findById(req.params.id)
       .populate("space", "title description")
-      .populate("posts");
+      .populate("createdBy", "name role")
+      .populate({
+        path: "posts",
+        populate: { path: "author", select: "name role" },
+      });
 
     if (!topic) {
       return res.status(404).json({
@@ -117,20 +128,31 @@ export const getSingleTopic = async (req, res) => {
    ========================================= */
 export const updateTopic = async (req, res) => {
   try {
+    const topic = await Topic.findById(req.params.id);
+
+    if (!topic) {
+      return res.status(404).json({
+        success: false,
+        message: "Topic not found",
+      });
+    }
+
+    if (topic.createdBy.toString() !== req.user._id.toString()) {
+      return res.status(403).json({
+        success: false,
+        message: "Unauthorized to update this topic",
+      });
+    }
+
     const { title, description } = req.body;
 
     const updatedTopic = await Topic.findByIdAndUpdate(
       req.params.id,
       { title, description },
       { new: true, runValidators: true },
-    );
-
-    if (!updatedTopic) {
-      return res.status(404).json({
-        success: false,
-        message: "Topic not found",
-      });
-    }
+    )
+      .populate("space", "title")
+      .populate("createdBy", "name role");
 
     return res.status(200).json({
       success: true,
@@ -151,18 +173,27 @@ export const updateTopic = async (req, res) => {
    ========================================= */
 export const deleteTopic = async (req, res) => {
   try {
-    const deletedTopic = await Topic.findByIdAndDelete(req.params.id);
+    const topic = await Topic.findById(req.params.id);
 
-    if (!deletedTopic) {
+    if (!topic) {
       return res.status(404).json({
         success: false,
         message: "Topic not found",
       });
     }
 
+    if (topic.createdBy.toString() !== req.user._id.toString()) {
+      return res.status(403).json({
+        success: false,
+        message: "Unauthorized to delete this topic",
+      });
+    }
+
+    await topic.deleteOne();
+
     // Remove topic reference from its parent Space
-    await Space.findByIdAndUpdate(deletedTopic.space, {
-      $pull: { topics: deletedTopic._id },
+    await Space.findByIdAndUpdate(topic.space, {
+      $pull: { topics: topic._id },
     });
 
     return res.status(200).json({

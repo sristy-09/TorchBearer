@@ -5,16 +5,20 @@ import {
   getPostById,
   updatePost,
   deletePost,
-  likePost
+  likePost,
 } from "../controllers/postController.js";
+import { protect } from "../middleware/authMiddleware.js";
 
 const router = express.Router();
 
-router.post("/", createPost);       
-router.get("/", getPosts);          
-router.get("/:id", getPostById);    
-router.put("/:id", updatePost);     
-router.delete("/:id", deletePost); 
-router.put("/:id/like", likePost) 
+// All routes below require a valid JWT token
+router.use(protect);
+
+router.post("/", createPost);
+router.get("/", getPosts);
+router.get("/:id", getPostById);
+router.put("/:id", updatePost);
+router.delete("/:id", deletePost);
+router.put("/:id/like", likePost);
 
 export default router;
