@@ -15,12 +15,18 @@ export const createSpace = async (req, res) => {
       });
     }
 
-    const newSpace = await Space.create({ title, description });
+    const newSpace = await Space.create({
+      title,
+      description,
+      createdBy: req.user._id, // req.user is set by auth middleware
+    });
+
+    const populated = await newSpace.populate("createdBy", "name role");
 
     res.status(201).json({
       success: true,
       message: "Space created successfully",
-      data: newSpace,
+      data: populated,
     });
   } catch (error) {
     res.status(500).json({
@@ -44,7 +50,9 @@ export const getAllSpaces = async (req, res) => {
       .filter()
       .paginate();
 
-    const spaces = await api.query.sort({ createdAt: -1 });
+    const spaces = await api.query
+      .populate("createdBy", "name role")
+      .sort({ createdAt: -1 });
 
     res.status(200).json({
       success: true,
@@ -65,7 +73,9 @@ export const getAllSpaces = async (req, res) => {
    ========================================= */
 export const getSingleSpace = async (req, res) => {
   try {
-    const space = await Space.findById(req.params.id).populate("topics");
+    const space = await Space.findById(req.params.id)
+      .populate("createdBy", "name role")
+      .populate("topics", "title description");
 
     if (!space) {
       return res.status(404).json({
@@ -92,20 +102,32 @@ export const getSingleSpace = async (req, res) => {
    ========================================= */
 export const updateSpace = async (req, res) => {
   try {
+    const space = await Space.findById(req.params.id);
+
+    if (!space) {
+      return res.status(404).json({
+        success: false,
+        message: "Space not found",
+      });
+    }
+
+    // Only creator or admin can update
+    if (
+      space.createdBy.toString() !== req.user._id.toString() &&
+      req.user.role !== "admin"
+    ) {
+      return res
+        .status(403)
+        .json({ success: false, message: "Unauthorized to update this space" });
+    }
+
     const { title, description } = req.body;
 
     const updatedSpace = await Space.findByIdAndUpdate(
       req.params.id,
       { title, description },
       { new: true, runValidators: true },
-    );
-
-    if (!updatedSpace) {
-      return res.status(404).json({
-        success: false,
-        message: "Space not found",
-      });
-    }
+    ).populate("createdBy", "name role");
 
     res.status(200).json({
       success: true,
@@ -126,14 +148,26 @@ export const updateSpace = async (req, res) => {
    ========================================= */
 export const deleteSpace = async (req, res) => {
   try {
-    const deletedSpace = await Space.findByIdAndDelete(req.params.id);
+    const space = await Space.findById(req.params.id);
 
-    if (!deletedSpace) {
+    if (!space) {
       return res.status(404).json({
         success: false,
         message: "Space not found",
       });
     }
+
+    // Only creator or admin can delete
+    if (
+      space.createdBy.toString() !== req.user._id.toString() &&
+      req.user.role !== "admin"
+    ) {
+      return res
+        .status(403)
+        .json({ success: false, message: "Unauthorized to delete this space" });
+    }
+
+    await space.deleteOne();
 
     res.status(200).json({
       success: true,

@@ -6,8 +6,12 @@ import {
   updateTopic,
   deleteTopic,
 } from "../controllers/topicController.js";
+import { protect } from "../middleware/authMiddleware.js";
 
 const router = express.Router();
+
+// All routes below require a valid JWT token
+router.use(protect);
 
 router.post("/", createTopic);
 router.get("/", getAllTopics);

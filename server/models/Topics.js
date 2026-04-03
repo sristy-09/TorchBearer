@@ -3,10 +3,19 @@ import mongoose from "mongoose";
 const topicSchema = new mongoose.Schema({
   title: {
     type: String,
-    required: true,
+    required: [true, "Title is required"],
+    trim: true,
   },
   description: {
     type: String,
+    required: [true, "Description is required"],
+    trim: true,
+  },
+
+  // 🔗 Alumni who created this topic
+  createdBy: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "User",
     required: true,
   },
 
@@ -14,7 +23,7 @@ const topicSchema = new mongoose.Schema({
   space: {
     type: mongoose.Schema.Types.ObjectId,
     ref: "Space",
-    required: true,
+    required: [true, "Space is required"],
   },
 
   // Optional: store posts inside topic
