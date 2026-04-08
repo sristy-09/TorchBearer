@@ -1,4 +1,3 @@
-import { success } from "zod";
 import { Post } from "../models/Post.js";
 import { Topic } from "../models/Topics.js";
 import APIFunctionality from "../utils/apiFunctionality.js";
@@ -159,13 +158,11 @@ export const updatePost = async (req, res) => {
       data: updatedPost,
     });
   } catch (error) {
-    res
-      .status(500)
-      .json({
-        success: false,
-        message: "Error updating post",
-        error: error.message,
-      });
+    res.status(500).json({
+      success: false,
+      message: "Error updating post",
+      error: error.message,
+    });
   }
 };
 
@@ -201,13 +198,11 @@ export const deletePost = async (req, res) => {
       .status(200)
       .json({ success: true, message: "Post deleted successfully" });
   } catch (error) {
-    res
-      .status(500)
-      .json({
-        success: false,
-        message: "Error deleting post",
-        error: error.message,
-      });
+    res.status(500).json({
+      success: false,
+      message: "Error deleting post",
+      error: error.message,
+    });
   }
 };
 
