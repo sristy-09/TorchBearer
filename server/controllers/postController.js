@@ -1,4 +1,3 @@
-import { success } from "zod";
 import { Post } from "../models/Post.js";
 import { Topic } from "../models/Topics.js";
 import APIFunctionality from "../utils/apiFunctionality.js";

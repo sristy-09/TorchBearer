@@ -1,4 +1,3 @@
-import { success } from "zod";
 import { Comment } from "../models/Comment.js";
 
 /* =========================================
@@ -36,13 +35,11 @@ export const addComment = async (req, res) => {
       data: populated,
     });
   } catch (err) {
-    res
-      .status(500)
-      .json({
-        success: false,
-        message: "Error adding comment",
-        error: err.message,
-      });
+    res.status(500).json({
+      success: false,
+      message: "Error adding comment",
+      error: err.message,
+    });
   }
 };
 
@@ -71,13 +68,11 @@ export const getComments = async (req, res) => {
       data: comments,
     });
   } catch (err) {
-    res
-      .status(500)
-      .json({
-        success: false,
-        message: "Error fetching comments",
-        error: err.message,
-      });
+    res.status(500).json({
+      success: false,
+      message: "Error fetching comments",
+      error: err.message,
+    });
   }
 };
 
@@ -106,12 +101,10 @@ export const deleteComment = async (req, res) => {
       .status(200)
       .json({ success: true, message: "Comment deleted successfully" });
   } catch (err) {
-    res
-      .status(500)
-      .json({
-        success: false,
-        message: "Error deleting comment",
-        error: err.message,
-      });
+    res.status(500).json({
+      success: false,
+      message: "Error deleting comment",
+      error: err.message,
+    });
   }
 };
