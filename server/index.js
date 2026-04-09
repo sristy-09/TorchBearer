@@ -1,6 +1,10 @@
 import express from "express";
+import passport from "./config/passport.js";
 import dotenv from "dotenv";
+
 dotenv.config();
+// No session needed — we use JWT
+app.use(passport.initialize());
 
 import { connectDB } from "./config/db.js";
 
