@@ -1,12 +1,9 @@
 import express from "express";
-import passport from "./config/passport.js";
 import dotenv from "dotenv";
-
 dotenv.config();
-// No session needed — we use JWT
-app.use(passport.initialize());
 
 import { connectDB } from "./config/db.js";
+import passport from "./config/passport.js";
 
 // Routes
 import topicRoutes from "./routes/Topic.js";
@@ -15,14 +12,18 @@ import postRoutes from "./routes/Post.js";
 import commentRoutes from "./routes/commentRoutes.js";
 import userRoutes from "./routes/User.js";
 
-connectDB();
-
-const PORT = process.env.PORT || 3000;
 const app = express();
 
 // Middleware
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+
+// No session needed — we use JWT
+app.use(passport.initialize());
+
+connectDB();
+
+const PORT = process.env.PORT || 3000;
 
 // Routes
 app.use("/api/spaces", spaceRoutes); // Space routes

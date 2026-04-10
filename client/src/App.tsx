@@ -1,5 +1,11 @@
+import LoginPage from "./feature/Auth/components/LoginPage";
+
 const App = () => {
-  return <div>App</div>;
+  return (
+    <div>
+      <LoginPage />
+    </div>
+  );
 };
 
 export default App;
