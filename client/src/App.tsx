@@ -2,12 +2,21 @@ import { BrowserRouter as Router, Route, Routes } from "react-router";
 import LoginPage from "./feature/Auth/components/LoginPage";
 import AuthSuccess from "./feature/Auth/components/AuthSuccess";
 import AuthRoute from "./feature/core/components/ProtectedRoutes";
+import SignUpPage from "./feature/Auth/components/SignupPage";
 
 const App = () => {
   return (
     <div>
       <Router>
         <Routes>
+          <Route
+            path="/signup"
+            element={
+              <AuthRoute mode="guest">
+                <SignUpPage />
+              </AuthRoute>
+            }
+          />
           <Route
             path="/login"
             element={
