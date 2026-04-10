@@ -1,5 +1,6 @@
 import { BrowserRouter as Router, Route, Routes } from "react-router";
 import LoginPage from "./feature/Auth/components/LoginPage";
+import AuthSuccess from "./feature/Auth/components/AuthSuccess";
 import AuthRoute from "./feature/core/components/ProtectedRoutes";
 
 const App = () => {
@@ -15,6 +16,7 @@ const App = () => {
               </AuthRoute>
             }
           />
+          <Route path="/auth/callback" element={<AuthSuccess />} />
         </Routes>
       </Router>
     </div>

@@ -77,7 +77,7 @@ function LoginPage() {
         </CardContent>
         <CardFooter className="flex-col gap-2">
           <Button
-            onClick={() => window.open(`${API_URL}/auth/google`, "_self")}
+            onClick={() => window.open(`${API_URL}/api/auth/google`, "_self")}
             variant="outline"
             className="w-full"
           >
