@@ -28,17 +28,7 @@ const sendTokenResponse = (user, statusCode, res) => {
    ========================================= */
 export const register = async (req, res) => {
   try {
-    const {
-      name,
-      email,
-      password,
-      role,
-      batchYear,
-      registrationNumber,
-      department,
-      skills,
-      interests,
-    } = req.body;
+    const { name, email, password } = req.body;
 
     // Check if email already taken
     const existingUser = await User.findOne({ email });
@@ -53,12 +43,6 @@ export const register = async (req, res) => {
       name,
       email,
       password, // hashed automatically by pre-save hook in model
-      role,
-      batchYear,
-      registrationNumber,
-      department,
-      skills,
-      interests,
     });
 
     sendTokenResponse(user, 201, res);
