@@ -16,7 +16,7 @@ passport.use(
         // 1. Check if user already exists by googleId
         let user = await User.findOne({ googleId: profile.id });
 
-        if (user) return done(null, user);
+        if (user) return done(null, { user, isNew: false });
 
         // 2. Check if an account with same email already exists (manual signup)
         user = await User.findOne({ email: profile.emails[0].value });
@@ -26,7 +26,7 @@ passport.use(
           user.googleId = profile.id;
           if (!user.avatar) user.avatar = profile.photos[0]?.value || "";
           await user.save();
-          return done(null, user);
+          return done(null, { user, isNew: false });
         }
 
         // 3. Create a brand new user from Google profile
@@ -35,10 +35,10 @@ passport.use(
           name: profile.displayName,
           email: profile.emails[0].value,
           avatar: profile.photos[0]?.value || "",
-          role: "student", // default role — adjust as needed
+          // no role, no password - user must complete profile after first login
         });
 
-        return done(null, user);
+        return done(null, { user, isNew: true });
       } catch (err) {
         return done(err, null);
       }

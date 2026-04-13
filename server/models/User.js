@@ -37,7 +37,7 @@ const userSchema = new mongoose.Schema(
         values: ["admin", "student", "alumni"],
         message: "Role must be either admin, student or alumni",
       },
-      required: [true, "Role is required"],
+      required: false, // remove required - Google users complete this later
     },
 
     // Profile fields

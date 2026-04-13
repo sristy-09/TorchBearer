@@ -8,6 +8,7 @@ import {
   changePassword,
   getAllUsers,
   getUserById,
+  completeProfile,
 } from "../controllers/userController.js";
 import { protect, restrictTo } from "../middleware/authMiddleware.js";
 import passport from "../config/passport.js";
@@ -22,6 +23,7 @@ router.post("/login", login);
 router.get("/me", protect, getMe);
 router.put("/update-profile", protect, updateProfile);
 router.put("/change-password", protect, changePassword);
+router.put("/complete-profile", protect, completeProfile); // for Google users to finish profile
 
 /* ── User directory (any logged-in user can browse) ────────── */
 router.get("/users", protect, getAllUsers);
@@ -44,10 +46,20 @@ router.get(
     session: false,
   }),
   (req, res) => {
+    const { user, isNew } = req.user; // passport puts result of done() in req.user
+
     // req.user is set by Passport — issue your JWT just like normal login
     const token = jwt.sign({ id: req.user._id }, process.env.JWT_SECRET, {
       expiresIn: process.env.JWT_EXPIRES_IN || "7d",
     });
+
+    if (isNew) {
+      // Send to complete-profile page if this is their first login (optional)
+      return res.redirect(
+        `${process.env.FRONTEND_URL}/auth/callback?token=${token}&isNew=true`,
+      );
+    }
+
     // Option A: redirect to frontend with token in query string
     res.redirect(`${process.env.FRONTEND_URL}/auth/callback?token=${token}`);
     // Option B: return JSON (for mobile/SPA)

@@ -293,3 +293,57 @@ export const getUserById = async (req, res) => {
     });
   }
 };
+
+/* =========================================
+   8. COMPLETE PROFILE  (Google OAuth new users)
+   PUT /api/auth/complete-profile
+   Requires: protect middleware
+   Body: { role, batchYear, department, skills, interests }
+   ========================================= */
+export const completeProfile = async (req, res) => {
+  try {
+    const { role, batchYear, department, skills, interests } = req.body;
+
+    if (!role) {
+      return res.status(400).json({
+        success: false,
+        message: "Role is required to complete profile.",
+      });
+    }
+
+    const allowedRoles = ["student", "alumni"];
+    if (!allowedRoles.includes(role)) {
+      return res.status(400).json({
+        success: false,
+        message: "Role must be either student or alumni.",
+      });
+    }
+
+    const updatedUser = await User.findByIdAndUpdate(
+      req.user._id,
+      { role, batchYear, department, skills, interests },
+      {
+        new: true,
+        runValidators: true,
+      },
+    );
+
+    res.status(200).json({
+      success: true,
+      message: "Profile completed successfully.",
+      data: { updatedUser },
+    });
+  } catch (error) {
+    if (error.name === "ValidationError") {
+      const messages = Object.values(error.errors).map((e) => e.message);
+      return res.status(400).json({
+        success: false,
+        message: messages.join(". "),
+      });
+    }
+    res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
