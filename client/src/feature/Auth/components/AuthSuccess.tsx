@@ -28,7 +28,9 @@ function AuthSuccess() {
       const result = await dispatch(fetchCurrentUser());
 
       if (fetchCurrentUser.fulfilled.match(result)) {
-        if (isNew) {
+        const user = result.payload.data.user;
+        // Check if profile is complete (has role)
+        if (!user.role || isNew) {
           navigate("/complete-profile");
         } else {
           navigate("/dashboard");

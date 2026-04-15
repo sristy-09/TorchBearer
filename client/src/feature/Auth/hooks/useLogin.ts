@@ -20,6 +20,7 @@ export function useLogin() {
     if (loginUser.rejected.match(result)) {
       throw new Error(result.payload as string);
     }
+    return result.payload;
   };
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -37,8 +38,13 @@ export function useLogin() {
     setErrors({});
 
     try {
-      await performLogin(result.data);
-      navigate("/dashboard");
+      const response = await performLogin(result.data);
+      // Check if user has completed their profile (has role)
+      if (!response.data.user.role) {
+        navigate("/complete-profile");
+      } else {
+        navigate("/dashboard");
+      }
     } catch (error: unknown) {
       alert(error instanceof Error ? error.message : "Login failed");
     }

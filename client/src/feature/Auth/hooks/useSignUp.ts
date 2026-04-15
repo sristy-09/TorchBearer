@@ -43,7 +43,7 @@ export function useSignup() {
 
     try {
       await performRegister(result.data);
-      navigate("/dashboard");
+      navigate("/complete-profile");
     } catch (error: unknown) {
       alert(error instanceof Error ? error.message : "Registration failed");
     } finally {

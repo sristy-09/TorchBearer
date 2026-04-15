@@ -49,7 +49,7 @@ router.get(
     const { user, isNew } = req.user; // passport puts result of done() in req.user
 
     // req.user is set by Passport — issue your JWT just like normal login
-    const token = jwt.sign({ id: req.user._id }, process.env.JWT_SECRET, {
+    const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, {
       expiresIn: process.env.JWT_EXPIRES_IN || "7d",
     });
 
