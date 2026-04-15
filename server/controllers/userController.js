@@ -147,7 +147,7 @@ export const updateProfile = async (req, res) => {
     });
 
     const updatedUser = await User.findByIdAndUpdate(req.user._id, updates, {
-      new: true,
+      returnDocument: 'after',
       runValidators: true,
     });
 
@@ -358,7 +358,7 @@ export const completeProfile = async (req, res) => {
         skills: skills ?? [],
         interests: interests ?? [],
       },
-      { new: true, runValidators: true },
+      { returnDocument: 'after', runValidators: true },
     );
 
     res.status(200).json({

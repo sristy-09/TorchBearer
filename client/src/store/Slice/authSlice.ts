@@ -79,7 +79,7 @@ export const completeUserProfile = createAsyncThunk(
     { rejectWithValue },
   ) => {
     try {
-      const res = await axios.put(`${API_URL}/auth/complete-profile`, data);
+      const res = await axios.put(`${API_URL}/api/auth/complete-profile`, data);
       return res.data; // { success, data: { user } }
     } catch (err: unknown) {
       if (axios.isAxiosError(err)) {
