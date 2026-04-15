@@ -4,11 +4,13 @@ import { useAppSelector } from "../../../store/hooks";
 
 interface AuthRouteProps {
   children: React.ReactElement;
-  mode: "guest" | "private";
+  mode: "guest" | "private" | "profile-incomplete";
 }
 
 const AuthRoute: React.FC<AuthRouteProps> = ({ children, mode }) => {
-  const { isAuthenticated, loading } = useAppSelector((state) => state.auth);
+  const { isAuthenticated, loading, isProfileComplete } = useAppSelector(
+    (state) => state.auth,
+  );
 
   // Wait for auth state to resolve before redirecting
   // (prevents flash-redirect on page refresh while token is being validated)
@@ -20,14 +22,25 @@ const AuthRoute: React.FC<AuthRouteProps> = ({ children, mode }) => {
     );
   }
 
+  // Guest-only routes: redirect logged-in users away
   if (mode === "guest" && isAuthenticated) {
-    // Logged-in user trying to access guest-only route
     return <Navigate to="/dashboard" replace />;
   }
 
+  // Private routes: must be logged in AND have a complete profile
   if (mode === "private" && !isAuthenticated) {
-    // Not logged in, trying to access private route
     return <Navigate to="/login" replace />;
+  }
+  if (mode === "private" && isAuthenticated && !isProfileComplete) {
+    return <Navigate to="/complete-profile" replace />;
+  }
+
+  // The complete-profile page itself: must be logged in but profile incomplete
+  if (mode === "profile-incomplete" && !isAuthenticated) {
+    return <Navigate to="/login" replace />;
+  }
+  if (mode === "profile-incomplete" && isProfileComplete) {
+    return <Navigate to="/dashboard" replace />;
   }
 
   return children;
