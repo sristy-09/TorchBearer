@@ -7,7 +7,7 @@ import { registerUser } from "../../../store/Slice/authSlice";
 
 export function useSignup() {
   const [myForm, setMyForm] = useState<SignUpFormType>({
-    username: "",
+    name: "",
     email: "",
     password: "",
   });
@@ -32,7 +32,7 @@ export function useSignup() {
     if (!result.success) {
       const fieldErrors = result.error.flatten().fieldErrors;
       setErrors({
-        username: fieldErrors.username?.[0],
+        name: fieldErrors.name?.[0],
         email: fieldErrors.email?.[0],
         password: fieldErrors.password?.[0],
       });

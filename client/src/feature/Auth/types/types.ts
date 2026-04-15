@@ -4,13 +4,13 @@ export interface LoginFormType {
 }
 
 export interface SignUpFormType {
-  username: string;
+  name: string;
   email: string;
   password: string;
 }
 
 export type FormErrors = {
-  username?: string;
+  name?: string;
   email?: string;
   password?: string;
 };

@@ -38,19 +38,19 @@ function SignUpPage() {
             <form onSubmit={handleSubmit}>
               <div className="flex flex-col gap-6">
                 <div className="grid gap-2">
-                  <Label htmlFor="username">Username:</Label>
+                  <Label htmlFor="name">Name:</Label>
                   <Input
-                    id="username"
+                    id="name"
                     type="text"
-                    placeholder="alice123"
-                    name="username"
-                    value={myForm.username}
+                    placeholder="Alice Smith"
+                    name="name"
+                    value={myForm.name}
                     onChange={handleChange}
                     required
                     disabled={loading}
                   />
-                  {errors.username && (
-                    <p className="text-sm text-red-500">{errors.username}</p>
+                  {errors.name && (
+                    <p className="text-sm text-red-500">{errors.name}</p>
                   )}
                 </div>
                 <div className="grid gap-2">
