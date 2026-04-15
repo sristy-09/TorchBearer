@@ -33,6 +33,25 @@ export interface AuthState {
   user: User | null;
   token: string | null;
   isAuthenticated: boolean;
+  isProfileComplete: boolean;
   loading: boolean;
   error: string | null;
 }
+
+export interface CompleteProfileFormType {
+  role: "student" | "alumni" | "";
+  batchYear: string;
+  registrationNumber: string;
+  department: string;
+  skills: string[];
+  interests: string[];
+}
+
+export type CompleteProfileErrors = {
+  role?: string;
+  batchYear?: string;
+  registrationNumber?: string;
+  department?: string;
+  skills?: string;
+  interests?: string;
+};

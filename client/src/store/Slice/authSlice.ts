@@ -65,12 +65,43 @@ export const fetchCurrentUser = createAsyncThunk(
   },
 );
 
+export const completeUserProfile = createAsyncThunk(
+  "auth/completeProfile",
+  async (
+    data: {
+      role: string;
+      batchYear?: number;
+      registrationNumber?: number;
+      department?: string;
+      skills?: string[];
+      interests?: string[];
+    },
+    { rejectWithValue },
+  ) => {
+    try {
+      const res = await axios.put(`${API_URL}/auth/complete-profile`, data);
+      return res.data; // { success, data: { user } }
+    } catch (err: unknown) {
+      if (axios.isAxiosError(err)) {
+        return rejectWithValue(
+          err.response?.data?.message || "Failed to complete profile",
+        );
+      }
+      return rejectWithValue("Failed to complete profile");
+    }
+  },
+);
+
 // ── Slice ─────────────────────────────────────────────────────
+
+// helper — check if user has completed profile
+const isProfileComplete = (user: User | null) => !!user?.role;
 
 const initialState: AuthState = {
   user: null,
   token: localStorage.getItem("token"),
   isAuthenticated: !!localStorage.getItem("token"),
+  isProfileComplete: false,
   loading: false,
   error: null,
 };
@@ -113,6 +144,7 @@ const authSlice = createSlice({
         state.loading = false;
         state.token = action.payload.token;
         state.user = action.payload.data.user;
+        state.isProfileComplete = isProfileComplete(action.payload.data.user);
         state.isAuthenticated = true;
         localStorage.setItem("token", action.payload.token);
         axios.defaults.headers.common["Authorization"] =
@@ -133,6 +165,7 @@ const authSlice = createSlice({
         state.loading = false;
         state.token = action.payload.token;
         state.user = action.payload.data.user;
+        state.isProfileComplete = isProfileComplete(action.payload.data.user);
         state.isAuthenticated = true;
         localStorage.setItem("token", action.payload.token);
         axios.defaults.headers.common["Authorization"] =
@@ -151,6 +184,7 @@ const authSlice = createSlice({
       .addCase(fetchCurrentUser.fulfilled, (state, action) => {
         state.loading = false;
         state.user = action.payload.data.user;
+        state.isProfileComplete = isProfileComplete(action.payload.data.user);
         state.isAuthenticated = true;
       })
       .addCase(fetchCurrentUser.rejected, (state) => {
@@ -158,6 +192,22 @@ const authSlice = createSlice({
         state.isAuthenticated = false;
         state.token = null;
         localStorage.removeItem("token");
+      });
+
+    // Add completeUserProfile cases:
+    builder
+      .addCase(completeUserProfile.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(completeUserProfile.fulfilled, (state, action) => {
+        state.loading = false;
+        state.user = action.payload.data.user;
+        state.isProfileComplete = true;
+      })
+      .addCase(completeUserProfile.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload as string;
       });
   },
 });

@@ -54,9 +54,15 @@ const userSchema = new mongoose.Schema(
       trim: true,
     },
 
-    skills: [String],
+    skills: {
+      type: [String],
+      default: [],
+    },
 
-    interests: [String],
+    interests: {
+      type: [String],
+      default: [],
+    },
 
     // Profile picture URL (optional)
     avatar: {

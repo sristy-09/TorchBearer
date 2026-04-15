@@ -279,43 +279,92 @@ export const getUserById = async (req, res) => {
 };
 
 /* =========================================
-   8. COMPLETE PROFILE  (Google OAuth new users)
+   8. COMPLETE PROFILE
    PUT /api/auth/complete-profile
    Requires: protect middleware
-   Body: { role, batchYear, department, skills, interests }
+   Body: { role, batchYear, registrationNumber,
+           department, skills, interests }
    ========================================= */
 export const completeProfile = async (req, res) => {
   try {
-    const { role, batchYear, department, skills, interests } = req.body;
+    const {
+      role,
+      batchYear,
+      registrationNumber,
+      department,
+      skills,
+      interests,
+    } = req.body;
 
-    if (!role) {
+    // Manual validation on backend (Zod is frontend-only here)
+    const errors = [];
+
+    if (!role || !["student", "alumni"].includes(role)) {
+      errors.push("Role must be either student or alumni.");
+    }
+
+    if (
+      !batchYear ||
+      isNaN(Number(batchYear)) ||
+      Number(batchYear) < 1900 ||
+      Number(batchYear) > new Date().getFullYear() + 5
+    ) {
+      errors.push("Please provide a valid batch year.");
+    }
+
+    if (
+      !registrationNumber ||
+      isNaN(Number(registrationNumber)) ||
+      Number(registrationNumber) <= 0
+    ) {
+      errors.push("Please provide a valid registration number.");
+    }
+
+    if (!department || typeof department !== "string" || !department.trim()) {
+      errors.push("Department is required.");
+    }
+
+    if (skills !== undefined && !Array.isArray(skills)) {
+      errors.push("Skills must be an array.");
+    }
+
+    if (interests !== undefined && !Array.isArray(interests)) {
+      errors.push("Interests must be an array.");
+    }
+
+    if (errors.length > 0) {
       return res.status(400).json({
         success: false,
-        message: "Role is required to complete profile.",
+        message: errors.join(" "),
       });
     }
 
-    const allowedRoles = ["student", "alumni"];
-    if (!allowedRoles.includes(role)) {
+    // Check if profile already completed (role already set)
+    const existingUser = await User.findById(req.user._id);
+    if (existingUser.role) {
       return res.status(400).json({
         success: false,
-        message: "Role must be either student or alumni.",
+        message: "Profile is already completed.",
       });
     }
 
     const updatedUser = await User.findByIdAndUpdate(
       req.user._id,
-      { role, batchYear, department, skills, interests },
       {
-        new: true,
-        runValidators: true,
+        role,
+        batchYear: Number(batchYear),
+        registrationNumber: Number(registrationNumber),
+        department: department.trim(),
+        skills: skills ?? [],
+        interests: interests ?? [],
       },
+      { new: true, runValidators: true },
     );
 
     res.status(200).json({
       success: true,
       message: "Profile completed successfully.",
-      data: { updatedUser },
+      data: { user: updatedUser },
     });
   } catch (error) {
     if (error.name === "ValidationError") {
