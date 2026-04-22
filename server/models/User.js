@@ -18,11 +18,17 @@ const userSchema = new mongoose.Schema(
       match: [/^\S+@\S+\.\S+$/, "Please enter a valid email"],
     },
 
+    googleId: {
+      type: String,
+      unique: true,
+      sparse: true, // allows multiple null values
+    },
+
     password: {
       type: String,
-      required: [true, "Password is required"],
       minlength: [6, "Password must be at least 6 characters"],
-      select: false, // never returned in queries by default
+      select: false,
+      // No longer globally required — Google users won't have one
     },
 
     role: {
@@ -31,7 +37,7 @@ const userSchema = new mongoose.Schema(
         values: ["admin", "student", "alumni"],
         message: "Role must be either admin, student or alumni",
       },
-      required: [true, "Role is required"],
+      required: false, // remove required - Google users complete this later
     },
 
     // Profile fields
@@ -48,9 +54,15 @@ const userSchema = new mongoose.Schema(
       trim: true,
     },
 
-    skills: [String],
+    skills: {
+      type: [String],
+      default: [],
+    },
 
-    interests: [String],
+    interests: {
+      type: [String],
+      default: [],
+    },
 
     // Profile picture URL (optional)
     avatar: {
@@ -62,11 +74,10 @@ const userSchema = new mongoose.Schema(
 );
 
 // ── Hash password before saving ──────────────────────────────
-userSchema.pre("save", async function (next) {
+userSchema.pre("save", async function () {
   // Only hash if password was modified (new user or password update)
-  if (!this.isModified("password")) return next();
+  if (!this.isModified("password") || !this.password) return;
   this.password = await bcrypt.hash(this.password, 12);
-  next();
 });
 
 // ── Instance method: compare plain password with hashed ──────

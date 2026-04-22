@@ -146,7 +146,7 @@ export const updatePost = async (req, res) => {
     const updatedPost = await Post.findByIdAndUpdate(
       req.params.id,
       { title, content, description, image },
-      { new: true, runValidators: true },
+      { returnDocument: 'after', runValidators: true },
     )
       .populate("author", "name role")
       .populate("topic", "title")
