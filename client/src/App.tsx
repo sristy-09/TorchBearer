@@ -4,12 +4,21 @@ import AuthSuccess from "./feature/Auth/components/AuthSuccess";
 import AuthRoute from "./feature/core/components/ProtectedRoutes";
 import SignUpPage from "./feature/Auth/components/SignupPage";
 import CompleteProfilePage from "./feature/Auth/components/CompleteProfilePage";
+import HomePage from "./pages/components/HomePage";
 
 const App = () => {
   return (
     <div>
       <Router>
         <Routes>
+          <Route
+            path="/dashboard"
+            element={
+              <AuthRoute mode="private">
+                <HomePage />
+              </AuthRoute>
+            }
+          />
           <Route
             path="/signup"
             element={
@@ -40,10 +49,6 @@ const App = () => {
       </Router>
     </div>
   );
-import Homepage from "./pages/components/HomePage";
-
-const App = () => {
-  return <div><Homepage></Homepage></div>;
 };
 
 export default App;
