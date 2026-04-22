@@ -146,7 +146,7 @@ export const updatePost = async (req, res) => {
     const updatedPost = await Post.findByIdAndUpdate(
       req.params.id,
       { title, content, description, image },
-      { new: true, runValidators: true },
+      { returnDocument: 'after', runValidators: true },
     )
       .populate("author", "name role")
       .populate("topic", "title")
@@ -158,13 +158,11 @@ export const updatePost = async (req, res) => {
       data: updatedPost,
     });
   } catch (error) {
-    res
-      .status(500)
-      .json({
-        success: false,
-        message: "Error updating post",
-        error: error.message,
-      });
+    res.status(500).json({
+      success: false,
+      message: "Error updating post",
+      error: error.message,
+    });
   }
 };
 
@@ -200,13 +198,11 @@ export const deletePost = async (req, res) => {
       .status(200)
       .json({ success: true, message: "Post deleted successfully" });
   } catch (error) {
-    res
-      .status(500)
-      .json({
-        success: false,
-        message: "Error deleting post",
-        error: error.message,
-      });
+    res.status(500).json({
+      success: false,
+      message: "Error deleting post",
+      error: error.message,
+    });
   }
 };
 

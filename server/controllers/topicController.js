@@ -149,7 +149,7 @@ export const updateTopic = async (req, res) => {
     const updatedTopic = await Topic.findByIdAndUpdate(
       req.params.id,
       { title, description },
-      { new: true, runValidators: true },
+      { returnDocument: 'after', runValidators: true },
     )
       .populate("space", "title")
       .populate("createdBy", "name role");

@@ -126,7 +126,7 @@ export const updateSpace = async (req, res) => {
     const updatedSpace = await Space.findByIdAndUpdate(
       req.params.id,
       { title, description },
-      { new: true, runValidators: true },
+      { returnDocument: 'after', runValidators: true },
     ).populate("createdBy", "name role");
 
     res.status(200).json({
