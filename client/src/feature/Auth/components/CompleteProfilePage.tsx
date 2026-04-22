@@ -8,6 +8,7 @@ import {
 } from "../../core/components/ui/card";
 import { Input } from "../../core/components/ui/input";
 import { Label } from "../../core/components/ui/label";
+import { Checkbox } from "../../core/components/ui/checkbox";
 import { useCompleteProfile } from "../hooks/useCompleteProfile";
 import { useAppSelector } from "../../../store/hooks";
 import { X } from "lucide-react";
@@ -18,12 +19,14 @@ function CompleteProfilePage() {
     errors,
     loading,
     skillInput,
-    interestInput,
+    otherInterest,
+    predefinedInterests,
     setSkillInput,
-    setInterestInput,
+    setOtherInterest,
     handleChange,
     handleSkillKeyDown,
-    handleInterestKeyDown,
+    handleInterestCheckbox,
+    handleOtherInterestKeyDown,
     removeSkill,
     removeInterest,
     handleSubmit,
@@ -159,9 +162,11 @@ function CompleteProfilePage() {
 
               {/* Interests */}
               <div className="grid gap-2">
-                <Label htmlFor="interestInput">Interests</Label>
+                <Label>Interests</Label>
+
+                {/* Display selected interests as tags */}
                 {form.interests.length > 0 && (
-                  <div className="flex flex-wrap gap-2">
+                  <div className="flex flex-wrap gap-2 mb-2">
                     {form.interests.map((interest) => (
                       <span
                         key={interest}
@@ -180,20 +185,43 @@ function CompleteProfilePage() {
                     ))}
                   </div>
                 )}
-                <Input
-                  id="interestInput"
-                  type="text"
-                  placeholder="Type an interest and press Enter"
-                  value={interestInput}
-                  onChange={(e) => setInterestInput(e.target.value)}
-                  onKeyDown={handleInterestKeyDown}
-                  disabled={loading}
-                />
+
+                {/* Predefined interest checkboxes */}
+                <div className="grid grid-cols-2 gap-3">
+                  {predefinedInterests.map((interest) => (
+                    <Checkbox
+                      key={interest}
+                      id={`interest-${interest}`}
+                      label={interest}
+                      checked={form.interests.includes(interest)}
+                      onChange={() => handleInterestCheckbox(interest)}
+                      disabled={loading}
+                    />
+                  ))}
+                </div>
+
+                {/* Other interest input */}
+                <div className="mt-2">
+                  <Label htmlFor="otherInterest" className="text-xs">
+                    Other (specify)
+                  </Label>
+                  <Input
+                    id="otherInterest"
+                    type="text"
+                    placeholder="Type other interest and press Enter"
+                    value={otherInterest}
+                    onChange={(e) => setOtherInterest(e.target.value)}
+                    onKeyDown={handleOtherInterestKeyDown}
+                    disabled={loading}
+                    className="mt-1"
+                  />
+                </div>
+
                 {errors.interests ? (
                   <p className="text-sm text-red-500">{errors.interests}</p>
                 ) : (
                   <p className="text-xs text-muted-foreground">
-                    Press Enter or comma after each interest
+                    Select from options or add your own
                   </p>
                 )}
               </div>
