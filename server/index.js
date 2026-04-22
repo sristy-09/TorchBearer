@@ -10,6 +10,7 @@ import spaceRoutes from "./routes/Space.js";
 import postRoutes from "./routes/Post.js";
 import commentRoutes from "./routes/commentRoutes.js";
 import userRoutes from "./routes/User.js";
+import recommendRoutes from "./routes/recommendRoutes.js";
 
 connectDB();
 
@@ -26,6 +27,7 @@ app.use("/api/topics", topicRoutes); // Topic routes
 app.use("/api/posts", postRoutes);
 app.use("/api/comments", commentRoutes);
 app.use("/api/auth", userRoutes);
+app.use("/api/recommend", recommendRoutes)
 
 // Default route
 app.get("/", (req, res) => {
