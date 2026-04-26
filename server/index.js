@@ -37,6 +37,7 @@ app.use("/api/posts", postRoutes);
 app.use("/api/comments", commentRoutes);
 app.use("/api/auth", userRoutes);
 
+
 // Default route
 app.get("/", (req, res) => {
   res.send("TorchBearer API is running...");
