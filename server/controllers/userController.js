@@ -28,17 +28,7 @@ const sendTokenResponse = (user, statusCode, res) => {
    ========================================= */
 export const register = async (req, res) => {
   try {
-    const {
-      name,
-      email,
-      password,
-      role,
-      batchYear,
-      registrationNumber,
-      department,
-      skills,
-      interests,
-    } = req.body;
+    const { name, email, password } = req.body;
 
     // Check if email already taken
     const existingUser = await User.findOne({ email });
@@ -53,12 +43,6 @@ export const register = async (req, res) => {
       name,
       email,
       password, // hashed automatically by pre-save hook in model
-      role,
-      batchYear,
-      registrationNumber,
-      department,
-      skills,
-      interests,
     });
 
     sendTokenResponse(user, 201, res);
@@ -163,7 +147,7 @@ export const updateProfile = async (req, res) => {
     });
 
     const updatedUser = await User.findByIdAndUpdate(req.user._id, updates, {
-      new: true,
+      returnDocument: 'after',
       runValidators: true,
     });
 
@@ -287,6 +271,109 @@ export const getUserById = async (req, res) => {
       data: { user },
     });
   } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
+/* =========================================
+   8. COMPLETE PROFILE
+   PUT /api/auth/complete-profile
+   Requires: protect middleware
+   Body: { role, batchYear, registrationNumber,
+           department, skills, interests }
+   ========================================= */
+export const completeProfile = async (req, res) => {
+  try {
+    const {
+      role,
+      batchYear,
+      registrationNumber,
+      department,
+      skills,
+      interests,
+    } = req.body;
+
+    // Manual validation on backend (Zod is frontend-only here)
+    const errors = [];
+
+    if (!role || !["student", "alumni"].includes(role)) {
+      errors.push("Role must be either student or alumni.");
+    }
+
+    if (
+      !batchYear ||
+      isNaN(Number(batchYear)) ||
+      Number(batchYear) < 1900 ||
+      Number(batchYear) > new Date().getFullYear() + 5
+    ) {
+      errors.push("Please provide a valid batch year.");
+    }
+
+    if (
+      !registrationNumber ||
+      isNaN(Number(registrationNumber)) ||
+      Number(registrationNumber) <= 0
+    ) {
+      errors.push("Please provide a valid registration number.");
+    }
+
+    if (!department || typeof department !== "string" || !department.trim()) {
+      errors.push("Department is required.");
+    }
+
+    if (skills !== undefined && !Array.isArray(skills)) {
+      errors.push("Skills must be an array.");
+    }
+
+    if (interests !== undefined && !Array.isArray(interests)) {
+      errors.push("Interests must be an array.");
+    }
+
+    if (errors.length > 0) {
+      return res.status(400).json({
+        success: false,
+        message: errors.join(" "),
+      });
+    }
+
+    // Check if profile already completed (role already set)
+    const existingUser = await User.findById(req.user._id);
+    if (existingUser.role) {
+      return res.status(400).json({
+        success: false,
+        message: "Profile is already completed.",
+      });
+    }
+
+    const updatedUser = await User.findByIdAndUpdate(
+      req.user._id,
+      {
+        role,
+        batchYear: Number(batchYear),
+        registrationNumber: Number(registrationNumber),
+        department: department.trim(),
+        skills: skills ?? [],
+        interests: interests ?? [],
+      },
+      { returnDocument: 'after', runValidators: true },
+    );
+
+    res.status(200).json({
+      success: true,
+      message: "Profile completed successfully.",
+      data: { user: updatedUser },
+    });
+  } catch (error) {
+    if (error.name === "ValidationError") {
+      const messages = Object.values(error.errors).map((e) => e.message);
+      return res.status(400).json({
+        success: false,
+        message: messages.join(". "),
+      });
+    }
     res.status(500).json({
       success: false,
       message: error.message,
