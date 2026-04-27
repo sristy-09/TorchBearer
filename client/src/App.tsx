@@ -5,12 +5,21 @@ import AuthRoute from "./feature/core/components/ProtectedRoutes";
 import SignUpPage from "./feature/Auth/components/SignupPage";
 import CompleteProfilePage from "./feature/Auth/components/CompleteProfilePage";
 import HomePage from "./pages/components/HomePage";
+import LandingPage from "./pages/components/LandingPage";
 
 const App = () => {
   return (
     <div>
       <Router>
         <Routes>
+          <Route
+            path="/"
+            element={
+              <AuthRoute mode="guest">
+                <LandingPage />
+              </AuthRoute>
+            }
+          />
           <Route
             path="/dashboard"
             element={
@@ -51,4 +60,4 @@ const App = () => {
   );
 };
 
-
+export default App;
