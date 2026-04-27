@@ -13,6 +13,14 @@ const sendTokenResponse = (user, statusCode, res) => {
   // Strip password from response even though select:false handles most cases
   user.password = undefined;
 
+  // Set secure cookie options for production
+  const cookieOptions = {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: "strict",
+    maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+  };
+
   res.status(statusCode).json({
     success: true,
     token,
