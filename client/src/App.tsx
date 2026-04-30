@@ -7,12 +7,12 @@ import SignUpPage from "./feature/Auth/components/SignupPage";
 import CompleteProfilePage from "./feature/Auth/components/CompleteProfilePage";
 import HomePage from "./pages/components/HomePage";
 import LandingPage from "./pages/components/LandingPage";
-import { useAppDispatch, useAppSelector } from "./store/hooks";
+import SpaceTopicsPage from "./pages/components/SpaceTopicsPage";
+import { useAppDispatch } from "./store/hooks";
 import { fetchCurrentUser } from "./store/Slice/authSlice";
 
 const App = () => {
   const dispatch = useAppDispatch();
-  const { token } = useAppSelector((state) => state.auth);
 
   // Verify token on app load
   useEffect(() => {
@@ -44,6 +44,22 @@ const App = () => {
             element={
               <AuthRoute mode="private">
                 <HomePage />
+              </AuthRoute>
+            }
+          />
+          <Route
+            path="/dashboard"
+            element={
+              <AuthRoute mode="private">
+                <HomePage />
+              </AuthRoute>
+            }
+          />
+          <Route
+            path="/space/:spaceId/topics"
+            element={
+              <AuthRoute mode="private">
+                <SpaceTopicsPage />
               </AuthRoute>
             }
           />
