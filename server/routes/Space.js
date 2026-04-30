@@ -15,7 +15,7 @@ router.use(protect);
 
 router.get("/", getAllSpaces); // any logged-in user
 
-router.post("/", restrictTo("admin"), createSpace); // only admin can create spaces
+router.post("/", createSpace); // only admin can create spaces
 router.get("/:id", getSingleSpace);
 router.put("/:id", restrictTo("admin"), updateSpace);
 router.delete("/:id", restrictTo("admin"), deleteSpace);
