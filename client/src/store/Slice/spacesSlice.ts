@@ -1,8 +1,6 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
-import axios from "axios";
 import type { Space } from "../../feature/Spaces/types/space";
-
-const API_URL = import.meta.env.VITE_API_URL;
+import { apiClient } from "./authSlice";
 
 interface SpacesState {
   spaces: Space[];
@@ -20,7 +18,7 @@ export const fetchSpaces = createAsyncThunk(
   "spaces/fetchSpaces",
   async (_, { rejectWithValue }) => {
     try {
-      const res = await axios.get(`${API_URL}/api/spaces`);
+      const res = await apiClient.get("/api/spaces");
       return res.data.data;
     } catch (err: any) {
       return rejectWithValue(
@@ -33,15 +31,15 @@ export const fetchSpaces = createAsyncThunk(
 export const createSpace = createAsyncThunk(
   "spaces/createSpace",
   async (
-    data: { 
-        title: string; 
-        description: string
-        tags?: string[];
-     },
+    data: {
+      title: string;
+      description: string
+      tags?: string[];
+    },
     { rejectWithValue }
   ) => {
     try {
-      const res = await axios.post(`${API_URL}/api/spaces`, data);
+      const res = await apiClient.post("/api/spaces", data);
       return res.data.data;
     } catch (err: any) {
       return rejectWithValue(
