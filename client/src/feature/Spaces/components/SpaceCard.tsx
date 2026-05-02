@@ -1,3 +1,4 @@
+import { useNavigate } from "react-router";
 import type { Space } from "../types/space";
 
 interface Props {
@@ -5,8 +6,17 @@ interface Props {
 }
 
 export default function SpaceCard({ space }: Props) {
+  const navigate = useNavigate();
+
+  const handleClick = () => {
+    navigate(`/space/${space._id}/topics`);
+  };
+
   return (
-    <div className="rounded-2xl border p-5 bg-white shadow-sm hover:shadow-md transition">
+    <div
+      onClick={handleClick}
+      className="rounded-2xl border p-5 bg-white shadow-sm hover:shadow-md transition cursor-pointer"
+    >
       <h2 className="font-bold text-xl">
         {space.title}
       </h2>
