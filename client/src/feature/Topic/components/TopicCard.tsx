@@ -1,3 +1,4 @@
+import { useNavigate } from "react-router";
 import type { Topic } from "../types/topic";
 
 interface Props {
@@ -5,8 +6,17 @@ interface Props {
 }
 
 export default function TopicCard({ topic }: Props) {
+  const navigate = useNavigate();
+
+  const handleClick = () => {
+    navigate(`/space/${topic.space._id}/topic/${topic._id}/posts`);
+  };
+
   return (
-    <div className="rounded-2xl border p-5 bg-white shadow-sm hover:shadow-md transition cursor-pointer">
+    <div
+      onClick={handleClick}
+      className="rounded-2xl border p-5 bg-white shadow-sm hover:shadow-md transition cursor-pointer"
+    >
       <h2 className="font-bold text-xl">
         {topic.title}
       </h2>
