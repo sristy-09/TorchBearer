@@ -8,7 +8,7 @@ export const useTopics = (spaceId: string | undefined) => {
 
   useEffect(() => {
     if (spaceId) {
-      dispatch(fetchTopicsBySpace(spaceId));
+      dispatch(fetchTopicsBySpace({ spaceId }));
     }
   }, [dispatch, spaceId]);
 

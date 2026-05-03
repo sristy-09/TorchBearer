@@ -6,7 +6,7 @@ import { Input } from "../../feature/core/components/ui/input";
 import CreateTopicDialog from "../../feature/Topic/components/CreateTopicDialog";
 import TopicsGrid from "../../feature/Topic/components/TopicsGrid";
 import { useAppDispatch, useAppSelector } from "../../store/hooks";
-import { fetchTopicsBySpace } from "../../store/Slice/topicsSlice";
+import { fetchTopicsBySpace, setSearchQuery, setSortBy } from "../../store/Slice/topicsSlice";
 import {
   Select,
   SelectContent,
@@ -22,13 +22,24 @@ export default function SpaceTopicsPage() {
   const dispatch = useAppDispatch();
 
   const { spaces } = useAppSelector((state) => state.spaces);
+  const { searchQuery, sortBy } = useAppSelector((state) => state.topics);
   const currentSpace = spaces.find((s) => s._id === spaceId);
 
+  // Fetch topics with search query (debounced)
   useEffect(() => {
-    if (spaceId) {
-      dispatch(fetchTopicsBySpace(spaceId));
-    }
-  }, [dispatch, spaceId]);
+    if (!spaceId) return;
+
+    const timer = setTimeout(() => {
+      dispatch(
+        fetchTopicsBySpace({
+          spaceId,
+          keyword: searchQuery || undefined,
+        })
+      );
+    }, 500); // Debounce search by 500ms
+
+    return () => clearTimeout(timer);
+  }, [dispatch, spaceId, searchQuery]);
 
   return (
     <div className="flex h-screen bg-gray-50">
@@ -78,26 +89,25 @@ export default function SpaceTopicsPage() {
 
               {/* Search + Filters */}
               <div className="flex flex-wrap gap-3 items-center">
-                <Input placeholder="🔍 Search topics..." className="w-72" />
+                <Input
+                  placeholder="🔍 Search topics..."
+                  className="w-72"
+                  value={searchQuery}
+                  onChange={(e) => dispatch(setSearchQuery(e.target.value))}
+                />
 
-                <Select defaultValue="all">
-                  <SelectTrigger className="w-40">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">All topics</SelectItem>
-                    <SelectItem value="my">My topics</SelectItem>
-                  </SelectContent>
-                </Select>
-
-                <Select defaultValue="latest">
+                <Select
+                  value={sortBy}
+                  onValueChange={(value: "latest" | "name") =>
+                    dispatch(setSortBy(value))
+                  }
+                >
                   <SelectTrigger className="w-40">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="latest">Latest</SelectItem>
                     <SelectItem value="name">Name</SelectItem>
-                    <SelectItem value="popular">Most Popular</SelectItem>
                   </SelectContent>
                 </Select>
               </div>

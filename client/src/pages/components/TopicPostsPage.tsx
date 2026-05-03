@@ -6,7 +6,7 @@ import { Input } from "../../feature/core/components/ui/input";
 import CreatePostDialog from "../../feature/Post/components/CreatePostDialog";
 import PostsList from "../../feature/Post/components/PostsList";
 import { useAppDispatch, useAppSelector } from "../../store/hooks";
-import { fetchPostsByTopic } from "../../store/Slice/postsSlice";
+import { fetchPostsByTopic, setSearchQuery, setSortBy } from "../../store/Slice/postsSlice";
 import {
   Select,
   SelectContent,
@@ -22,13 +22,24 @@ export default function TopicPostsPage() {
   const dispatch = useAppDispatch();
 
   const { topics } = useAppSelector((state) => state.topics);
+  const { searchQuery, sortBy } = useAppSelector((state) => state.posts);
   const currentTopic = topics.find((t) => t._id === topicId);
 
+  // Fetch posts with search query (debounced)
   useEffect(() => {
-    if (topicId) {
-      dispatch(fetchPostsByTopic(topicId));
-    }
-  }, [dispatch, topicId]);
+    if (!topicId) return;
+
+    const timer = setTimeout(() => {
+      dispatch(
+        fetchPostsByTopic({
+          topicId,
+          keyword: searchQuery || undefined,
+        })
+      );
+    }, 500); // Debounce search by 500ms
+
+    return () => clearTimeout(timer);
+  }, [dispatch, topicId, searchQuery]);
 
   return (
     <div className="flex h-screen bg-gray-50">
@@ -83,26 +94,25 @@ export default function TopicPostsPage() {
 
               {/* Search + Filters */}
               <div className="flex flex-wrap gap-3 items-center">
-                <Input placeholder="🔍 Search posts..." className="w-72" />
+                <Input
+                  placeholder="🔍 Search posts..."
+                  className="w-72"
+                  value={searchQuery}
+                  onChange={(e) => dispatch(setSearchQuery(e.target.value))}
+                />
 
-                <Select defaultValue="latest">
+                <Select
+                  value={sortBy}
+                  onValueChange={(value: "latest" | "popular") =>
+                    dispatch(setSortBy(value))
+                  }
+                >
                   <SelectTrigger className="w-40">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="latest">Latest</SelectItem>
-                    <SelectItem value="oldest">Oldest</SelectItem>
                     <SelectItem value="popular">Most Popular</SelectItem>
-                  </SelectContent>
-                </Select>
-
-                <Select defaultValue="all">
-                  <SelectTrigger className="w-40">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">All posts</SelectItem>
-                    <SelectItem value="my">My posts</SelectItem>
                   </SelectContent>
                 </Select>
               </div>

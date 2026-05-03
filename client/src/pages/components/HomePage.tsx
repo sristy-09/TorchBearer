@@ -5,8 +5,8 @@ import { Input } from "../../feature/core/components/ui/input";
 import CreateSpaceDialog from "../../feature/Spaces/components/CreateSpaceDialog";
 import SpacesGrid from "../../feature/Spaces/components/SpacesGrid";
 
-import { useAppDispatch } from "../../store/hooks";
-import { fetchSpaces } from "../../store/Slice/spacesSlice";
+import { useAppDispatch, useAppSelector } from "../../store/hooks";
+import { fetchSpaces, setSearchQuery, setFilterType, setSortBy } from "../../store/Slice/spacesSlice";
 
 import {
   Select,
@@ -19,9 +19,10 @@ import { Compass } from "lucide-react";
 
 export default function HomePage() {
   const dispatch = useAppDispatch();
+  const { searchQuery, filterType, sortBy } = useAppSelector((state) => state.spaces);
 
   useEffect(() => {
-    dispatch(fetchSpaces());
+    dispatch(fetchSpaces({}));
   }, [dispatch]);
 
   return (
@@ -96,11 +97,21 @@ export default function HomePage() {
                 <CreateSpaceDialog />
               </div>
 
-              {/* Search + Filters (LIKE YOUR SCREENSHOT) */}
+              {/* Search + Filters */}
               <div className="flex flex-wrap gap-3 items-center">
-                <Input placeholder="🔍Search spaces..." className="w-72" />
+                <Input
+                  placeholder="🔍 Search spaces..."
+                  className="w-72"
+                  value={searchQuery}
+                  onChange={(e) => dispatch(setSearchQuery(e.target.value))}
+                />
 
-                <Select defaultValue="all">
+                <Select
+                  value={filterType}
+                  onValueChange={(value: "all" | "my" | "joined") =>
+                    dispatch(setFilterType(value))
+                  }
+                >
                   <SelectTrigger className="w-40">
                     <SelectValue />
                   </SelectTrigger>
@@ -111,7 +122,12 @@ export default function HomePage() {
                   </SelectContent>
                 </Select>
 
-                <Select defaultValue="latest">
+                <Select
+                  value={sortBy}
+                  onValueChange={(value: "latest" | "name") =>
+                    dispatch(setSortBy(value))
+                  }
+                >
                   <SelectTrigger className="w-40">
                     <SelectValue />
                   </SelectTrigger>

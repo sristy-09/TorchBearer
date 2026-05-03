@@ -8,7 +8,7 @@ export const usePosts = (topicId: string | undefined) => {
 
   useEffect(() => {
     if (topicId) {
-      dispatch(fetchPostsByTopic(topicId));
+      dispatch(fetchPostsByTopic({ topicId }));
     }
   }, [dispatch, topicId]);
 

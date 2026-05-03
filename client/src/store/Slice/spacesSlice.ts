@@ -6,19 +6,40 @@ interface SpacesState {
   spaces: Space[];
   loading: boolean;
   error: string | null;
+  searchQuery: string;
+  filterType: "all" | "my" | "joined";
+  sortBy: "latest" | "name";
 }
 
 const initialState: SpacesState = {
   spaces: [],
   loading: false,
   error: null,
+  searchQuery: "",
+  filterType: "all",
+  sortBy: "latest",
 };
 
 export const fetchSpaces = createAsyncThunk(
   "spaces/fetchSpaces",
-  async (_, { rejectWithValue }) => {
+  async (params: { keyword?: string; page?: number; limit?: number } = {}, { rejectWithValue }) => {
     try {
-      const res = await apiClient.get("/api/spaces");
+      const queryParams = new URLSearchParams();
+
+      if (params.keyword) {
+        queryParams.append("keyword", params.keyword);
+      }
+      if (params.page) {
+        queryParams.append("page", params.page.toString());
+      }
+      if (params.limit) {
+        queryParams.append("limit", params.limit.toString());
+      }
+
+      const queryString = queryParams.toString();
+      const url = `/api/spaces${queryString ? `?${queryString}` : ""}`;
+
+      const res = await apiClient.get(url);
       return res.data.data;
     } catch (err: any) {
       return rejectWithValue(
@@ -52,7 +73,17 @@ export const createSpace = createAsyncThunk(
 const spacesSlice = createSlice({
   name: "spaces",
   initialState,
-  reducers: {},
+  reducers: {
+    setSearchQuery: (state, action) => {
+      state.searchQuery = action.payload;
+    },
+    setFilterType: (state, action) => {
+      state.filterType = action.payload;
+    },
+    setSortBy: (state, action) => {
+      state.sortBy = action.payload;
+    },
+  },
 
   extraReducers: (builder) => {
     builder
@@ -76,4 +107,5 @@ const spacesSlice = createSlice({
   },
 });
 
+export const { setSearchQuery, setFilterType, setSortBy } = spacesSlice.actions;
 export default spacesSlice.reducer;

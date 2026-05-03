@@ -7,6 +7,8 @@ interface PostsState {
   loading: boolean;
   error: string | null;
   currentTopicId: string | null;
+  searchQuery: string;
+  sortBy: "latest" | "popular";
 }
 
 const initialState: PostsState = {
@@ -14,14 +16,32 @@ const initialState: PostsState = {
   loading: false,
   error: null,
   currentTopicId: null,
+  searchQuery: "",
+  sortBy: "latest",
 };
 
 export const fetchPostsByTopic = createAsyncThunk(
   "posts/fetchPostsByTopic",
-  async (topicId: string, { rejectWithValue }) => {
+  async (
+    params: { topicId: string; keyword?: string; page?: number; limit?: number },
+    { rejectWithValue }
+  ) => {
     try {
-      const res = await apiClient.get(`/api/posts?topic=${topicId}`);
-      return { posts: res.data.data, topicId };
+      const queryParams = new URLSearchParams();
+      queryParams.append("topic", params.topicId);
+
+      if (params.keyword) {
+        queryParams.append("keyword", params.keyword);
+      }
+      if (params.page) {
+        queryParams.append("page", params.page.toString());
+      }
+      if (params.limit) {
+        queryParams.append("limit", params.limit.toString());
+      }
+
+      const res = await apiClient.get(`/api/posts?${queryParams.toString()}`);
+      return { posts: res.data.data, topicId: params.topicId };
     } catch (err: any) {
       return rejectWithValue(
         err.response?.data?.message || "Failed to fetch posts"
@@ -75,6 +95,12 @@ const postsSlice = createSlice({
       state.posts = [];
       state.currentTopicId = null;
     },
+    setSearchQuery: (state, action) => {
+      state.searchQuery = action.payload;
+    },
+    setSortBy: (state, action) => {
+      state.sortBy = action.payload;
+    },
   },
 
   extraReducers: (builder) => {
@@ -114,5 +140,5 @@ const postsSlice = createSlice({
   },
 });
 
-export const { clearPosts } = postsSlice.actions;
+export const { clearPosts, setSearchQuery, setSortBy } = postsSlice.actions;
 export default postsSlice.reducer;

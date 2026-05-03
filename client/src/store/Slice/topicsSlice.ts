@@ -7,6 +7,8 @@ interface TopicsState {
   loading: boolean;
   error: string | null;
   currentSpaceId: string | null;
+  searchQuery: string;
+  sortBy: "latest" | "name";
 }
 
 const initialState: TopicsState = {
@@ -14,14 +16,32 @@ const initialState: TopicsState = {
   loading: false,
   error: null,
   currentSpaceId: null,
+  searchQuery: "",
+  sortBy: "latest",
 };
 
 export const fetchTopicsBySpace = createAsyncThunk(
   "topics/fetchTopicsBySpace",
-  async (spaceId: string, { rejectWithValue }) => {
+  async (
+    params: { spaceId: string; keyword?: string; page?: number; limit?: number },
+    { rejectWithValue }
+  ) => {
     try {
-      const res = await apiClient.get(`/api/topics?space=${spaceId}`);
-      return { topics: res.data.data, spaceId };
+      const queryParams = new URLSearchParams();
+      queryParams.append("space", params.spaceId);
+
+      if (params.keyword) {
+        queryParams.append("keyword", params.keyword);
+      }
+      if (params.page) {
+        queryParams.append("page", params.page.toString());
+      }
+      if (params.limit) {
+        queryParams.append("limit", params.limit.toString());
+      }
+
+      const res = await apiClient.get(`/api/topics?${queryParams.toString()}`);
+      return { topics: res.data.data, spaceId: params.spaceId };
     } catch (err: any) {
       return rejectWithValue(
         err.response?.data?.message || "Failed to fetch topics"
@@ -59,6 +79,12 @@ const topicsSlice = createSlice({
       state.topics = [];
       state.currentSpaceId = null;
     },
+    setSearchQuery: (state, action) => {
+      state.searchQuery = action.payload;
+    },
+    setSortBy: (state, action) => {
+      state.sortBy = action.payload;
+    },
   },
 
   extraReducers: (builder) => {
@@ -84,5 +110,5 @@ const topicsSlice = createSlice({
   },
 });
 
-export const { clearTopics } = topicsSlice.actions;
+export const { clearTopics, setSearchQuery, setSortBy } = topicsSlice.actions;
 export default topicsSlice.reducer;
