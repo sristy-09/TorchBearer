@@ -28,9 +28,9 @@ function SignUpPage() {
             <CardAction>
               <Button
                 variant="link"
-                className=" text-white bg-[#c084fc] hover:bg-[#6b21a8]"
+                className=" text-white bg-[#c084fc] hover:bg-[#6b21a8] cursor-pointer"
               >
-                <Link to={"/login"}>Log In</Link>
+                <Link to={"/login"} className="cursor-pointer">Log In</Link>
               </Button>
             </CardAction>
           </CardHeader>
@@ -99,7 +99,7 @@ function SignUpPage() {
             <Button
               onClick={() => window.open(`${API_URL}/api/auth/google`, "_self")}
               variant="outline"
-              className="w-full"
+              className="w-full cursor-pointer"
               disabled={loading}
             >
               <FaGoogle />

@@ -41,7 +41,7 @@ export default function LandingPage() {
             <a
               key={link.name}
               href={link.href}
-              className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+              className="text-sm text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
             >
               {link.name}
             </a>
@@ -51,18 +51,18 @@ export default function LandingPage() {
         <div className="flex items-center gap-2">
           <button
             onClick={() => setDark(!dark)}
-            className="p-2 rounded-md border border-border"
+            className="p-2 rounded-md border border-border cursor-pointer"
           >
             {dark ? <Sun size={16} /> : <Moon size={16} />}
           </button>
 
-          <Link to="/login">
+          <Link to="/login" className="cursor-pointer">
             <Button variant="ghost" size="sm">
               Login
             </Button>
           </Link>
 
-          <Link to="/signup">
+          <Link to="/signup" className="cursor-pointer">
             <Button size="sm" className="px-4">
               Sign Up
             </Button>
@@ -117,7 +117,7 @@ export default function LandingPage() {
           <div key={i} className="border-b py-4">
             <button
               onClick={() => setOpenFAQ(openFAQ === i ? null : i)}
-              className="w-full text-left font-medium"
+              className="w-full text-left font-medium cursor-pointer"
             >
               {item.q}
             </button>
@@ -139,14 +139,14 @@ export default function LandingPage() {
           <div className="flex gap-8">
             <div className="flex flex-col gap-2">
               <span className="font-medium text-foreground"> Product </span>
-              <a href="#">Features</a>
-              <a href="#">Pricing</a>
+              <a href="#" className="cursor-pointer hover:text-foreground transition-colors">Features</a>
+              <a href="#" className="cursor-pointer hover:text-foreground transition-colors">Pricing</a>
             </div>
 
             <div className="flex flex-col gap-2">
               <span className="font-medium text-foreground">Legal</span>
-              <a href="#">Privacy</a>
-              <a href="#">Terms</a>
+              <a href="#" className="cursor-pointer hover:text-foreground transition-colors">Privacy</a>
+              <a href="#" className="cursor-pointer hover:text-foreground transition-colors">Terms</a>
             </div>
           </div>
         </div>

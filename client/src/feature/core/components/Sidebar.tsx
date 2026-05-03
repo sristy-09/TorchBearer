@@ -42,7 +42,7 @@ export default function Sidebar() {
           </p>
         </div>
 
-        <button className="ml-auto text-gray-600 hover:text-gray-800">
+        <button className="ml-auto text-gray-600 hover:text-gray-800 cursor-pointer">
           <Plus size={20} />
         </button>
       </div>
@@ -72,7 +72,7 @@ export default function Sidebar() {
 
         <div className="px-4 mt-6 mb-2 text-xs font-semibold text-gray-600 tracking-widest flex items-center justify-between">
           SPACES
-          <button className="hover:text-gray-700">
+          <button className="hover:text-gray-700 cursor-pointer">
             <Plus size={18} />
           </button>
         </div>
@@ -102,7 +102,7 @@ export default function Sidebar() {
         {user && (
           <button
             onClick={toggleMenu}
-            className="w-full px-4 py-3 flex items-center gap-3 hover:bg-gray-50 transition-colors"
+            className="w-full px-4 py-3 flex items-center gap-3 hover:bg-gray-50 transition-colors cursor-pointer"
           >
             <Avatar name={user.name} avatarUrl={user.avatar} size="md" />
             <div className="flex-1 min-w-0 text-left">
