@@ -27,7 +27,7 @@ export default function SpacesGrid() {
     // Apply filter type (client-side only)
     if (filterType === "my" && currentUser) {
       filtered = filtered.filter(
-        (space) => space.createdBy._id === currentUser._id
+        (space) => space.createdBy?._id === currentUser._id
       );
     } else if (filterType === "joined" && currentUser) {
       filtered = filtered.filter((space) =>
@@ -51,11 +51,19 @@ export default function SpacesGrid() {
   if (loading) return <p>Loading spaces...</p>;
 
   if (filteredAndSortedSpaces.length === 0) {
+    let message = "No spaces available.";
+
+    if (searchQuery) {
+      message = "No spaces found matching your search.";
+    } else if (filterType === "my") {
+      message = "You haven't created any spaces yet.";
+    } else if (filterType === "joined") {
+      message = "You haven't joined any spaces yet.";
+    }
+
     return (
       <div className="text-center py-12">
-        <p className="text-gray-500 text-lg">
-          {searchQuery ? "No spaces found matching your search." : "No spaces available."}
-        </p>
+        <p className="text-gray-500 text-lg">{message}</p>
       </div>
     );
   }
