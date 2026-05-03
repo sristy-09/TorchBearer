@@ -4,6 +4,7 @@ import { likePost } from "../../../store/Slice/postsSlice";
 import type { Post } from "../types/post";
 import { Heart, MessageCircle, Calendar } from "lucide-react";
 import { Button } from "../../core/components/ui/button";
+import { Avatar } from "../../core/components/ui/avatar";
 
 interface Props {
   post: Post;
@@ -36,7 +37,13 @@ export default function PostCard({ post }: Props) {
   return (
     <div className="bg-white rounded-lg border shadow-sm p-6 hover:shadow-md transition">
       {/* Header */}
-      <div className="flex items-start justify-between mb-4">
+      <div className="flex items-start gap-3 mb-4">
+        <Avatar
+          name={post.author.name}
+          avatarUrl={post.author.avatar}
+          size="md"
+        />
+
         <div className="flex-1">
           <h3 className="text-xl font-bold text-gray-900 mb-2">
             {post.title}

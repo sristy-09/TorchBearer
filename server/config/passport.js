@@ -16,7 +16,15 @@ passport.use(
         // 1. Check if user already exists by googleId
         let user = await User.findOne({ googleId: profile.id });
 
-        if (user) return done(null, { user, isNew: false });
+        if (user) {
+          // Update avatar if it's changed or missing
+          const googleAvatar = profile.photos?.[0]?.value || "";
+          if (googleAvatar && user.avatar !== googleAvatar) {
+            user.avatar = googleAvatar;
+            await user.save();
+          }
+          return done(null, { user, isNew: false });
+        }
 
         // 2. Check if an account with same email already exists (manual signup)
         user = await User.findOne({ email: profile.emails[0].value });
@@ -24,7 +32,10 @@ passport.use(
         if (user) {
           // Link Google to existing account
           user.googleId = profile.id;
-          if (!user.avatar) user.avatar = profile.photos[0]?.value || "";
+          // Set avatar from Google if user doesn't have one
+          if (!user.avatar) {
+            user.avatar = profile.photos?.[0]?.value || "";
+          }
           await user.save();
           return done(null, { user, isNew: false });
         }
@@ -34,7 +45,7 @@ passport.use(
           googleId: profile.id,
           name: profile.displayName,
           email: profile.emails[0].value,
-          avatar: profile.photos[0]?.value || "",
+          avatar: profile.photos?.[0]?.value || "",
           // no role, no password - user must complete profile after first login
         });
 

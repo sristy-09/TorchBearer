@@ -40,7 +40,7 @@ export const createPost = async (req, res) => {
     });
 
     const populated = await newPost.populate([
-      { path: "author", select: "name role" },
+      { path: "author", select: "name role avatar" },
       { path: "topic", select: "title" },
       { path: "space", select: "title" },
     ]);
@@ -76,7 +76,7 @@ export const getPosts = async (req, res) => {
       .paginate();
 
     const posts = await api.query
-      .populate("author", "name role")
+      .populate("author", "name role avatar")
       .populate("topic", "title")
       .populate("space", "title")
       .sort({ createdAt: -1 });
@@ -101,7 +101,7 @@ export const getPosts = async (req, res) => {
 export const getPostById = async (req, res) => {
   try {
     const post = await Post.findById(req.params.id)
-      .populate("author", "name role")
+      .populate("author", "name role avatar")
       .populate("topic", "title")
       .populate("space", "title");
 
@@ -148,7 +148,7 @@ export const updatePost = async (req, res) => {
       { title, content, description, image },
       { returnDocument: 'after', runValidators: true },
     )
-      .populate("author", "name role")
+      .populate("author", "name role avatar")
       .populate("topic", "title")
       .populate("space", "title");
 

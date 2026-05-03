@@ -3,6 +3,7 @@ import { useAppDispatch, useAppSelector } from "../../../store/hooks";
 import { logoutUser } from "../../../store/Slice/authSlice";
 import { useNavigate } from "react-router";
 import { useState } from "react";
+import { Avatar } from "./ui/avatar";
 
 export default function Sidebar() {
   const dispatch = useAppDispatch();
@@ -24,16 +25,6 @@ export default function Sidebar() {
 
   const toggleMenu = () => {
     setIsMenuOpen(!isMenuOpen);
-  };
-
-  // Get user initials for avatar
-  const getInitials = (name: string) => {
-    return name
-      .split(" ")
-      .map((n) => n[0])
-      .join("")
-      .toUpperCase()
-      .slice(0, 2);
   };
 
   return (
@@ -113,17 +104,7 @@ export default function Sidebar() {
             onClick={toggleMenu}
             className="w-full px-4 py-3 flex items-center gap-3 hover:bg-gray-50 transition-colors"
           >
-            <div className="w-10 h-10 bg-gray-400 rounded-full flex items-center justify-center text-white font-semibold text-sm flex-shrink-0">
-              {user.avatar ? (
-                <img
-                  src={user.avatar}
-                  alt={user.name}
-                  className="w-full h-full rounded-full object-cover"
-                />
-              ) : (
-                getInitials(user.name)
-              )}
-            </div>
+            <Avatar name={user.name} avatarUrl={user.avatar} size="md" />
             <div className="flex-1 min-w-0 text-left">
               <p className="font-medium text-sm text-gray-900 truncate">
                 {user.name}

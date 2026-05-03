@@ -8,6 +8,7 @@ export interface Post {
     _id: string;
     name: string;
     role: string;
+    avatar?: string;
   };
   topic: {
     _id: string;
