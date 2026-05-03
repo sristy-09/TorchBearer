@@ -118,6 +118,23 @@ export const completeUserProfile = createAsyncThunk(
   },
 );
 
+export const logoutUser = createAsyncThunk(
+  "auth/logout",
+  async (_, { rejectWithValue }) => {
+    try {
+      const res = await apiClient.post("/api/auth/logout");
+      return res.data; // { success, message }
+    } catch (err: unknown) {
+      if (axios.isAxiosError(err)) {
+        return rejectWithValue(
+          err.response?.data?.message || "Logout failed",
+        );
+      }
+      return rejectWithValue("Logout failed");
+    }
+  },
+);
+
 // ── Slice ─────────────────────────────────────────────────────
 
 // helper — check if user has completed profile
@@ -233,6 +250,31 @@ const authSlice = createSlice({
       .addCase(completeUserProfile.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload as string;
+      });
+
+    // logout
+    builder
+      .addCase(logoutUser.pending, (state) => {
+        state.loading = true;
+      })
+      .addCase(logoutUser.fulfilled, (state) => {
+        state.loading = false;
+        state.user = null;
+        state.token = null;
+        state.isAuthenticated = false;
+        state.isProfileComplete = false;
+        state.error = null;
+        localStorage.removeItem("token");
+      })
+      .addCase(logoutUser.rejected, (state) => {
+        // Even if API call fails, clear local state
+        state.loading = false;
+        state.user = null;
+        state.token = null;
+        state.isAuthenticated = false;
+        state.isProfileComplete = false;
+        state.error = null;
+        localStorage.removeItem("token");
       });
   },
 });

@@ -1,5 +1,6 @@
 import jwt from "jsonwebtoken";
 import { User } from "../models/User.js";
+import { TokenBlacklist } from "../models/TokenBlacklist.js";
 
 /* ─── Helper: sign a JWT and send it back ───────────────────── */
 const signToken = (id) =>
@@ -106,7 +107,47 @@ export const login = async (req, res) => {
 };
 
 /* =========================================
-   3. GET ME  (current logged-in user)
+   3. LOGOUT
+   POST /api/auth/logout
+   Requires: protect middleware
+   ========================================= */
+export const logout = async (req, res) => {
+  try {
+    // Get token from request (set by protect middleware)
+    const token = req.headers.authorization?.split(" ")[1];
+
+    if (!token) {
+      return res.status(400).json({
+        success: false,
+        message: "No token provided.",
+      });
+    }
+
+    // Decode token to get expiration time
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const expiresAt = new Date(decoded.exp * 1000);
+
+    // Add token to blacklist
+    await TokenBlacklist.create({
+      token,
+      userId: req.user._id,
+      expiresAt,
+    });
+
+    res.status(200).json({
+      success: true,
+      message: "Logged out successfully.",
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
+/* =========================================
+   4. GET ME  (current logged-in user)
    GET /api/auth/me
    Requires: protect middleware
    ========================================= */
@@ -128,7 +169,7 @@ export const getMe = async (req, res) => {
 };
 
 /* =========================================
-   4. UPDATE PROFILE
+   5. UPDATE PROFILE
    PUT /api/auth/update-profile
    Requires: protect middleware
    Body: { name, department, batchYear, registrationNumber,
@@ -180,7 +221,7 @@ export const updateProfile = async (req, res) => {
 };
 
 /* =========================================
-   5. CHANGE PASSWORD
+   6. CHANGE PASSWORD
    PUT /api/auth/change-password
    Requires: protect middleware
    Body: { currentPassword, newPassword }
@@ -228,7 +269,7 @@ export const changePassword = async (req, res) => {
 };
 
 /* =========================================
-   6. GET ALL USERS  (alumni-only or admin use)
+   7. GET ALL USERS  (alumni-only or admin use)
    GET /api/auth/users
    Requires: protect middleware
    Query params: ?role=alumni  ?department=CS  ?keyword=John
@@ -259,7 +300,7 @@ export const getAllUsers = async (req, res) => {
 };
 
 /* =========================================
-   7. GET SINGLE USER by ID
+   8. GET SINGLE USER by ID
    GET /api/auth/users/:id
    Requires: protect middleware
    ========================================= */
@@ -287,7 +328,7 @@ export const getUserById = async (req, res) => {
 };
 
 /* =========================================
-   8. COMPLETE PROFILE
+   9. COMPLETE PROFILE
    PUT /api/auth/complete-profile
    Requires: protect middleware
    Body: { role, batchYear, registrationNumber,

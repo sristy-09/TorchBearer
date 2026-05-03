@@ -1,5 +1,6 @@
 import jwt from "jsonwebtoken";
 import { User } from "../models/User.js";
+import { TokenBlacklist } from "../models/TokenBlacklist.js";
 
 /* =========================================
    protect  —  verifies JWT, attaches user to req
@@ -18,10 +19,19 @@ export const protect = async (req, res, next) => {
 
     const token = authHeader.split(" ")[1];
 
-    // 2. Verify token
+    // 2. Check if token is blacklisted (user logged out)
+    const blacklistedToken = await TokenBlacklist.findOne({ token });
+    if (blacklistedToken) {
+      return res.status(401).json({
+        success: false,
+        message: "Token has been invalidated. Please log in again.",
+      });
+    }
+
+    // 3. Verify token
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
-    // 3. Check user still exists
+    // 4. Check user still exists
     const user = await User.findById(decoded.id);
     if (!user) {
       return res.status(401).json({
@@ -30,7 +40,7 @@ export const protect = async (req, res, next) => {
       });
     }
 
-    // 4. Attach user to request for downstream use
+    // 5. Attach user to request for downstream use
     req.user = user;
     next();
   } catch (error) {

@@ -3,6 +3,7 @@ import jwt from "jsonwebtoken";
 import {
   register,
   login,
+  logout,
   getMe,
   updateProfile,
   changePassword,
@@ -20,6 +21,7 @@ router.post("/register", register);
 router.post("/login", login);
 
 /* ── Protected routes (valid JWT required) ─────────────────── */
+router.post("/logout", protect, logout);
 router.get("/me", protect, getMe);
 router.put("/update-profile", protect, updateProfile);
 router.put("/change-password", protect, changePassword);
