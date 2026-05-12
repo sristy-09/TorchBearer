@@ -222,26 +222,34 @@ export const likePost = async (req, res) => {
     }
 
     const userId = req.user._id.toString();
-    const alreadyLiked = post.likes.some((id) => id.toString() === userId);
+
+    const alreadyLiked = post.likes.some(
+      (id) => id.toString() === userId
+    );
 
     if (alreadyLiked) {
-      post.likes = post.likes.filter((id) => id.toString() !== userId);
+      post.likes = post.likes.filter(
+        (id) => id.toString() !== userId
+      );
     } else {
       post.likes.push(req.user._id);
     }
 
     await post.save();
 
+    const updatedPost = await Post.findById(post._id)
+      .populate("author", "name avatar role")
+      .populate("topic", "title")
+      .populate("space", "title");
+
     res.status(200).json({
       success: true,
-      liked: !alreadyLiked,
-      likesCount: post.likes.length,
+      data: updatedPost,
     });
   } catch (error) {
     res.status(500).json({
       success: false,
-      message: "Error updating like",
-      error: error.message,
+      message: error.message,
     });
   }
 };
