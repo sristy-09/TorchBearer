@@ -1,7 +1,6 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import type { Post } from "../../feature/Post/types/post";
 import { apiClient } from "./authSlice";
-
 interface PostsState {
   posts: Post[];
   loading: boolean;
@@ -30,17 +29,12 @@ export const fetchPostsByTopic = createAsyncThunk(
       const queryParams = new URLSearchParams();
       queryParams.append("topic", params.topicId);
 
-      if (params.keyword) {
-        queryParams.append("keyword", params.keyword);
-      }
-      if (params.page) {
-        queryParams.append("page", params.page.toString());
-      }
-      if (params.limit) {
-        queryParams.append("limit", params.limit.toString());
-      }
+      if (params.keyword) queryParams.append("keyword", params.keyword);
+      if (params.page) queryParams.append("page", params.page.toString());
+      if (params.limit) queryParams.append("limit", params.limit.toString());
 
       const res = await apiClient.get(`/api/posts?${queryParams.toString()}`);
+
       return { posts: res.data.data, topicId: params.topicId };
     } catch (err: any) {
       return rejectWithValue(
@@ -77,11 +71,31 @@ export const likePost = createAsyncThunk(
   "posts/likePost",
   async (postId: string, { rejectWithValue }) => {
     try {
-      const res = await apiClient.post(`/api/posts/${postId}/like`);
-      return { postId, liked: res.data.liked, likesCount: res.data.likesCount };
+      const res = await apiClient.put(`/api/posts/${postId}/like`);
+      return res.data.data;
     } catch (err: any) {
       return rejectWithValue(
         err.response?.data?.message || "Failed to like post"
+      );
+    }
+  }
+);
+
+export const addComment = createAsyncThunk(
+  "posts/addComment",
+  async (
+    { postId, text }: { postId: string; text: string },
+    { rejectWithValue }
+  ) => {
+    try {
+      const res = await apiClient.post(`/api/posts/${postId}/comment`, {
+        text,
+      });
+
+      return res.data.data;
+    } catch (err: any) {
+      return rejectWithValue(
+        err.response?.data?.message || "Failed to add comment"
       );
     }
   }
@@ -108,33 +122,47 @@ const postsSlice = createSlice({
       .addCase(fetchPostsByTopic.pending, (state) => {
         state.loading = true;
       })
-
       .addCase(fetchPostsByTopic.fulfilled, (state, action) => {
         state.loading = false;
         state.posts = action.payload.posts;
         state.currentTopicId = action.payload.topicId;
       })
-
       .addCase(fetchPostsByTopic.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload as string;
       })
 
-      .addCase(createPost.fulfilled, (state, action) => {
+        .addCase(createPost.fulfilled, (state, action) => {
         state.posts.unshift(action.payload);
       })
 
       .addCase(likePost.fulfilled, (state, action) => {
-        const post = state.posts.find((p) => p._id === action.payload.postId);
-        if (post) {
-          // Update likes count based on server response
-          if (action.payload.liked) {
-            // User liked the post - add placeholder if needed
-            post.likes = Array(action.payload.likesCount).fill("");
-          } else {
-            // User unliked - reduce count
-            post.likes = Array(action.payload.likesCount).fill("");
-          }
+        const updatedPost = action.payload;
+
+        const index = state.posts.findIndex(
+          (p) => p._id === updatedPost._id
+        );
+
+        if (index !== -1) {
+          state.posts[index] = {
+            ...state.posts[index],
+            ...updatedPost,
+          };
+        }
+      })
+
+      .addCase(addComment.fulfilled, (state, action) => {
+        const updatedPost = action.payload;
+
+        const index = state.posts.findIndex(
+          (p) => p._id === updatedPost._id
+        );
+
+        if (index !== -1) {
+          state.posts[index] = {
+            ...state.posts[index],
+            ...updatedPost,
+          };
         }
       });
   },

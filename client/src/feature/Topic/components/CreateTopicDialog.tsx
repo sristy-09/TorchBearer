@@ -58,7 +58,7 @@ export default function CreateTopicDialog({ spaceId }: Props) {
         </Button>
       </DialogTrigger>
 
-      <DialogContent className="sm:max-w-[500px]">
+      <DialogContent className="sm:max-w-125">
         <DialogHeader>
           <DialogTitle>Create New Topic</DialogTitle>
           <DialogDescription>

@@ -64,7 +64,7 @@ export default function CreatePostDialog({ topicId }: Props) {
         </Button>
       </DialogTrigger>
 
-      <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
+      <DialogContent className="sm:max-w-150 max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Create New Post</DialogTitle>
           <DialogDescription>
