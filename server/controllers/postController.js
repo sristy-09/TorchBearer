@@ -133,8 +133,11 @@ export const updatePost = async (req, res) => {
         .json({ success: false, message: "Post not found" });
     }
 
-    // Ownership check
-    if (post.author.toString() !== req.user._id.toString()) {
+    // Only author or admin can update
+    if (
+      post.author.toString() !== req.user._id.toString() &&
+      req.user.role !== "admin"
+    ) {
       return res
         .status(403)
         .json({ success: false, message: "Unauthorized to update this post" });
@@ -171,7 +174,7 @@ export const updatePost = async (req, res) => {
    ========================================= */
 export const deletePost = async (req, res) => {
   try {
-    const post = await Post.findByIdAndDelete(req.params.id);
+    const post = await Post.findById(req.params.id);
 
     if (!post) {
       return res
@@ -179,14 +182,24 @@ export const deletePost = async (req, res) => {
         .json({ success: false, message: "Post not found" });
     }
 
-    // Ownership check
-    if (post.author.toString() !== req.user._id.toString()) {
+    // Only author or admin can delete
+    if (
+      post.author.toString() !== req.user._id.toString() &&
+      req.user.role !== "admin"
+    ) {
       return res.status(403).json({
         success: false,
         message: "Not authorized. You can only delete your own posts.",
       });
     }
 
+    // Import Comment model for cascade delete
+    const { Comment } = await import("../models/Comment.js");
+
+    // Delete all comments on this post
+    await Comment.deleteMany({ post: post._id });
+
+    // Delete the post
     await post.deleteOne();
 
     // Remove post reference from its parent Topic
@@ -198,6 +211,7 @@ export const deletePost = async (req, res) => {
       .status(200)
       .json({ success: true, message: "Post deleted successfully" });
   } catch (error) {
+    console.error("Error deleting post:", error);
     res.status(500).json({
       success: false,
       message: "Error deleting post",

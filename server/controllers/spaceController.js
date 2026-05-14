@@ -167,6 +167,33 @@ export const deleteSpace = async (req, res) => {
         .json({ success: false, message: "Unauthorized to delete this space" });
     }
 
+    // Import models for cascade delete
+    const { Topic } = await import("../models/Topics.js");
+    const { Post } = await import("../models/Post.js");
+    const { Comment } = await import("../models/Comment.js");
+
+    // Find all topics in this space
+    const topics = await Topic.find({ space: space._id });
+    const topicIds = topics.map(t => t._id);
+
+    if (topicIds.length > 0) {
+      // Find all posts in these topics
+      const posts = await Post.find({ topic: { $in: topicIds } });
+      const postIds = posts.map(p => p._id);
+
+      if (postIds.length > 0) {
+        // Delete all comments on these posts
+        await Comment.deleteMany({ post: { $in: postIds } });
+      }
+
+      // Delete all posts in these topics
+      await Post.deleteMany({ topic: { $in: topicIds } });
+
+      // Delete all topics in this space
+      await Topic.deleteMany({ space: space._id });
+    }
+
+    // Finally delete the space
     await space.deleteOne();
 
     res.status(200).json({
@@ -174,6 +201,7 @@ export const deleteSpace = async (req, res) => {
       message: "Space deleted successfully",
     });
   } catch (error) {
+    console.error("Error deleting space:", error);
     res.status(500).json({
       success: false,
       message: "Error deleting space",
