@@ -71,6 +71,37 @@ export const createTopic = createAsyncThunk(
   }
 );
 
+export const updateTopic = createAsyncThunk(
+  "topics/updateTopic",
+  async (
+    { id, data }: { id: string; data: { title: string; description: string } },
+    { rejectWithValue }
+  ) => {
+    try {
+      const res = await apiClient.put(`/api/topics/${id}`, data);
+      return res.data.data;
+    } catch (err: any) {
+      return rejectWithValue(
+        err.response?.data?.message || "Failed to update topic"
+      );
+    }
+  }
+);
+
+export const deleteTopic = createAsyncThunk(
+  "topics/deleteTopic",
+  async (id: string, { rejectWithValue }) => {
+    try {
+      await apiClient.delete(`/api/topics/${id}`);
+      return id;
+    } catch (err: any) {
+      return rejectWithValue(
+        err.response?.data?.message || "Failed to delete topic"
+      );
+    }
+  }
+);
+
 const topicsSlice = createSlice({
   name: "topics",
   initialState,
@@ -106,6 +137,17 @@ const topicsSlice = createSlice({
 
       .addCase(createTopic.fulfilled, (state, action) => {
         state.topics.unshift(action.payload);
+      })
+
+      .addCase(updateTopic.fulfilled, (state, action) => {
+        const index = state.topics.findIndex((t) => t._id === action.payload._id);
+        if (index !== -1) {
+          state.topics[index] = action.payload;
+        }
+      })
+
+      .addCase(deleteTopic.fulfilled, (state, action) => {
+        state.topics = state.topics.filter((t) => t._id !== action.payload);
       });
   },
 });

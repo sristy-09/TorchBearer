@@ -1,12 +1,23 @@
 import React, { useState, useEffect } from "react";
 import { useAppDispatch, useAppSelector } from "../../../store/hooks";
-import { likePost } from "../../../store/Slice/postsSlice";
+import { likePost, deletePost } from "../../../store/Slice/postsSlice";
 import type { Post } from "../types/post";
 
-import { Heart, MessageCircle, Calendar } from "lucide-react";
+import { Heart, MessageCircle, Calendar, Pencil, Trash2 } from "lucide-react";
 
 import { Button } from "../../core/components/ui/button";
 import { Avatar } from "../../core/components/ui/avatar";
+import EditPostDialog from "./EditPostDialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "../../core/components/ui/alert-dialog";
 
 import {
   addComment,
@@ -230,6 +241,9 @@ export default function PostCard({ post }: Props) {
   const currentUser = useAppSelector((state) => state.auth.user);
 
   const [isLiking, setIsLiking] = useState(false);
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const [text, setText] = useState("");
 
@@ -298,6 +312,26 @@ export default function PostCard({ post }: Props) {
       console.error(err);
     } finally {
       setIsLiking(false);
+    }
+  };
+
+  const handleEdit = () => {
+    setEditDialogOpen(true);
+  };
+
+  const handleDeleteClick = () => {
+    setDeleteDialogOpen(true);
+  };
+
+  const handleDeleteConfirm = async () => {
+    setIsDeleting(true);
+    try {
+      await dispatch(deletePost(post._id)).unwrap();
+      setDeleteDialogOpen(false);
+    } catch (error) {
+      console.error("Failed to delete post:", error);
+    } finally {
+      setIsDeleting(false);
     }
   };
 
@@ -395,125 +429,177 @@ export default function PostCard({ post }: Props) {
     ? post.likes?.includes(currentUser._id)
     : false;
 
+  const isOwner = currentUser?._id === post.author._id;
+  const isAdmin = currentUser?.role === "admin";
+  const canModify = isOwner || isAdmin;
+
   return (
-    <div className="bg-white border border-gray-200 rounded-lg p-6 hover:border-gray-300 transition">
-      {/* HEADER */}
+    <>
+      <div className="bg-white border border-gray-200 rounded-lg p-6 hover:border-gray-300 transition">
+        {/* HEADER */}
 
-      <div className="flex items-start gap-3 mb-4">
-        <Avatar
-          name={post.author.name}
-          avatarUrl={post.author.avatar}
-          size="md"
-        />
-
-        <div className="flex-1 min-w-0">
-          <h3 className="text-lg font-semibold text-gray-900 mb-1">{post.title}</h3>
-
-          <div className="flex flex-wrap items-center gap-2 text-sm text-gray-600">
-            <span className="font-medium">{post.author.name}</span>
-            <span>•</span>
-            <span className="px-2 py-0.5 bg-blue-50 text-blue-700 rounded text-xs font-medium">
-              {post.author.role}
-            </span>
-            <span>•</span>
-            <span className="flex items-center gap-1">
-              <Calendar size={14} />
-              {formatDate(post.createdAt)}
-            </span>
-          </div>
-        </div>
-      </div>
-
-      {/* CONTENT */}
-
-      <div className="text-gray-700 leading-relaxed mb-4">{post.content}</div>
-
-      {/* ACTIONS */}
-
-      <div className="flex items-center gap-2 border-t border-gray-100 pt-4">
-        <Button
-          onClick={handleLike}
-          disabled={isLiking}
-          variant="ghost"
-          className={`border rounded-md px-4 ${isLikedByCurrentUser
-              ? "border-red-200 hover:bg-red-50"
-              : "border-gray-200 hover:bg-gray-50"
-            }`}
-        >
-          <Heart
-            className={`mr-2 h-4 w-4 ${isLikedByCurrentUser
-                ? "fill-red-500 text-red-500"
-                : "text-gray-600"
-              }`}
+        <div className="flex items-start gap-3 mb-4">
+          <Avatar
+            name={post.author.name}
+            avatarUrl={post.author.avatar}
+            size="md"
           />
 
-          <span
-            className={
-              isLikedByCurrentUser
-                ? "text-red-600 font-medium text-sm"
-                : "text-gray-700 text-sm"
-            }
+          <div className="flex-1 min-w-0">
+            <h3 className="text-lg font-semibold text-gray-900 mb-1">{post.title}</h3>
+
+            <div className="flex flex-wrap items-center gap-2 text-sm text-gray-600">
+              <span className="font-medium">{post.author.name}</span>
+              <span>•</span>
+              <span className="px-2 py-0.5 bg-blue-50 text-blue-700 rounded text-xs font-medium">
+                {post.author.role}
+              </span>
+              <span>•</span>
+              <span className="flex items-center gap-1">
+                <Calendar size={14} />
+                {formatDate(post.createdAt)}
+              </span>
+            </div>
+          </div>
+
+          {canModify && (
+            <div className="flex gap-2">
+              <button
+                onClick={handleEdit}
+                className="p-2 bg-blue-50 hover:bg-blue-100 text-blue-600 rounded-md transition-colors"
+                title="Edit post"
+              >
+                <Pencil size={16} />
+              </button>
+              <button
+                onClick={handleDeleteClick}
+                className="p-2 bg-red-50 hover:bg-red-100 text-red-600 rounded-md transition-colors"
+                title="Delete post"
+              >
+                <Trash2 size={16} />
+              </button>
+            </div>
+          )}
+        </div>
+
+        {/* CONTENT */}
+
+        <div className="text-gray-700 leading-relaxed mb-4">{post.content}</div>
+
+        {/* ACTIONS */}
+
+        <div className="flex items-center gap-2 border-t border-gray-100 pt-4">
+          <Button
+            onClick={handleLike}
+            disabled={isLiking}
+            variant="ghost"
+            className={`border rounded-md px-4 ${isLikedByCurrentUser
+              ? "border-red-200 hover:bg-red-50"
+              : "border-gray-200 hover:bg-gray-50"
+              }`}
           >
-            {post.likes?.length || 0}
-          </span>
-        </Button>
-
-        <Button
-          onClick={() => setShowComments(!showComments)}
-          variant="ghost"
-          className="border border-gray-200 hover:bg-gray-50 rounded-md px-4"
-        >
-          <MessageCircle className="mr-2 h-4 w-4 text-gray-700" />
-
-          <span className="text-gray-700 font-medium text-sm">{comments.length}</span>
-        </Button>
-      </div>
-
-      {/* COMMENTS */}
-
-      {showComments && (
-        <div className="mt-5 border-t border-gray-100 pt-5">
-          {/* ADD COMMENT */}
-
-          <div className="flex gap-2 mb-5">
-            <input
-              value={text}
-              onChange={(e) => setText(e.target.value)}
-              placeholder="Write a comment..."
-              className="flex-1 border border-gray-300 px-4 py-2.5 rounded-md text-sm outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            <Heart
+              className={`mr-2 h-4 w-4 ${isLikedByCurrentUser
+                ? "fill-red-500 text-red-500"
+                : "text-gray-600"
+                }`}
             />
 
-            <button
-              onClick={handleAddComment}
-              className="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 rounded-md text-sm font-medium transition-colors"
+            <span
+              className={
+                isLikedByCurrentUser
+                  ? "text-red-600 font-medium text-sm"
+                  : "text-gray-700 text-sm"
+              }
             >
-              Post
-            </button>
-          </div>
+              {post.likes?.length || 0}
+            </span>
+          </Button>
 
-          {/* COMMENT LIST */}
+          <Button
+            onClick={() => setShowComments(!showComments)}
+            variant="ghost"
+            className="border border-gray-200 hover:bg-gray-50 rounded-md px-4"
+          >
+            <MessageCircle className="mr-2 h-4 w-4 text-gray-700" />
 
-          <div className="space-y-4">
-            {nestedComments.map((comment) => (
-              <CommentItem
-                key={comment._id}
-                comment={comment}
-                likedComments={likedComments}
-                expandedReplies={expandedReplies}
-                activeReplyId={activeReplyId}
-                replyTexts={replyTexts}
-                handleLikeComment={handleLikeComment}
-                handleDeleteComment={handleDeleteComment}
-                handleEditComment={handleEditComment}
-                toggleReplies={toggleReplies}
-                setActiveReplyId={setActiveReplyId}
-                setReplyTexts={setReplyTexts}
-                submitReply={submitReply}
-              />
-            ))}
-          </div>
+            <span className="text-gray-700 font-medium text-sm">{comments.length}</span>
+          </Button>
         </div>
-      )}
-    </div>
+
+        {/* COMMENTS */}
+
+        {showComments && (
+          <div className="mt-5 border-t border-gray-100 pt-5">
+            {/* ADD COMMENT */}
+
+            <div className="flex gap-2 mb-5">
+              <input
+                value={text}
+                onChange={(e) => setText(e.target.value)}
+                placeholder="Write a comment..."
+                className="flex-1 border border-gray-300 px-4 py-2.5 rounded-md text-sm outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              />
+
+              <button
+                onClick={handleAddComment}
+                className="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 rounded-md text-sm font-medium transition-colors"
+              >
+                Post
+              </button>
+            </div>
+
+            {/* COMMENT LIST */}
+
+            <div className="space-y-4">
+              {nestedComments.map((comment) => (
+                <CommentItem
+                  key={comment._id}
+                  comment={comment}
+                  likedComments={likedComments}
+                  expandedReplies={expandedReplies}
+                  activeReplyId={activeReplyId}
+                  replyTexts={replyTexts}
+                  handleLikeComment={handleLikeComment}
+                  handleDeleteComment={handleDeleteComment}
+                  handleEditComment={handleEditComment}
+                  toggleReplies={toggleReplies}
+                  setActiveReplyId={setActiveReplyId}
+                  setReplyTexts={setReplyTexts}
+                  submitReply={submitReply}
+                />
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
+
+      <EditPostDialog
+        open={editDialogOpen}
+        onOpenChange={setEditDialogOpen}
+        post={post}
+      />
+
+      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Post</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete "{post.title}"? This action cannot be undone and will remove all comments on this post.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isDeleting}>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDeleteConfirm}
+              disabled={isDeleting}
+              className="bg-red-600 hover:bg-red-700"
+            >
+              {isDeleting ? "Deleting..." : "Delete"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </>
   );
 }

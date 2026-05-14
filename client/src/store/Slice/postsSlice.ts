@@ -101,6 +101,37 @@ export const addComment = createAsyncThunk(
   }
 );
 
+export const updatePost = createAsyncThunk(
+  "posts/updatePost",
+  async (
+    { id, data }: { id: string; data: { title: string; content: string } },
+    { rejectWithValue }
+  ) => {
+    try {
+      const res = await apiClient.put(`/api/posts/${id}`, data);
+      return res.data.data;
+    } catch (err: any) {
+      return rejectWithValue(
+        err.response?.data?.message || "Failed to update post"
+      );
+    }
+  }
+);
+
+export const deletePost = createAsyncThunk(
+  "posts/deletePost",
+  async (id: string, { rejectWithValue }) => {
+    try {
+      await apiClient.delete(`/api/posts/${id}`);
+      return id;
+    } catch (err: any) {
+      return rejectWithValue(
+        err.response?.data?.message || "Failed to delete post"
+      );
+    }
+  }
+);
+
 const postsSlice = createSlice({
   name: "posts",
   initialState,
@@ -132,7 +163,7 @@ const postsSlice = createSlice({
         state.error = action.payload as string;
       })
 
-        .addCase(createPost.fulfilled, (state, action) => {
+      .addCase(createPost.fulfilled, (state, action) => {
         state.posts.unshift(action.payload);
       })
 
@@ -164,6 +195,20 @@ const postsSlice = createSlice({
             ...updatedPost,
           };
         }
+      })
+
+      .addCase(updatePost.fulfilled, (state, action) => {
+        const index = state.posts.findIndex((p) => p._id === action.payload._id);
+        if (index !== -1) {
+          state.posts[index] = {
+            ...state.posts[index],
+            ...action.payload,
+          };
+        }
+      })
+
+      .addCase(deletePost.fulfilled, (state, action) => {
+        state.posts = state.posts.filter((p) => p._id !== action.payload);
       });
   },
 });

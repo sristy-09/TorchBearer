@@ -70,6 +70,37 @@ export const createSpace = createAsyncThunk(
   }
 );
 
+export const updateSpace = createAsyncThunk(
+  "spaces/updateSpace",
+  async (
+    { id, data }: { id: string; data: { title: string; description: string } },
+    { rejectWithValue }
+  ) => {
+    try {
+      const res = await apiClient.put(`/api/spaces/${id}`, data);
+      return res.data.data;
+    } catch (err: any) {
+      return rejectWithValue(
+        err.response?.data?.message || "Failed to update space"
+      );
+    }
+  }
+);
+
+export const deleteSpace = createAsyncThunk(
+  "spaces/deleteSpace",
+  async (id: string, { rejectWithValue }) => {
+    try {
+      await apiClient.delete(`/api/spaces/${id}`);
+      return id;
+    } catch (err: any) {
+      return rejectWithValue(
+        err.response?.data?.message || "Failed to delete space"
+      );
+    }
+  }
+);
+
 const spacesSlice = createSlice({
   name: "spaces",
   initialState,
@@ -103,6 +134,17 @@ const spacesSlice = createSlice({
 
       .addCase(createSpace.fulfilled, (state, action) => {
         state.spaces.unshift(action.payload);
+      })
+
+      .addCase(updateSpace.fulfilled, (state, action) => {
+        const index = state.spaces.findIndex((s) => s._id === action.payload._id);
+        if (index !== -1) {
+          state.spaces[index] = action.payload;
+        }
+      })
+
+      .addCase(deleteSpace.fulfilled, (state, action) => {
+        state.spaces = state.spaces.filter((s) => s._id !== action.payload);
       });
   },
 });
