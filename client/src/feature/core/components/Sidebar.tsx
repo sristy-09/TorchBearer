@@ -1,4 +1,4 @@
-import { Plus, Home, Clock, Star, User, LogOut, ChevronRight } from "lucide-react";
+import { Home, Clock, Star, User, LogOut, ChevronRight } from "lucide-react";
 import { useAppDispatch, useAppSelector } from "../../../store/hooks";
 import { logoutUser } from "../../../store/Slice/authSlice";
 import { useNavigate } from "react-router";
@@ -31,12 +31,15 @@ export default function Sidebar() {
     <div className="w-64 bg-white border-r flex flex-col h-screen">
       {/* Logo Section */}
       <div className="px-5 py-6 border-b">
-        <div className="flex items-center gap-2.5">
+        <button
+          onClick={() => navigate("/dashboard")}
+          className="flex items-center gap-2.5 hover:opacity-80 transition-opacity cursor-pointer"
+        >
           <div className="w-7 h-7 bg-gradient-to-br from-orange-500 to-red-600 rounded-lg flex items-center justify-center">
             <span className="text-white text-sm font-bold">T</span>
           </div>
           <span className="font-semibold text-gray-900">TorchBearer</span>
-        </div>
+        </button>
       </div>
 
       <nav className="flex-1 px-3 py-4">
