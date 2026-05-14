@@ -73,7 +73,7 @@ function CompleteProfilePage() {
                   id="batchYear"
                   name="batchYear"
                   type="number"
-                  placeholder="e.g. 2022"
+                  placeholder="e.g. 2076-2084"
                   value={form.batchYear}
                   onChange={handleChange}
                   disabled={loading}

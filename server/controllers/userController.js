@@ -355,10 +355,10 @@ export const completeProfile = async (req, res) => {
     if (
       !batchYear ||
       isNaN(Number(batchYear)) ||
-      Number(batchYear) < 1900 ||
-      Number(batchYear) > new Date().getFullYear() + 5
+      Number(batchYear) < 2076 ||
+      Number(batchYear) > 2084
     ) {
-      errors.push("Please provide a valid batch year.");
+      errors.push("Batch year must be between 2076 and 2084.");
     }
 
     if (

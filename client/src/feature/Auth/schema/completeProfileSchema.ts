@@ -1,7 +1,5 @@
 import { z } from "zod";
 
-const currentYear = new Date().getFullYear();
-
 export const completeProfileSchema = z.object({
   role: z
     .string()
@@ -14,8 +12,8 @@ export const completeProfileSchema = z.object({
     .string()
     .min(1, "Batch year is required.")
     .transform((val) => Number(val))
-    .refine((num) => !isNaN(num) && num >= 1900 && num <= currentYear + 5, {
-      message: `Batch year must be between 1900 and ${currentYear + 5}.`,
+    .refine((num) => !isNaN(num) && num >= 2076 && num <= 2084, {
+      message: "Batch year must be between 2076 and 2084.",
     }),
 
   registrationNumber: z
