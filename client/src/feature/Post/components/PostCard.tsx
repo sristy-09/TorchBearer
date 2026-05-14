@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { useAppDispatch } from "../../../store/hooks";
+import { useAppDispatch, useAppSelector } from "../../../store/hooks";
 import { likePost } from "../../../store/Slice/postsSlice";
 import type { Post } from "../types/post";
 
@@ -227,6 +227,7 @@ const CommentItem = React.memo(
 
 export default function PostCard({ post }: Props) {
   const dispatch = useAppDispatch();
+  const currentUser = useAppSelector((state) => state.auth.user);
 
   const [isLiking, setIsLiking] = useState(false);
 
@@ -389,6 +390,11 @@ export default function PostCard({ post }: Props) {
     });
   };
 
+  // Check if current user has liked this post
+  const isLikedByCurrentUser = currentUser?._id
+    ? post.likes?.includes(currentUser._id)
+    : false;
+
   return (
     <div className="bg-white border border-gray-200 rounded-lg p-6 hover:border-gray-300 transition">
       {/* HEADER */}
@@ -429,18 +435,21 @@ export default function PostCard({ post }: Props) {
           onClick={handleLike}
           disabled={isLiking}
           variant="ghost"
-          className="border border-gray-200 hover:bg-red-50 hover:border-red-200 rounded-md px-4"
+          className={`border rounded-md px-4 ${isLikedByCurrentUser
+              ? "border-red-200 hover:bg-red-50"
+              : "border-gray-200 hover:bg-gray-50"
+            }`}
         >
           <Heart
-            className={`mr-2 h-4 w-4 ${post.likes?.length > 0
-              ? "fill-red-500 text-red-500"
-              : "text-gray-600"
+            className={`mr-2 h-4 w-4 ${isLikedByCurrentUser
+                ? "fill-red-500 text-red-500"
+                : "text-gray-600"
               }`}
           />
 
           <span
             className={
-              post.likes?.length > 0
+              isLikedByCurrentUser
                 ? "text-red-600 font-medium text-sm"
                 : "text-gray-700 text-sm"
             }
