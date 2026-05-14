@@ -1,6 +1,7 @@
 import { useMemo } from "react";
 import { useAppSelector } from "../../../store/hooks";
 import PostCard from "./PostCard";
+import ErrorBoundary from "../../core/components/ErrorBoundary";
 
 export default function PostsList() {
   const { posts, loading, searchQuery, sortBy } = useAppSelector((state) => state.posts);
@@ -46,7 +47,9 @@ export default function PostsList() {
   return (
     <div className="space-y-4">
       {sortedPosts.map((post) => (
-        <PostCard key={post._id} post={post} />
+        <ErrorBoundary key={post._id} level="component">
+          <PostCard post={post} />
+        </ErrorBoundary>
       ))}
     </div>
   );

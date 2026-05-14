@@ -2,6 +2,7 @@ import { useEffect, useMemo } from "react";
 import { useAppDispatch, useAppSelector } from "../../../store/hooks";
 import { fetchSpaces } from "../../../store/Slice/spacesSlice";
 import SpaceCard from "./SpaceCard";
+import ErrorBoundary from "../../core/components/ErrorBoundary";
 
 export default function SpacesGrid() {
   const dispatch = useAppDispatch();
@@ -71,7 +72,9 @@ export default function SpacesGrid() {
   return (
     <div className="grid md:grid-cols-3 gap-6">
       {filteredAndSortedSpaces.map((space) => (
-        <SpaceCard key={space._id} space={space} />
+        <ErrorBoundary key={space._id} level="component">
+          <SpaceCard space={space} />
+        </ErrorBoundary>
       ))}
     </div>
   );

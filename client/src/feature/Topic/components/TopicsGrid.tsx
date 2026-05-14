@@ -1,6 +1,7 @@
 import { useMemo } from "react";
 import { useAppSelector } from "../../../store/hooks";
 import TopicCard from "./TopicCard";
+import ErrorBoundary from "../../core/components/ErrorBoundary";
 
 export default function TopicsGrid() {
   const { topics, loading, searchQuery, sortBy } = useAppSelector((state) => state.topics);
@@ -40,7 +41,9 @@ export default function TopicsGrid() {
   return (
     <div className="grid md:grid-cols-3 gap-6">
       {sortedTopics.map((topic) => (
-        <TopicCard key={topic._id} topic={topic} />
+        <ErrorBoundary key={topic._id} level="component">
+          <TopicCard topic={topic} />
+        </ErrorBoundary>
       ))}
     </div>
   );

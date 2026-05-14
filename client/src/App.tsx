@@ -12,6 +12,8 @@ import TopicPostsPage from "./pages/components/TopicPostsPage";
 import SpaceMembersPage from "./pages/components/SpaceMembersPage";
 import { useAppDispatch } from "./store/hooks";
 import { fetchCurrentUser } from "./store/Slice/authSlice";
+import ErrorBoundary from "./feature/core/components/ErrorBoundary";
+import RouteErrorBoundary from "./feature/core/components/RouteErrorBoundary";
 
 const App = () => {
   const dispatch = useAppDispatch();
@@ -30,86 +32,109 @@ const App = () => {
   }, [dispatch]);
 
   return (
-    <div>
+    <ErrorBoundary level="app">
       <Router>
         <Routes>
           <Route
             path="/"
             element={
-              <AuthRoute mode="guest">
-                <LandingPage />
-              </AuthRoute>
+              <ErrorBoundary level="page">
+                <AuthRoute mode="guest">
+                  <LandingPage />
+                </AuthRoute>
+              </ErrorBoundary>
             }
+            errorElement={<RouteErrorBoundary />}
           />
           <Route
             path="/dashboard"
             element={
-              <AuthRoute mode="private">
-                <HomePage />
-              </AuthRoute>
+              <ErrorBoundary level="page">
+                <AuthRoute mode="private">
+                  <HomePage />
+                </AuthRoute>
+              </ErrorBoundary>
             }
-          />
-          <Route
-            path="/dashboard"
-            element={
-              <AuthRoute mode="private">
-                <HomePage />
-              </AuthRoute>
-            }
+            errorElement={<RouteErrorBoundary />}
           />
           <Route
             path="/space/:spaceId/topics"
             element={
-              <AuthRoute mode="private">
-                <SpaceTopicsPage />
-              </AuthRoute>
+              <ErrorBoundary level="page">
+                <AuthRoute mode="private">
+                  <SpaceTopicsPage />
+                </AuthRoute>
+              </ErrorBoundary>
             }
+            errorElement={<RouteErrorBoundary />}
           />
           <Route
             path="/space/:spaceId/members"
             element={
-              <AuthRoute mode="private">
-                <SpaceMembersPage />
-              </AuthRoute>
+              <ErrorBoundary level="page">
+                <AuthRoute mode="private">
+                  <SpaceMembersPage />
+                </AuthRoute>
+              </ErrorBoundary>
             }
+            errorElement={<RouteErrorBoundary />}
           />
           <Route
             path="/space/:spaceId/topic/:topicId/posts"
             element={
-              <AuthRoute mode="private">
-                <TopicPostsPage />
-              </AuthRoute>
+              <ErrorBoundary level="page">
+                <AuthRoute mode="private">
+                  <TopicPostsPage />
+                </AuthRoute>
+              </ErrorBoundary>
             }
+            errorElement={<RouteErrorBoundary />}
           />
           <Route
             path="/signup"
             element={
-              <AuthRoute mode="guest">
-                <SignUpPage />
-              </AuthRoute>
+              <ErrorBoundary level="page">
+                <AuthRoute mode="guest">
+                  <SignUpPage />
+                </AuthRoute>
+              </ErrorBoundary>
             }
+            errorElement={<RouteErrorBoundary />}
           />
           <Route
             path="/login"
             element={
-              <AuthRoute mode="guest">
-                <LoginPage />
-              </AuthRoute>
+              <ErrorBoundary level="page">
+                <AuthRoute mode="guest">
+                  <LoginPage />
+                </AuthRoute>
+              </ErrorBoundary>
             }
+            errorElement={<RouteErrorBoundary />}
           />
-          <Route path="/auth/callback" element={<AuthSuccess />} />
-
+          <Route
+            path="/auth/callback"
+            element={
+              <ErrorBoundary level="page">
+                <AuthSuccess />
+              </ErrorBoundary>
+            }
+            errorElement={<RouteErrorBoundary />}
+          />
           <Route
             path="/complete-profile"
             element={
-              <AuthRoute mode="profile-incomplete">
-                <CompleteProfilePage />
-              </AuthRoute>
+              <ErrorBoundary level="page">
+                <AuthRoute mode="profile-incomplete">
+                  <CompleteProfilePage />
+                </AuthRoute>
+              </ErrorBoundary>
             }
+            errorElement={<RouteErrorBoundary />}
           />
         </Routes>
       </Router>
-    </div>
+    </ErrorBoundary>
   );
 };
 
