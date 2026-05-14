@@ -77,41 +77,39 @@ export default function LandingPage() {
       >
         {/* Badge */}
         <div className="flex items-center gap-2 border border-border rounded-full px-4 py-1.5 text-sm text-muted-foreground">
-          <span> Connect With Your Alumni</span>
+          <span>Alumni Network Platform</span>
           <ArrowRight className="size-3.5" />
         </div>
 
         {/* Headline */}
         <h1 className="text-5xl md:text-6xl font-bold tracking-tight leading-tight max-w-3xl">
-          Digital platform to connect Alumni and Current Students Together.
+          Connect Alumni and Students
         </h1>
 
         {/* Subheadline */}
         <p className="text-muted-foreground text-lg max-w-xl leading-relaxed">
-          A platform where the communication between graduates and students can
-          take place efficiently.
+          A platform for meaningful connections between graduates and current students.
           <br />
-          TorchBearer, leading to networking, mentorship and career-development.
+          Network, find mentorship, and explore career opportunities.
         </p>
       </main>
-      {/*Faq section */}
       <section
         id="faq"
         className="px-6 md:px-16 py-20 border-t border-border max-w-4xl mx-auto w-full"
       >
-        <h2 className="text-2xl font-bold mb-8 text-center">FAQs</h2>
+        <h2 className="text-2xl font-bold mb-8 text-center">Frequently Asked Questions</h2>
         {[
           {
             q: "What is TorchBearer?",
-            a: "TorchBearer is a digital platform that helps to connect Alumni(Graduate Students) and present students in any institution.",
+            a: "TorchBearer is a platform that connects alumni with current students for networking, mentorship, and career development.",
           },
           {
-            q: "Is it free or premium?",
-            a: "It is free to enter in the first three spaces but if you want to enter more than 3 spaces, you have to pay some fee.",
+            q: "How does pricing work?",
+            a: "You can join up to 3 spaces for free. Additional spaces require a subscription.",
           },
           {
-            q: "Can I filter topics or spaces by interests or skills?",
-            a: "Yes, you can filter out the topics or spaces according to ypur skills pr interests.",
+            q: "Can I filter by skills or interests?",
+            a: "Yes, you can filter spaces and topics based on your skills and interests.",
           },
         ].map((item, i) => (
           <div key={i} className="border-b py-4">

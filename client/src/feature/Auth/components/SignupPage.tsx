@@ -20,17 +20,17 @@ function SignUpPage() {
 
   return (
     <>
-      <div className="flex justify-center items-center mt-40">
+      <div className="flex justify-center items-center min-h-screen bg-neutral-50 px-4">
         <Card className="w-full max-w-sm">
           <CardHeader>
-            <CardTitle>Sign Up to register</CardTitle>
-            <CardDescription>Already have an account?</CardDescription>
+            <CardTitle>Create an account</CardTitle>
+            <CardDescription>Join the TorchBearer community</CardDescription>
             <CardAction>
               <Button
                 variant="link"
-                className=" text-white bg-[#c084fc] hover:bg-[#6b21a8] cursor-pointer"
+                className="text-white bg-blue-600 hover:bg-blue-700 cursor-pointer"
               >
-                <Link to={"/login"} className="cursor-pointer">Log In</Link>
+                <Link to={"/login"} className="cursor-pointer">Sign in</Link>
               </Button>
             </CardAction>
           </CardHeader>
@@ -38,11 +38,11 @@ function SignUpPage() {
             <form onSubmit={handleSubmit}>
               <div className="flex flex-col gap-6">
                 <div className="grid gap-2">
-                  <Label htmlFor="name">Name:</Label>
+                  <Label htmlFor="name">Name</Label>
                   <Input
                     id="name"
                     type="text"
-                    placeholder="Alice Smith"
+                    placeholder="Your name"
                     name="name"
                     value={myForm.name}
                     onChange={handleChange}
@@ -50,7 +50,7 @@ function SignUpPage() {
                     disabled={loading}
                   />
                   {errors.name && (
-                    <p className="text-sm text-red-500">{errors.name}</p>
+                    <p className="text-sm text-red-600">{errors.name}</p>
                   )}
                 </div>
                 <div className="grid gap-2">
@@ -58,7 +58,7 @@ function SignUpPage() {
                   <Input
                     id="email"
                     type="email"
-                    placeholder="m@example.com"
+                    placeholder="you@example.com"
                     name="email"
                     value={myForm.email}
                     onChange={handleChange}
@@ -66,7 +66,7 @@ function SignUpPage() {
                     disabled={loading}
                   />
                   {errors.email && (
-                    <p className="text-sm text-red-500">{errors.email}</p>
+                    <p className="text-sm text-red-600">{errors.email}</p>
                   )}
                 </div>
                 <div className="grid gap-2">
@@ -81,16 +81,16 @@ function SignUpPage() {
                     disabled={loading}
                   />
                   {errors.password && (
-                    <p className="text-sm text-red-500">{errors.password}</p>
+                    <p className="text-sm text-red-600">{errors.password}</p>
                   )}
                 </div>
 
                 <Button
                   type="submit"
-                  className="w-full bg-[#c084fc] hover:bg-[#6b21a8]"
+                  className="w-full bg-blue-600 hover:bg-blue-700"
                   disabled={loading}
                 >
-                  {loading ? "Signing Up..." : "Sign Up"}
+                  {loading ? "Creating account..." : "Create account"}
                 </Button>
               </div>
             </form>
@@ -103,7 +103,7 @@ function SignUpPage() {
               disabled={loading}
             >
               <FaGoogle />
-              Login with Google
+              Continue with Google
             </Button>
           </CardFooter>
         </Card>

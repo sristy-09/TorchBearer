@@ -26,127 +26,97 @@ export default function HomePage() {
   }, [dispatch]);
 
   return (
-    <div className="flex h-screen bg-gray-50">
+    <div className="flex h-screen bg-neutral-50">
       <Sidebar />
 
       <div className="flex-1 overflow-auto">
         {/* Header */}
-        <div className="bg-gray-100 border-b px-6 py-4 flex items-center justify-between shadow-sm">
-          <div>
-            <p className="text-xl text-gray-700">Welcome back!</p>
-            <h1 className="text-lg font-semibold text-gray-800">
-              Explore your spaces and discover opportunities
+        <div className="bg-white border-b px-8 py-6">
+          <div className="max-w-7xl mx-auto">
+            <h1 className="text-2xl font-semibold text-gray-900">
+              Your Spaces
             </h1>
+            <p className="text-gray-600 mt-1">
+              Connect with alumni and students in your areas of interest
+            </p>
           </div>
-
-          <Button className="bg-blue-600 hover:bg-blue-700 text-white">
-            Explore Features
-          </Button>
         </div>
 
-        <div className="p-8">
-          {/* MatchMyTalent Engine */}
-          <div className="max-w-2xl mx-auto mb-12">
-            <div className="bg-[#121a2c] text-white rounded-3xl shadow-2xl p-10">
-              <h1 className="text-4xl font-bold text-yellow-400 text-center mb-8">
-                MatchMyTalent Engine
-              </h1>
+        <div className="max-w-7xl mx-auto px-8 py-8">
+          {/* Recommendation Section */}
+          <div className="mb-10">
+            <div className="bg-gradient-to-br from-blue-600 to-indigo-700 rounded-lg p-8 text-white">
+              <div className="max-w-3xl">
+                <h2 className="text-2xl font-semibold mb-2">
+                  Find Relevant Opportunities
+                </h2>
+                <p className="text-blue-100 mb-6">
+                  Get personalized space recommendations based on your skills and interests
+                </p>
 
-              <div className="space-y-6">
-                <Select defaultValue="skills-based">
-                  <SelectTrigger className="bg-white text-black h-12">
-                    <SelectValue />
-                  </SelectTrigger>
-
-                  <SelectContent>
-                    <SelectItem value="skills-based">
-                      Skills-based Recommendations
-                    </SelectItem>
-                    <SelectItem value="interest-based">
-                      Interest-based Recommendations
-                    </SelectItem>
-                    <SelectItem value="career-path">
-                      Career Path Recommendations
-                    </SelectItem>
-                  </SelectContent>
-                </Select>
-
-                <Input
-                  placeholder="Enter your skills (e.g. Python, React, SQL)"
-                  className="bg-white text-black h-12"
-                />
-
-                <Button className="w-full bg-yellow-400 hover:bg-yellow-300 text-black font-semibold py-6 rounded-2xl">
-                  Get Recommendations
-                </Button>
+                <div className="flex gap-3">
+                  <Input
+                    placeholder="Enter skills (e.g. Python, React, Machine Learning)"
+                    className="bg-white/95 text-gray-900 border-0 h-11 flex-1"
+                  />
+                  <Button className="bg-white text-blue-600 hover:bg-blue-50 font-medium px-6">
+                    Search
+                  </Button>
+                </div>
               </div>
             </div>
           </div>
 
           <div>
-            <div className="flex flex-col gap-4 mb-6">
-              <div className="flex items-center justify-between mb-6">
-                <div className="flex items-center gap-3">
-                  <Compass size={26} className="text-blue-500" />
-
-                  <h2 className="text-3xl font-bold text-gray-900">
-                    Explore Spaces
-                  </h2>
-                </div>
-
-                <CreateSpaceDialog />
-              </div>
-
-              {/* Search + Filters */}
-              <div className="flex flex-wrap gap-3 items-center">
-                <Input
-                  placeholder="🔍 Search spaces..."
-                  className="w-72"
-                  value={searchQuery}
-                  onChange={(e) => dispatch(setSearchQuery(e.target.value))}
-                />
-
-                <Select
-                  value={filterType}
-                  onValueChange={(value: "all" | "my" | "joined") =>
-                    dispatch(setFilterType(value))
-                  }
-                >
-                  <SelectTrigger className="w-40">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">All spaces</SelectItem>
-                    <SelectItem value="my">My spaces</SelectItem>
-                    <SelectItem value="joined">Joined spaces</SelectItem>
-                  </SelectContent>
-                </Select>
-
-                <Select
-                  value={sortBy}
-                  onValueChange={(value: "latest" | "name") =>
-                    dispatch(setSortBy(value))
-                  }
-                >
-                  <SelectTrigger className="w-40">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="latest">Latest</SelectItem>
-                    <SelectItem value="name">Name</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-xl font-semibold text-gray-900">
+                All Spaces
+              </h2>
+              <CreateSpaceDialog />
             </div>
 
-            {/* GRID (NO TABLE ANYMORE 🚀) */}
-            <SpacesGrid />
+            {/* Search + Filters */}
+            <div className="flex flex-wrap gap-3 items-center mb-6">
+              <Input
+                placeholder="Search spaces..."
+                className="w-80"
+                value={searchQuery}
+                onChange={(e) => dispatch(setSearchQuery(e.target.value))}
+              />
 
-            {/* Footer note */}
-            <p className="text-center text-xs text-gray-500 mt-8">
-              Explore spaces, build meaningful connections, and discover
-              opportunities aligned with your skills.
-            </p>
+              <Select
+                value={filterType}
+                onValueChange={(value: "all" | "my" | "joined") =>
+                  dispatch(setFilterType(value))
+                }
+              >
+                <SelectTrigger className="w-36">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All spaces</SelectItem>
+                  <SelectItem value="my">My spaces</SelectItem>
+                  <SelectItem value="joined">Joined</SelectItem>
+                </SelectContent>
+              </Select>
+
+              <Select
+                value={sortBy}
+                onValueChange={(value: "latest" | "name") =>
+                  dispatch(setSortBy(value))
+                }
+              >
+                <SelectTrigger className="w-36">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="latest">Latest</SelectItem>
+                  <SelectItem value="name">Name</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <SpacesGrid />
           </div>
         </div>
       </div>

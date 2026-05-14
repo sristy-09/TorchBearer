@@ -69,15 +69,15 @@ export default function CreateSpaceDialog() {
     <Dialog open={open} onOpenChange={setOpen}>
       {/* Trigger */}
       <DialogTrigger asChild>
-        <Button className="bg-blue-500 hover:bg-blue-600 rounded-xl">
-          + Create New Space
+        <Button className="bg-blue-600 hover:bg-blue-700 rounded-md">
+          Create Space
         </Button>
       </DialogTrigger>
 
       {/* Modal */}
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle className="text-xl font-semibold">
+          <DialogTitle className="text-lg font-semibold">
             Create New Space
           </DialogTitle>
         </DialogHeader>
@@ -101,21 +101,21 @@ export default function CreateSpaceDialog() {
 
           {/* Tags */}
           <Input
-            placeholder="Tags (comma separated e.g. react, ai, startup)"
+            placeholder="Tags (comma separated)"
             value={tags}
             onChange={(e) => setTags(e.target.value)}
           />
 
           {/* Error */}
           {error && (
-            <p className="text-sm text-red-500">{error}</p>
+            <p className="text-sm text-red-600">{error}</p>
           )}
 
           {/* Actions */}
           <div className="flex gap-2 pt-2">
             <Button
               variant="outline"
-              className="w-1/2"
+              className="flex-1"
               onClick={() => {
                 resetForm();
                 setOpen(false);
@@ -126,11 +126,11 @@ export default function CreateSpaceDialog() {
             </Button>
 
             <Button
-              className="w-1/2 bg-blue-500 hover:bg-blue-600"
+              className="flex-1 bg-blue-600 hover:bg-blue-700"
               onClick={submitHandler}
               disabled={loading}
             >
-              {loading ? "Creating..." : "Create Space"}
+              {loading ? "Creating..." : "Create"}
             </Button>
           </div>
         </div>

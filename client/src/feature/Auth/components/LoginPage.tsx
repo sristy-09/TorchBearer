@@ -19,17 +19,17 @@ function LoginPage() {
 
   const API_URL = import.meta.env.VITE_API_URL;
   return (
-    <div className="flex justify-center items-center mt-40">
-      <Card className="w-full max-w-sm ">
+    <div className="flex justify-center items-center min-h-screen bg-neutral-50 px-4">
+      <Card className="w-full max-w-sm">
         <CardHeader>
-          <CardTitle>Login to your account</CardTitle>
-          <CardDescription>Don't have an account?</CardDescription>
+          <CardTitle>Welcome back</CardTitle>
+          <CardDescription>Sign in to your account</CardDescription>
           <CardAction>
             <Button
               variant="link"
-              className="bg-[#c084fc] hover:bg-[#6b21a8] text-white cursor-pointer"
+              className="bg-blue-600 hover:bg-blue-700 text-white cursor-pointer"
             >
-              <Link to={"/signup"} className="cursor-pointer">Sign Up</Link>
+              <Link to={"/signup"} className="cursor-pointer">Create account</Link>
             </Button>
           </CardAction>
         </CardHeader>
@@ -41,14 +41,14 @@ function LoginPage() {
                 <Input
                   id="email"
                   type="email"
-                  placeholder="m@example.com"
+                  placeholder="you@example.com"
                   name="email"
                   value={myForm.email}
                   onChange={handleChange}
                   required
                 />
                 {errors.email && (
-                  <p className="text-sm text-red-500">{errors.email}</p>
+                  <p className="text-sm text-red-600">{errors.email}</p>
                 )}
               </div>
               <div className="grid gap-2">
@@ -62,15 +62,15 @@ function LoginPage() {
                   required
                 />
                 {errors.password && (
-                  <p className="text-sm text-red-500">{errors.password}</p>
+                  <p className="text-sm text-red-600">{errors.password}</p>
                 )}
               </div>
 
               <Button
                 type="submit"
-                className="w-full bg-[#c084fc] hover:bg-[#6b21a8]"
+                className="w-full bg-blue-600 hover:bg-blue-700"
               >
-                Login
+                Sign in
               </Button>
             </div>
           </form>
@@ -82,7 +82,7 @@ function LoginPage() {
             className="w-full cursor-pointer"
           >
             <FaGoogle />
-            Login with Google
+            Continue with Google
           </Button>
         </CardFooter>
       </Card>

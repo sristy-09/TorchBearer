@@ -83,14 +83,14 @@ const CommentItem = React.memo(
       <div className="mt-3">
         {/* COMMENT CARD */}
 
-        <div className="bg-gray-50 border border-gray-100 rounded-xl p-4">
+        <div className="bg-gray-50 border border-gray-100 rounded-lg p-4">
           {/* USER */}
 
-          <h4 className="font-semibold text-gray-900">{comment.user?.name}</h4>
+          <h4 className="font-semibold text-sm text-gray-900">{comment.user?.name}</h4>
 
           {/* TEXT */}
 
-          <p className="text-gray-700 mt-1 wrap-break-words">
+          <p className="text-gray-700 text-sm mt-1.5 wrap-break-words leading-relaxed">
             {renderTextWithMentions(comment.text)}
           </p>
 
@@ -98,16 +98,15 @@ const CommentItem = React.memo(
 
           <button
             onClick={() => handleLikeComment(comment._id)}
-            className={`flex items-center gap-1 text-xs mt-3 transition ${
-              likedComments.includes(comment._id)
-                ? "text-red-500"
-                : "text-gray-500 hover:text-red-500"
-            }`}
+            className={`flex items-center gap-1.5 text-xs mt-3 transition font-medium ${likedComments.includes(comment._id)
+              ? "text-red-600"
+              : "text-gray-500 hover:text-red-600"
+              }`}
           >
             <Heart
-              size={14}
+              size={13}
               className={
-                likedComments.includes(comment._id) ? "fill-red-500" : ""
+                likedComments.includes(comment._id) ? "fill-red-600" : ""
               }
             />
 
@@ -119,7 +118,7 @@ const CommentItem = React.memo(
           <div className="flex items-center gap-4 text-xs text-gray-500 mt-3 flex-wrap">
             <button
               onClick={() => handleDeleteComment(comment._id)}
-              className="hover:text-red-500"
+              className="hover:text-red-600 font-medium"
             >
               Delete
             </button>
@@ -131,7 +130,7 @@ const CommentItem = React.memo(
                   prompt("Edit comment", comment.text) || "",
                 )
               }
-              className="hover:text-blue-500"
+              className="hover:text-blue-600 font-medium"
             >
               Edit
             </button>
@@ -152,7 +151,7 @@ const CommentItem = React.memo(
                     : `@[${comment.user?.name || ""}] `,
                 }));
               }}
-              className="hover:text-blue-500"
+              className="hover:text-blue-600 font-medium"
             >
               Reply
             </button>
@@ -160,11 +159,11 @@ const CommentItem = React.memo(
             {comment.replies?.length > 0 && (
               <button
                 onClick={() => toggleReplies(comment._id)}
-                className="hover:text-blue-500"
+                className="hover:text-blue-600 font-medium"
               >
                 {expandedReplies.includes(comment._id)
                   ? "Hide"
-                  : `Replies (${comment.replies.length})`}
+                  : `${comment.replies.length} ${comment.replies.length === 1 ? 'reply' : 'replies'}`}
               </button>
             )}
           </div>
@@ -181,13 +180,13 @@ const CommentItem = React.memo(
                     [comment._id]: e.target.value,
                   }))
                 }
-                placeholder={`Reply to @[${comment.user?.name}]`}
-                className="flex-1 border border-gray-300 px-3 py-2 rounded-lg text-sm outline-none focus:ring-2 focus:ring-blue-400"
+                placeholder={`Reply to ${comment.user?.name}`}
+                className="flex-1 border border-gray-300 px-3 py-2 rounded-md text-sm outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               />
 
               <button
                 onClick={() => submitReply(comment._id)}
-                className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-2 rounded-lg text-sm"
+                className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors"
               >
                 Reply
               </button>
@@ -391,7 +390,7 @@ export default function PostCard({ post }: Props) {
   };
 
   return (
-    <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-6 hover:shadow-md transition">
+    <div className="bg-white border border-gray-200 rounded-lg p-6 hover:border-gray-300 transition">
       {/* HEADER */}
 
       <div className="flex items-start gap-3 mb-4">
@@ -401,19 +400,18 @@ export default function PostCard({ post }: Props) {
           size="md"
         />
 
-        <div className="flex-1">
-          <h3 className="text-xl font-bold text-gray-900">{post.title}</h3>
+        <div className="flex-1 min-w-0">
+          <h3 className="text-lg font-semibold text-gray-900 mb-1">{post.title}</h3>
 
-          <div className="flex flex-wrap items-center gap-3 text-sm text-gray-500 mt-1">
-            <span>{post.author.name}</span>
-
-            <span className="px-2 py-0.5 bg-blue-100 text-blue-700 rounded-md text-xs font-medium">
+          <div className="flex flex-wrap items-center gap-2 text-sm text-gray-600">
+            <span className="font-medium">{post.author.name}</span>
+            <span>•</span>
+            <span className="px-2 py-0.5 bg-blue-50 text-blue-700 rounded text-xs font-medium">
               {post.author.role}
             </span>
-
+            <span>•</span>
             <span className="flex items-center gap-1">
               <Calendar size={14} />
-
               {formatDate(post.createdAt)}
             </span>
           </div>
@@ -422,30 +420,29 @@ export default function PostCard({ post }: Props) {
 
       {/* CONTENT */}
 
-      <div className="text-gray-700 mb-4">{post.content}</div>
+      <div className="text-gray-700 leading-relaxed mb-4">{post.content}</div>
 
       {/* ACTIONS */}
 
-      <div className="flex items-center gap-3 border-t border-gray-100 pt-4">
+      <div className="flex items-center gap-2 border-t border-gray-100 pt-4">
         <Button
           onClick={handleLike}
           disabled={isLiking}
           variant="ghost"
-          className="border border-gray-200 bg-white hover:bg-red-50 rounded-lg px-4"
+          className="border border-gray-200 hover:bg-red-50 hover:border-red-200 rounded-md px-4"
         >
           <Heart
-            className={`mr-2 h-5 w-5 ${
-              post.likes?.length > 0
-                ? "fill-red-500 text-red-500"
-                : "text-gray-600"
-            }`}
+            className={`mr-2 h-4 w-4 ${post.likes?.length > 0
+              ? "fill-red-500 text-red-500"
+              : "text-gray-600"
+              }`}
           />
 
           <span
             className={
               post.likes?.length > 0
-                ? "text-red-500 font-medium"
-                : "text-gray-700"
+                ? "text-red-600 font-medium text-sm"
+                : "text-gray-700 text-sm"
             }
           >
             {post.likes?.length || 0}
@@ -455,11 +452,11 @@ export default function PostCard({ post }: Props) {
         <Button
           onClick={() => setShowComments(!showComments)}
           variant="ghost"
-          className="border border-gray-200 bg-white hover:bg-gray-100 rounded-lg px-4"
+          className="border border-gray-200 hover:bg-gray-50 rounded-md px-4"
         >
-          <MessageCircle className="mr-2 h-5 w-5 text-gray-700" />
+          <MessageCircle className="mr-2 h-4 w-4 text-gray-700" />
 
-          <span className="text-gray-700 font-medium">{comments.length}</span>
+          <span className="text-gray-700 font-medium text-sm">{comments.length}</span>
         </Button>
       </div>
 
@@ -473,15 +470,15 @@ export default function PostCard({ post }: Props) {
             <input
               value={text}
               onChange={(e) => setText(e.target.value)}
-              placeholder="Write comment..."
-              className="flex-1 border border-gray-300 px-4 py-2 rounded-lg text-sm outline-none focus:ring-2 focus:ring-blue-400"
+              placeholder="Write a comment..."
+              className="flex-1 border border-gray-300 px-4 py-2.5 rounded-md text-sm outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             />
 
             <button
               onClick={handleAddComment}
-              className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium"
+              className="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 rounded-md text-sm font-medium transition-colors"
             >
-              Comment
+              Post
             </button>
           </div>
 

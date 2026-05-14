@@ -15,18 +15,18 @@ export default function SpaceCard({ space }: Props) {
   return (
     <div
       onClick={handleClick}
-      className="rounded-2xl border p-5 bg-white shadow-sm hover:shadow-md transition cursor-pointer"
+      className="group border border-gray-200 rounded-lg p-6 bg-white hover:border-gray-300 hover:shadow-sm transition-all cursor-pointer"
     >
-      <h2 className="font-bold text-xl">
+      <h2 className="font-semibold text-lg text-gray-900 group-hover:text-blue-600 transition-colors">
         {space.title}
       </h2>
 
-      <p className="text-gray-500 mt-2 line-clamp-3">
+      <p className="text-gray-600 mt-2 text-sm line-clamp-2 leading-relaxed">
         {space.description}
       </p>
 
-      <div className="mt-4 text-sm text-gray-400">
-        by {space.createdBy?.name}
+      <div className="mt-4 pt-4 border-t border-gray-100 text-sm text-gray-500">
+        Created by {space.createdBy?.name}
       </div>
     </div>
   );

@@ -28,53 +28,35 @@ export default function Sidebar() {
   };
 
   return (
-    <div className="w-64 bg-white border-r flex flex-col shadow-sm h-screen">
+    <div className="w-64 bg-white border-r flex flex-col h-screen">
       {/* Logo Section */}
-      <div className="px-4 py-5 border-b flex items-center gap-3">
-        <div className="w-8 h-8 bg-gray-400 rounded-xl flex items-center justify-center text-white font-bold text-xl">
-          🔥
-        </div>
-
-        <div>
-          <p className="font-semibold text-lg">TorchBearer</p>
-          <p className="text-xs text-gray-600">
-            Alumni-Student Platform
-          </p>
-        </div>
-
-        <button className="ml-auto text-gray-600 hover:text-gray-800 cursor-pointer">
-          <Plus size={20} />
-        </button>
-      </div>
-
-      <div className="px-4 py-3">
-        <div className="bg-gray-100 rounded-lg px-3 py-2 text-sm flex items-center gap-2 text-gray-500">
-          <span className="text-lg">🔎</span>
-          Search by title or topic
+      <div className="px-5 py-6 border-b">
+        <div className="flex items-center gap-2.5">
+          <div className="w-7 h-7 bg-gradient-to-br from-orange-500 to-red-600 rounded-lg flex items-center justify-center">
+            <span className="text-white text-sm font-bold">T</span>
+          </div>
+          <span className="font-semibold text-gray-900">TorchBearer</span>
         </div>
       </div>
 
-      <nav className="flex-1 px-2">
-        <div className="flex items-center gap-3 px-4 py-3 text-gray-700 hover:bg-gray-100 rounded-xl cursor-pointer">
+      <nav className="flex-1 px-3 py-4">
+        <div className="flex items-center gap-3 px-3 py-2 text-gray-700 hover:bg-gray-50 rounded-md cursor-pointer transition-colors">
           <Home size={20} />
-          <span className="font-medium">Home</span>
+          <span className="text-sm font-medium">Home</span>
         </div>
 
-        <div className="flex items-center gap-3 px-4 py-3 text-gray-700 hover:bg-gray-100 rounded-xl cursor-pointer">
+        <div className="flex items-center gap-3 px-3 py-2 text-gray-700 hover:bg-gray-50 rounded-md cursor-pointer transition-colors">
           <Clock size={20} />
-          <span className="font-medium">Recent</span>
+          <span className="text-sm font-medium">Recent</span>
         </div>
 
-        <div className="flex items-center gap-3 px-4 py-3 text-gray-700 hover:bg-gray-100 rounded-xl cursor-pointer">
+        <div className="flex items-center gap-3 px-3 py-2 text-gray-700 hover:bg-gray-50 rounded-md cursor-pointer transition-colors">
           <Star size={20} />
-          <span className="font-medium">Starred</span>
+          <span className="text-sm font-medium">Starred</span>
         </div>
 
-        <div className="px-4 mt-6 mb-2 text-xs font-semibold text-gray-600 tracking-widest flex items-center justify-between">
-          SPACES
-          <button className="hover:text-gray-700 cursor-pointer">
-            <Plus size={18} />
-          </button>
+        <div className="px-3 mt-6 mb-2 text-xs font-semibold text-gray-500 uppercase tracking-wider">
+          Spaces
         </div>
       </nav>
 
@@ -82,18 +64,18 @@ export default function Sidebar() {
       <div className="border-t">
         {/* Collapsible Menu */}
         {isMenuOpen && (
-          <div className="px-2 py-3 space-y-1 border-b">
-            <button className="w-full flex items-center gap-3 px-4 py-2.5 text-gray-700 hover:bg-gray-100 rounded-lg cursor-pointer transition-colors">
+          <div className="px-3 py-3 space-y-1 border-b bg-gray-50">
+            <button className="w-full flex items-center gap-3 px-3 py-2 text-gray-700 hover:bg-white rounded-md cursor-pointer transition-colors">
               <User size={18} />
-              <span className="font-medium text-sm">Profile</span>
+              <span className="text-sm font-medium">Profile</span>
             </button>
 
             <button
               onClick={handleLogout}
-              className="w-full flex items-center gap-3 px-4 py-2.5 text-gray-700 hover:bg-gray-100 rounded-lg cursor-pointer transition-colors"
+              className="w-full flex items-center gap-3 px-3 py-2 text-gray-700 hover:bg-white rounded-md cursor-pointer transition-colors"
             >
               <LogOut size={18} />
-              <span className="font-medium text-sm">Log out</span>
+              <span className="text-sm font-medium">Log out</span>
             </button>
           </div>
         )}
@@ -102,17 +84,17 @@ export default function Sidebar() {
         {user && (
           <button
             onClick={toggleMenu}
-            className="w-full px-4 py-3 flex items-center gap-3 hover:bg-gray-50 transition-colors cursor-pointer"
+            className="w-full px-4 py-3.5 flex items-center gap-3 hover:bg-gray-50 transition-colors cursor-pointer"
           >
             <Avatar name={user.name} avatarUrl={user.avatar} size="md" />
             <div className="flex-1 min-w-0 text-left">
-              <p className="font-medium text-sm text-gray-900 truncate">
+              <p className="text-sm font-medium text-gray-900 truncate">
                 {user.name}
               </p>
-              <p className="text-xs text-gray-600 capitalize">{user.role}</p>
+              <p className="text-xs text-gray-500 capitalize">{user.role}</p>
             </div>
             <ChevronRight
-              size={18}
+              size={16}
               className={`text-gray-400 transition-transform ${isMenuOpen ? "rotate-90" : ""
                 }`}
             />
