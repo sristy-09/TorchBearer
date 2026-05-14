@@ -181,3 +181,127 @@ export const deleteSpace = async (req, res) => {
     });
   }
 };
+
+/* =========================================
+   6. GET Space Members
+   ========================================= */
+export const getSpaceMembers = async (req, res) => {
+  try {
+    const space = await Space.findById(req.params.id).populate(
+      "members",
+      "name email role avatar department batchYear"
+    );
+
+    if (!space) {
+      return res.status(404).json({
+        success: false,
+        message: "Space not found",
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      count: space.members.length,
+      data: space.members,
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: "Error fetching space members",
+      error: error.message,
+    });
+  }
+};
+
+/* =========================================
+   7. ADD Member to Space
+   ========================================= */
+export const addMemberToSpace = async (req, res) => {
+  try {
+    const { userId } = req.body;
+    const spaceId = req.params.id;
+
+    const space = await Space.findById(spaceId);
+
+    if (!space) {
+      return res.status(404).json({
+        success: false,
+        message: "Space not found",
+      });
+    }
+
+    // Check if user is already a member
+    if (space.members.includes(userId)) {
+      return res.status(400).json({
+        success: false,
+        message: "User is already a member of this space",
+      });
+    }
+
+    space.members.push(userId);
+    await space.save();
+
+    const updatedSpace = await Space.findById(spaceId).populate(
+      "members",
+      "name email role avatar"
+    );
+
+    res.status(200).json({
+      success: true,
+      message: "Member added successfully",
+      data: updatedSpace.members,
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: "Error adding member to space",
+      error: error.message,
+    });
+  }
+};
+
+/* =========================================
+   8. REMOVE Member from Space
+   ========================================= */
+export const removeMemberFromSpace = async (req, res) => {
+  try {
+    const { userId } = req.body;
+    const spaceId = req.params.id;
+
+    const space = await Space.findById(spaceId);
+
+    if (!space) {
+      return res.status(404).json({
+        success: false,
+        message: "Space not found",
+      });
+    }
+
+    // Only creator or admin can remove members
+    if (
+      space.createdBy.toString() !== req.user._id.toString() &&
+      req.user.role !== "admin"
+    ) {
+      return res.status(403).json({
+        success: false,
+        message: "Unauthorized to remove members from this space",
+      });
+    }
+
+    space.members = space.members.filter(
+      (memberId) => memberId.toString() !== userId
+    );
+    await space.save();
+
+    res.status(200).json({
+      success: true,
+      message: "Member removed successfully",
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: "Error removing member from space",
+      error: error.message,
+    });
+  }
+};

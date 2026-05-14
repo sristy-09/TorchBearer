@@ -9,6 +9,7 @@ import HomePage from "./pages/components/HomePage";
 import LandingPage from "./pages/components/LandingPage";
 import SpaceTopicsPage from "./pages/components/SpaceTopicsPage";
 import TopicPostsPage from "./pages/components/TopicPostsPage";
+import SpaceMembersPage from "./pages/components/SpaceMembersPage";
 import { useAppDispatch } from "./store/hooks";
 import { fetchCurrentUser } from "./store/Slice/authSlice";
 
@@ -61,6 +62,14 @@ const App = () => {
             element={
               <AuthRoute mode="private">
                 <SpaceTopicsPage />
+              </AuthRoute>
+            }
+          />
+          <Route
+            path="/space/:spaceId/members"
+            element={
+              <AuthRoute mode="private">
+                <SpaceMembersPage />
               </AuthRoute>
             }
           />

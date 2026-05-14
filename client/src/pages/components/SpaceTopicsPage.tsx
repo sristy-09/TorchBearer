@@ -14,7 +14,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "../../feature/core/components/ui/select";
-import { ArrowLeft, MessageSquare } from "lucide-react";
+import { ArrowLeft, MessageSquare, Users } from "lucide-react";
 
 export default function SpaceTopicsPage() {
   const { spaceId } = useParams<{ spaceId: string }>();
@@ -69,6 +69,15 @@ export default function SpaceTopicsPage() {
                 {currentSpace?.description || "Explore topics in this space"}
               </p>
             </div>
+
+            <Button
+              variant="outline"
+              onClick={() => navigate(`/space/${spaceId}/members`)}
+              className="flex items-center gap-2"
+            >
+              <Users size={18} />
+              View All Members
+            </Button>
           </div>
         </div>
 

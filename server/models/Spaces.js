@@ -19,6 +19,14 @@ const spaceSchema = new mongoose.Schema({
     required: true,
   },
 
+  // 🔗 Members admitted to this space
+  members: [
+    {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+    },
+  ],
+
   // Optional: store topics inside space (reverse reference)
   topics: [
     {

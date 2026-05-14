@@ -5,6 +5,9 @@ import {
   getSingleSpace,
   updateSpace,
   deleteSpace,
+  getSpaceMembers,
+  addMemberToSpace,
+  removeMemberFromSpace,
 } from "../controllers/spaceController.js";
 import { protect, restrictTo } from "../middleware/authMiddleware.js";
 
@@ -19,5 +22,10 @@ router.post("/", createSpace); // only admin can create spaces
 router.get("/:id", getSingleSpace);
 router.put("/:id", restrictTo("admin"), updateSpace);
 router.delete("/:id", restrictTo("admin"), deleteSpace);
+
+// Member management routes
+router.get("/:id/members", getSpaceMembers); // Get all members of a space
+router.post("/:id/members", addMemberToSpace); // Add a member to a space
+router.delete("/:id/members", removeMemberFromSpace); // Remove a member from a space
 
 export default router;
