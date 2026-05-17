@@ -68,7 +68,10 @@ export default function Sidebar() {
         {/* Collapsible Menu */}
         {isMenuOpen && (
           <div className="px-3 py-3 space-y-1 border-b bg-gray-50">
-            <button className="w-full flex items-center gap-3 px-3 py-2 text-gray-700 hover:bg-white rounded-md cursor-pointer transition-colors">
+            <button
+              onClick={() => { navigate("/profile"); setIsMenuOpen(false); }}
+              className="w-full flex items-center gap-3 px-3 py-2 text-gray-700 hover:bg-white rounded-md cursor-pointer transition-colors"
+            >
               <User size={18} />
               <span className="text-sm font-medium">Profile</span>
             </button>
