@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useAppDispatch, useAppSelector } from "../../../store/hooks";
 import { likePost, deletePost } from "../../../store/Slice/postsSlice";
 import type { Post } from "../types/post";
+import { useNavigate } from "react-router";
 
 import { Heart, MessageCircle, Calendar, Pencil, Trash2 } from "lucide-react";
 
@@ -239,6 +240,7 @@ const CommentItem = React.memo(
 export default function PostCard({ post }: Props) {
   const dispatch = useAppDispatch();
   const currentUser = useAppSelector((state) => state.auth.user);
+  const navigate = useNavigate();
 
   const [isLiking, setIsLiking] = useState(false);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
@@ -439,11 +441,17 @@ export default function PostCard({ post }: Props) {
         {/* HEADER */}
 
         <div className="flex items-start gap-3 mb-4">
-          <Avatar
-            name={post.author.name}
-            avatarUrl={post.author.avatar}
-            size="md"
-          />
+          <button
+            onClick={() => navigate(`/profile/${post.author._id}`)}
+            className="shrink-0 rounded-full focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+            aria-label={`View ${post.author.name}'s profile`}
+          >
+            <Avatar
+              name={post.author.name}
+              avatarUrl={post.author.avatar}
+              size="md"
+            />
+          </button>
 
           <div className="flex-1 min-w-0">
             <h3 className="text-lg font-semibold text-gray-900 mb-1">{post.title}</h3>
