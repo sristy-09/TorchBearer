@@ -10,6 +10,7 @@ import LandingPage from "./pages/components/LandingPage";
 import SpaceTopicsPage from "./pages/components/SpaceTopicsPage";
 import TopicPostsPage from "./pages/components/TopicPostsPage";
 import SpaceMembersPage from "./pages/components/SpaceMembersPage";
+import ProfilePage from "./feature/Profile/components/ProfilePage";
 import { useAppDispatch } from "./store/hooks";
 import { fetchCurrentUser } from "./store/Slice/authSlice";
 import ErrorBoundary from "./feature/core/components/ErrorBoundary";
@@ -127,6 +128,28 @@ const App = () => {
               <ErrorBoundary level="page">
                 <AuthRoute mode="profile-incomplete">
                   <CompleteProfilePage />
+                </AuthRoute>
+              </ErrorBoundary>
+            }
+            errorElement={<RouteErrorBoundary />}
+          />
+          <Route
+            path="/profile"
+            element={
+              <ErrorBoundary level="page">
+                <AuthRoute mode="private">
+                  <ProfilePage />
+                </AuthRoute>
+              </ErrorBoundary>
+            }
+            errorElement={<RouteErrorBoundary />}
+          />
+          <Route
+            path="/profile/:userId"
+            element={
+              <ErrorBoundary level="page">
+                <AuthRoute mode="private">
+                  <ProfilePage />
                 </AuthRoute>
               </ErrorBoundary>
             }
