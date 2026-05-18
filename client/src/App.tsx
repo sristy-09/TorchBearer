@@ -9,6 +9,12 @@ import CompleteProfilePage from "./feature/Auth/components/CompleteProfilePage";
 import HomePage from "./pages/components/HomePage";
 import LandingPage from "./pages/components/LandingPage";
 import AdminDashboard from "./pages/components/AdminDashboard";
+import AdminSpacesList from "./pages/components/admin/AdminSpacesList";
+import AdminTopicsList from "./pages/components/admin/AdminTopicsList";
+import AdminPostsList from "./pages/components/admin/AdminPostsList";
+import AdminUsersList from "./pages/components/admin/AdminUsersList";
+import AdminCreateSpace from "./pages/components/admin/AdminCreateSpace";
+import AdminAdmitUsers from "./pages/components/admin/AdminAdmitUsers";
 import SpaceTopicsPage from "./pages/components/SpaceTopicsPage";
 import TopicPostsPage from "./pages/components/TopicPostsPage";
 import SpaceMembersPage from "./pages/components/SpaceMembersPage";
@@ -130,6 +136,72 @@ const App = () => {
               <ErrorBoundary level="page">
                 <AuthRoute mode="private">
                   <AdminDashboard />
+                </AuthRoute>
+              </ErrorBoundary>
+            }
+            errorElement={<RouteErrorBoundary />}
+          />
+          <Route
+            path="/admin/spaces"
+            element={
+              <ErrorBoundary level="page">
+                <AuthRoute mode="private">
+                  <AdminSpacesList />
+                </AuthRoute>
+              </ErrorBoundary>
+            }
+            errorElement={<RouteErrorBoundary />}
+          />
+          <Route
+            path="/admin/topics"
+            element={
+              <ErrorBoundary level="page">
+                <AuthRoute mode="private">
+                  <AdminTopicsList />
+                </AuthRoute>
+              </ErrorBoundary>
+            }
+            errorElement={<RouteErrorBoundary />}
+          />
+          <Route
+            path="/admin/posts"
+            element={
+              <ErrorBoundary level="page">
+                <AuthRoute mode="private">
+                  <AdminPostsList />
+                </AuthRoute>
+              </ErrorBoundary>
+            }
+            errorElement={<RouteErrorBoundary />}
+          />
+          <Route
+            path="/admin/users"
+            element={
+              <ErrorBoundary level="page">
+                <AuthRoute mode="private">
+                  <AdminUsersList />
+                </AuthRoute>
+              </ErrorBoundary>
+            }
+            errorElement={<RouteErrorBoundary />}
+          />
+          <Route
+            path="/admin/create-space"
+            element={
+              <ErrorBoundary level="page">
+                <AuthRoute mode="private">
+                  <AdminCreateSpace />
+                </AuthRoute>
+              </ErrorBoundary>
+            }
+            errorElement={<RouteErrorBoundary />}
+          />
+          <Route
+            path="/admin/admit-users"
+            element={
+              <ErrorBoundary level="page">
+                <AuthRoute mode="private">
+                  <AdminAdmitUsers />
                 </AuthRoute>
               </ErrorBoundary>
             }

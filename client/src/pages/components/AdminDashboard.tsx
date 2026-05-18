@@ -1,7 +1,7 @@
 import { useEffect } from "react";
 import { useNavigate } from "react-router";
 import { useAppSelector } from "../../store/hooks";
-import Sidebar from "../../feature/core/components/Sidebar";
+import AdminSidebar from "../../feature/core/components/AdminSidebar";
 import { FaUsers, FaComments, FaLayerGroup, FaChartLine } from "react-icons/fa";
 
 function AdminDashboard() {
@@ -22,7 +22,7 @@ function AdminDashboard() {
 
   return (
     <div className="flex min-h-screen bg-neutral-50">
-      <Sidebar />
+      <AdminSidebar />
       <div className="flex-1 p-8">
         <div className="max-w-7xl mx-auto">
           {/* Header */}
@@ -49,13 +49,13 @@ function AdminDashboard() {
             />
             <StatCard
               icon={<FaComments className="w-6 h-6" />}
-              title="Total Posts"
+              title="Total Topics"
               value="0"
               bgColor="bg-purple-500"
             />
             <StatCard
               icon={<FaChartLine className="w-6 h-6" />}
-              title="Active Today"
+              title="Total Posts"
               value="0"
               bgColor="bg-orange-500"
             />
