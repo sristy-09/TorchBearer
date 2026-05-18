@@ -44,6 +44,35 @@ export const fetchPostsByTopic = createAsyncThunk(
   }
 );
 
+export const fetchAllPosts = createAsyncThunk(
+  "posts/fetchAllPosts",
+  async (params: { keyword?: string; page?: number; limit?: number } = {}, { rejectWithValue }) => {
+    try {
+      const queryParams = new URLSearchParams();
+
+      if (params.keyword) {
+        queryParams.append("keyword", params.keyword);
+      }
+      if (params.page) {
+        queryParams.append("page", params.page.toString());
+      }
+      if (params.limit) {
+        queryParams.append("limit", params.limit.toString());
+      }
+
+      const queryString = queryParams.toString();
+      const url = `/api/posts${queryString ? `?${queryString}` : ""}`;
+
+      const res = await apiClient.get(url);
+      return res.data.data;
+    } catch (err: any) {
+      return rejectWithValue(
+        err.response?.data?.message || "Failed to fetch posts"
+      );
+    }
+  }
+);
+
 export const createPost = createAsyncThunk(
   "posts/createPost",
   async (
@@ -159,6 +188,19 @@ const postsSlice = createSlice({
         state.currentTopicId = action.payload.topicId;
       })
       .addCase(fetchPostsByTopic.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload as string;
+      })
+
+      .addCase(fetchAllPosts.pending, (state) => {
+        state.loading = true;
+      })
+      .addCase(fetchAllPosts.fulfilled, (state, action) => {
+        state.loading = false;
+        state.posts = action.payload;
+        state.currentTopicId = null;
+      })
+      .addCase(fetchAllPosts.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload as string;
       })
