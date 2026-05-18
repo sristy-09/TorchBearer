@@ -11,6 +11,6 @@ export interface Topic {
   space: {
     _id: string;
     title: string;
-  };
+  } | null;
   posts?: string[];
 }
