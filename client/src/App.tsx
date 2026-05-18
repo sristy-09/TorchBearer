@@ -1,12 +1,14 @@
 import { BrowserRouter as Router, Route, Routes } from "react-router";
 import { useEffect } from "react";
 import LoginPage from "./feature/Auth/components/LoginPage";
+import AdminLoginPage from "./feature/Auth/components/AdminLoginPage";
 import AuthSuccess from "./feature/Auth/components/AuthSuccess";
 import AuthRoute from "./feature/core/components/ProtectedRoutes";
 import SignUpPage from "./feature/Auth/components/SignupPage";
 import CompleteProfilePage from "./feature/Auth/components/CompleteProfilePage";
 import HomePage from "./pages/components/HomePage";
 import LandingPage from "./pages/components/LandingPage";
+import AdminDashboard from "./pages/components/AdminDashboard";
 import SpaceTopicsPage from "./pages/components/SpaceTopicsPage";
 import TopicPostsPage from "./pages/components/TopicPostsPage";
 import SpaceMembersPage from "./pages/components/SpaceMembersPage";
@@ -108,6 +110,26 @@ const App = () => {
               <ErrorBoundary level="page">
                 <AuthRoute mode="guest">
                   <LoginPage />
+                </AuthRoute>
+              </ErrorBoundary>
+            }
+            errorElement={<RouteErrorBoundary />}
+          />
+          <Route
+            path="/admin/login"
+            element={
+              <ErrorBoundary level="page">
+                <AdminLoginPage />
+              </ErrorBoundary>
+            }
+            errorElement={<RouteErrorBoundary />}
+          />
+          <Route
+            path="/admin/dashboard"
+            element={
+              <ErrorBoundary level="page">
+                <AuthRoute mode="private">
+                  <AdminDashboard />
                 </AuthRoute>
               </ErrorBoundary>
             }

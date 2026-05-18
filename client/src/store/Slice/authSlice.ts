@@ -57,6 +57,27 @@ export const loginUser = createAsyncThunk(
   },
 );
 
+export const loginAdmin = createAsyncThunk(
+  "auth/loginAdmin",
+  async (data: LoginFormType, { rejectWithValue }) => {
+    try {
+      const res = await apiClient.post("/api/auth/login", data);
+
+      // Verify the user is an admin
+      if (res.data.data.user.role !== "admin") {
+        return rejectWithValue("Access denied. Admin credentials required.");
+      }
+
+      return res.data; // { success, token, data: { user } }
+    } catch (err: unknown) {
+      if (axios.isAxiosError(err)) {
+        return rejectWithValue(err.response?.data?.message || "Login failed");
+      }
+      return rejectWithValue("Login failed");
+    }
+  },
+);
+
 export const registerUser = createAsyncThunk(
   "auth/register",
   async (data: SignUpFormType, { rejectWithValue }) => {
@@ -194,6 +215,25 @@ const authSlice = createSlice({
         // No need to set axios headers - interceptor handles it
       })
       .addCase(loginUser.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload as string;
+      });
+
+    // admin login
+    builder
+      .addCase(loginAdmin.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(loginAdmin.fulfilled, (state, action) => {
+        state.loading = false;
+        state.token = action.payload.token;
+        state.user = action.payload.data.user;
+        state.isProfileComplete = isProfileComplete(action.payload.data.user);
+        state.isAuthenticated = true;
+        localStorage.setItem("token", action.payload.token);
+      })
+      .addCase(loginAdmin.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload as string;
       });
