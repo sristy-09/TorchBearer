@@ -23,12 +23,14 @@ export default function EditSpaceDialog({ open, onOpenChange, space }: Props) {
   const dispatch = useAppDispatch();
   const [title, setTitle] = useState(space.title);
   const [description, setDescription] = useState(space.description);
+  const [tagsInput, setTagsInput] = useState((space.tags ?? []).join(", "));
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     if (open) {
       setTitle(space.title);
       setDescription(space.description);
+      setTagsInput((space.tags ?? []).join(", "));
     }
   }, [open, space]);
 
@@ -36,12 +38,17 @@ export default function EditSpaceDialog({ open, onOpenChange, space }: Props) {
     e.preventDefault();
     if (!title.trim() || !description.trim()) return;
 
+    const tags = tagsInput
+      .split(",")
+      .map((t) => t.trim().toLowerCase())
+      .filter(Boolean);
+
     setLoading(true);
     try {
       await dispatch(
         updateSpace({
           id: space._id,
-          data: { title, description },
+          data: { title, description, tags },
         })
       ).unwrap();
       onOpenChange(false);
@@ -81,6 +88,19 @@ export default function EditSpaceDialog({ open, onOpenChange, space }: Props) {
               rows={4}
               required
             />
+          </div>
+
+          <div>
+            <Label htmlFor="tags">Tags (comma separated)</Label>
+            <Input
+              id="tags"
+              value={tagsInput}
+              onChange={(e) => setTagsInput(e.target.value)}
+              placeholder="e.g. python, machine learning, backend"
+            />
+            <p className="text-xs text-gray-500 mt-1">
+              Tags help the AI recommend this space to relevant users.
+            </p>
           </div>
 
           <div className="flex justify-end gap-2">

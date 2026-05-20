@@ -6,7 +6,7 @@ import APIFunctionality from "../utils/apiFunctionality.js";
    ========================================= */
 export const createSpace = async (req, res) => {
   try {
-    const { title, description } = req.body;
+    const { title, description, tags } = req.body;
 
     if (!title) {
       return res.status(400).json({
@@ -18,6 +18,7 @@ export const createSpace = async (req, res) => {
     const newSpace = await Space.create({
       title,
       description,
+      tags: Array.isArray(tags) ? tags : [],
       createdBy: req.user._id, // req.user is set by auth middleware
     });
 
@@ -121,11 +122,11 @@ export const updateSpace = async (req, res) => {
         .json({ success: false, message: "Unauthorized to update this space" });
     }
 
-    const { title, description } = req.body;
+    const { title, description, tags } = req.body;
 
     const updatedSpace = await Space.findByIdAndUpdate(
       req.params.id,
-      { title, description },
+      { title, description, ...(Array.isArray(tags) && { tags }) },
       { returnDocument: 'after', runValidators: true },
     ).populate("createdBy", "name role");
 
