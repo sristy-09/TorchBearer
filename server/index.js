@@ -12,6 +12,7 @@ import spaceRoutes from "./routes/Space.js";
 import postRoutes from "./routes/Post.js";
 import commentRoutes from "./routes/commentRoutes.js";
 import userRoutes from "./routes/User.js";
+import recommendationRoutes from "./routes/recommendations.js";
 
 const app = express();
 
@@ -36,6 +37,7 @@ app.use("/api/topics", topicRoutes); // Topic routes
 app.use("/api/posts", postRoutes);
 app.use("/api/comments", commentRoutes);
 app.use("/api/auth", userRoutes);
+app.use("/api/recommendations", recommendationRoutes); // AI recommendations
 
 
 // Default route

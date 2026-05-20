@@ -12,6 +12,12 @@ const spaceSchema = new mongoose.Schema({
     trim: true,
   },
 
+  // 🏷️ Tags for AI-powered recommendations
+  tags: {
+    type: [String],
+    default: [],
+  },
+
   // 🔗 Alumni who created this space
   createdBy: {
     type: mongoose.Schema.Types.ObjectId,
