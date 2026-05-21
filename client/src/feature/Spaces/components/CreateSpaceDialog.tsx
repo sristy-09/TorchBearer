@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useAppDispatch } from "../../../store/hooks";
+import { useAppDispatch, useAppSelector } from "../../../store/hooks";
 import { createSpace } from "../../../store/Slice/spacesSlice";
 import {
   Dialog,
@@ -15,6 +15,7 @@ import { Textarea } from "../../core/components/ui/textarea";
 
 export default function CreateSpaceDialog() {
   const dispatch = useAppDispatch();
+  const { user } = useAppSelector((state) => state.auth);
 
   const [open, setOpen] = useState(false);
 
@@ -38,6 +39,12 @@ export default function CreateSpaceDialog() {
 
     if (!trimmedTitle || !trimmedDesc) {
       setError("Title and description are required");
+      return;
+    }
+
+    // Check if user is admin
+    if (user?.role !== "admin") {
+      setError("Only administrators can create spaces");
       return;
     }
 

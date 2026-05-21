@@ -20,6 +20,7 @@ import { Compass } from "lucide-react";
 export default function HomePage() {
   const dispatch = useAppDispatch();
   const { searchQuery, filterType, sortBy } = useAppSelector((state) => state.spaces);
+  const { user } = useAppSelector((state) => state.auth);
 
   useEffect(() => {
     dispatch(fetchSpaces({}));
@@ -72,7 +73,7 @@ export default function HomePage() {
               <h2 className="text-xl font-semibold text-gray-900">
                 All Spaces
               </h2>
-              <CreateSpaceDialog />
+              {user?.role === "admin" && <CreateSpaceDialog />}
             </div>
 
             {/* Search + Filters */}
