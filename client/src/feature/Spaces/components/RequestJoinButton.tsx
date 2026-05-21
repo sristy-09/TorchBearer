@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useAppDispatch, useAppSelector } from "../../../store/hooks";
 import { requestJoinSpace } from "../../../store/Slice/notificationSlice";
 import { Button } from "../../core/components/ui/button";
-import { UserPlus, Check, Clock } from "lucide-react";
+import { UserPlus, Check, Clock, CheckCircle } from "lucide-react";
 
 interface RequestJoinButtonProps {
   spaceId: string;
@@ -18,6 +18,7 @@ export default function RequestJoinButton({
   const { notifications } = useAppSelector((state) => state.notifications);
 
   const [loading, setLoading] = useState(false);
+  const [requestSent, setRequestSent] = useState(false);
   const [error, setError] = useState("");
 
   // Check if user already has a pending request for this space
@@ -45,6 +46,7 @@ export default function RequestJoinButton({
 
     try {
       await dispatch(requestJoinSpace(spaceId)).unwrap();
+      setRequestSent(true);
     } catch (err: any) {
       setError(err || "Failed to send request");
     } finally {
@@ -62,7 +64,17 @@ export default function RequestJoinButton({
     );
   }
 
-  // If user has a pending request
+  // If request was just sent (local state)
+  if (requestSent) {
+    return (
+      <Button disabled className="bg-green-600">
+        <CheckCircle className="w-4 h-4 mr-2" />
+        Request Sent
+      </Button>
+    );
+  }
+
+  // If user has a pending request (from notifications)
   if (hasPendingRequest) {
     return (
       <Button disabled className="bg-yellow-600">

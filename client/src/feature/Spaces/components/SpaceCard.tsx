@@ -98,18 +98,12 @@ export default function SpaceCard({ space }: Props) {
           {space.description}
         </p>
 
-        <div className="mt-4 pt-4 border-t border-gray-100 flex items-center justify-between">
-          <span className="text-sm text-gray-500">
-            Created by {space.createdBy?.name}
-          </span>
-
-          {/* Show RequestJoinButton if user is not a member and not admin */}
-          {!canAccess && (
-            <div onClick={(e) => e.stopPropagation()}>
-              <RequestJoinButton spaceId={space._id} isMember={isMember} />
-            </div>
-          )}
-        </div>
+        {/* Show RequestJoinButton if user is not a member and not admin */}
+        {!canAccess && (
+          <div className="mt-4 pt-4 border-t border-gray-100" onClick={(e) => e.stopPropagation()}>
+            <RequestJoinButton spaceId={space._id} isMember={isMember} />
+          </div>
+        )}
       </div>
 
       <EditSpaceDialog
