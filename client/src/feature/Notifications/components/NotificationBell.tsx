@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { Bell } from "lucide-react";
 import { useAppDispatch } from "../../../store/hooks";
 import { useNotifications } from "../hooks/useNotifications";
@@ -9,6 +9,18 @@ export default function NotificationBell() {
   const dispatch = useAppDispatch();
   const { notifications, unreadCount } = useNotifications();
   const [isOpen, setIsOpen] = useState(false);
+  const buttonRef = useRef<HTMLButtonElement>(null);
+  const [dropdownPosition, setDropdownPosition] = useState({ top: 0, left: 0 });
+
+  useEffect(() => {
+    if (isOpen && buttonRef.current) {
+      const rect = buttonRef.current.getBoundingClientRect();
+      setDropdownPosition({
+        top: rect.bottom + 8, // 8px below the button
+        left: rect.left - 384 + rect.width, // Align right edge of dropdown with button
+      });
+    }
+  }, [isOpen]);
 
   const handleMarkAsRead = (notificationId: string) => {
     dispatch(markAsRead(notificationId));
@@ -22,6 +34,7 @@ export default function NotificationBell() {
     <div className="relative">
       {/* Bell Icon */}
       <button
+        ref={buttonRef}
         onClick={() => setIsOpen(!isOpen)}
         className="relative p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-full transition-colors"
       >
@@ -38,12 +51,18 @@ export default function NotificationBell() {
         <>
           {/* Backdrop */}
           <div
-            className="fixed inset-0 z-10"
+            className="fixed inset-0 z-40"
             onClick={() => setIsOpen(false)}
           />
 
           {/* Notification Panel */}
-          <div className="absolute right-0 mt-2 w-96 bg-white rounded-lg shadow-lg border border-gray-200 z-20 max-h-[600px] flex flex-col">
+          <div
+            className="fixed w-96 bg-white rounded-lg shadow-xl border border-gray-200 z-50 max-h-[600px] flex flex-col"
+            style={{
+              top: `${dropdownPosition.top}px`,
+              left: `${dropdownPosition.left}px`,
+            }}
+          >
             {/* Header */}
             <div className="px-4 py-3 border-b border-gray-200 flex items-center justify-between">
               <h3 className="text-lg font-semibold text-gray-900">
@@ -118,10 +137,10 @@ export default function NotificationBell() {
                         <div className="mt-2 ml-13">
                           <span
                             className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${notification.status === "pending"
-                                ? "bg-yellow-100 text-yellow-800"
-                                : notification.status === "approved"
-                                  ? "bg-green-100 text-green-800"
-                                  : "bg-red-100 text-red-800"
+                              ? "bg-yellow-100 text-yellow-800"
+                              : notification.status === "approved"
+                                ? "bg-green-100 text-green-800"
+                                : "bg-red-100 text-red-800"
                               }`}
                           >
                             {notification.status}
