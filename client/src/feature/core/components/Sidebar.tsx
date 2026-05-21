@@ -4,6 +4,7 @@ import { logoutUser } from "../../../store/Slice/authSlice";
 import { useNavigate } from "react-router";
 import { useState } from "react";
 import { Avatar } from "./ui/avatar";
+import NotificationBell from "../../Notifications/components/NotificationBell";
 
 export default function Sidebar() {
   const dispatch = useAppDispatch();
@@ -31,15 +32,18 @@ export default function Sidebar() {
     <div className="w-64 bg-white border-r flex flex-col h-screen">
       {/* Logo Section */}
       <div className="px-5 py-6 border-b">
-        <button
-          onClick={() => navigate("/dashboard")}
-          className="flex items-center gap-2.5 hover:opacity-80 transition-opacity cursor-pointer"
-        >
-          <div className="w-7 h-7 bg-gradient-to-br from-orange-500 to-red-600 rounded-lg flex items-center justify-center">
-            <span className="text-white text-sm font-bold">T</span>
-          </div>
-          <span className="font-semibold text-gray-900">TorchBearer</span>
-        </button>
+        <div className="flex items-center justify-between">
+          <button
+            onClick={() => navigate("/dashboard")}
+            className="flex items-center gap-2.5 hover:opacity-80 transition-opacity cursor-pointer"
+          >
+            <div className="w-7 h-7 bg-gradient-to-br from-orange-500 to-red-600 rounded-lg flex items-center justify-center">
+              <span className="text-white text-sm font-bold">T</span>
+            </div>
+            <span className="font-semibold text-gray-900">TorchBearer</span>
+          </button>
+          <NotificationBell />
+        </div>
       </div>
 
       <nav className="flex-1 px-3 py-4">

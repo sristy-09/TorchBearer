@@ -11,6 +11,7 @@ import {
   Settings,
   UserPlus,
   FolderPlus,
+  Bell,
 } from "lucide-react";
 import { useAppDispatch, useAppSelector } from "../../../store/hooks";
 import { logoutUser } from "../../../store/Slice/authSlice";
@@ -92,6 +93,11 @@ export default function AdminSidebar() {
           label: "Admit Users",
           path: "/admin/admit-users",
           icon: <UserPlus size={18} />,
+        },
+        {
+          label: "Pending Requests",
+          path: "/admin/pending-requests",
+          icon: <Bell size={18} />,
         },
       ],
     },

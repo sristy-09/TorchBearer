@@ -3,6 +3,7 @@ import authReducer from "./Slice/authSlice"; // add this
 import spacesReducer from "./Slice/spacesSlice";
 import topicsReducer from "./Slice/topicsSlice";
 import postsReducer from "./Slice/postsSlice";
+import notificationReducer from "./Slice/notificationSlice";
 
 export const store = configureStore({
   reducer: {
@@ -10,6 +11,7 @@ export const store = configureStore({
     spaces: spacesReducer,
     topics: topicsReducer,
     posts: postsReducer,
+    notifications: notificationReducer,
   },
 });
 

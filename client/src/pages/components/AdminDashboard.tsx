@@ -2,11 +2,14 @@ import { useEffect } from "react";
 import { useNavigate } from "react-router";
 import { useAppSelector } from "../../store/hooks";
 import AdminSidebar from "../../feature/core/components/AdminSidebar";
-import { FaUsers, FaComments, FaLayerGroup, FaChartLine } from "react-icons/fa";
+import { useNotifications } from "../../feature/Notifications/hooks/useNotifications";
+import { FaUsers, FaComments, FaLayerGroup } from "react-icons/fa";
+import { Bell } from "lucide-react";
 
 function AdminDashboard() {
   const navigate = useNavigate();
   const { user, isAuthenticated } = useAppSelector((state) => state.auth);
+  const { pendingRequests } = useNotifications();
 
   useEffect(() => {
     // Redirect if not authenticated or not an admin
@@ -54,10 +57,12 @@ function AdminDashboard() {
               bgColor="bg-purple-500"
             />
             <StatCard
-              icon={<FaChartLine className="w-6 h-6" />}
-              title="Total Posts"
-              value="0"
-              bgColor="bg-orange-500"
+              icon={<Bell className="w-6 h-6" />}
+              title="Pending Requests"
+              value={pendingRequests.length.toString()}
+              bgColor="bg-yellow-500"
+              onClick={() => navigate("/admin/pending-requests")}
+              clickable
             />
           </div>
 
@@ -76,9 +81,10 @@ function AdminDashboard() {
                 onClick={() => navigate("/admin/spaces")}
               />
               <ActionButton
-                title="View Reports"
-                description="Check system reports"
-                onClick={() => navigate("/admin/reports")}
+                title="Pending Requests"
+                description="Review space join requests"
+                onClick={() => navigate("/admin/pending-requests")}
+                badge={pendingRequests.length > 0 ? pendingRequests.length : undefined}
               />
             </div>
           </div>
@@ -94,11 +100,19 @@ interface StatCardProps {
   title: string;
   value: string;
   bgColor: string;
+  onClick?: () => void;
+  clickable?: boolean;
 }
 
-function StatCard({ icon, title, value, bgColor }: StatCardProps) {
+function StatCard({ icon, title, value, bgColor, onClick, clickable }: StatCardProps) {
+  const Component = clickable ? "button" : "div";
+
   return (
-    <div className="bg-white rounded-lg shadow p-6">
+    <Component
+      onClick={onClick}
+      className={`bg-white rounded-lg shadow p-6 ${clickable ? "cursor-pointer hover:shadow-lg transition-shadow" : ""
+        }`}
+    >
       <div className="flex items-center justify-between">
         <div>
           <p className="text-sm text-gray-600 mb-1">{title}</p>
@@ -108,7 +122,7 @@ function StatCard({ icon, title, value, bgColor }: StatCardProps) {
           {icon}
         </div>
       </div>
-    </div>
+    </Component>
   );
 }
 
@@ -117,15 +131,23 @@ interface ActionButtonProps {
   title: string;
   description: string;
   onClick: () => void;
+  badge?: number;
 }
 
-function ActionButton({ title, description, onClick }: ActionButtonProps) {
+function ActionButton({ title, description, onClick, badge }: ActionButtonProps) {
   return (
     <button
       onClick={onClick}
-      className="text-left p-4 border border-gray-200 rounded-lg hover:border-blue-500 hover:shadow-md transition-all"
+      className="text-left p-4 border border-gray-200 rounded-lg hover:border-blue-500 hover:shadow-md transition-all relative"
     >
-      <h3 className="font-semibold text-gray-900 mb-1">{title}</h3>
+      <h3 className="font-semibold text-gray-900 mb-1 flex items-center gap-2">
+        {title}
+        {badge !== undefined && badge > 0 && (
+          <span className="inline-flex items-center justify-center px-2 py-1 text-xs font-bold leading-none text-white bg-red-600 rounded-full">
+            {badge}
+          </span>
+        )}
+      </h3>
       <p className="text-sm text-gray-600">{description}</p>
     </button>
   );

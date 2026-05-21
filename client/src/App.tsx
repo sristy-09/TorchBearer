@@ -15,17 +15,24 @@ import AdminPostsList from "./pages/components/admin/AdminPostsList";
 import AdminUsersList from "./pages/components/admin/AdminUsersList";
 import AdminCreateSpace from "./pages/components/admin/AdminCreateSpace";
 import AdminAdmitUsers from "./pages/components/admin/AdminAdmitUsers";
+import AdminPendingRequests from "./pages/components/admin/AdminPendingRequests";
 import SpaceTopicsPage from "./pages/components/SpaceTopicsPage";
 import TopicPostsPage from "./pages/components/TopicPostsPage";
 import SpaceMembersPage from "./pages/components/SpaceMembersPage";
 import ProfilePage from "./feature/Profile/components/ProfilePage";
-import { useAppDispatch } from "./store/hooks";
+import { useAppDispatch, useAppSelector } from "./store/hooks";
 import { fetchCurrentUser } from "./store/Slice/authSlice";
+import { socketService } from "./services/socket";
+import { useNotificationPermission } from "./feature/Notifications/hooks/useNotifications";
 import ErrorBoundary from "./feature/core/components/ErrorBoundary";
 import RouteErrorBoundary from "./feature/core/components/RouteErrorBoundary";
 
 const App = () => {
   const dispatch = useAppDispatch();
+  const { token, isAuthenticated } = useAppSelector((state) => state.auth);
+
+  // Request notification permission
+  useNotificationPermission();
 
   // Verify token on app load
   useEffect(() => {
@@ -39,6 +46,19 @@ const App = () => {
 
     verifyToken();
   }, [dispatch]);
+
+  // Initialize socket connection when authenticated
+  useEffect(() => {
+    if (isAuthenticated && token) {
+      socketService.connect(token);
+    } else {
+      socketService.disconnect();
+    }
+
+    return () => {
+      socketService.disconnect();
+    };
+  }, [isAuthenticated, token]);
 
   return (
     <ErrorBoundary level="app">
@@ -202,6 +222,17 @@ const App = () => {
               <ErrorBoundary level="page">
                 <AuthRoute mode="private">
                   <AdminAdmitUsers />
+                </AuthRoute>
+              </ErrorBoundary>
+            }
+            errorElement={<RouteErrorBoundary />}
+          />
+          <Route
+            path="/admin/pending-requests"
+            element={
+              <ErrorBoundary level="page">
+                <AuthRoute mode="private">
+                  <AdminPendingRequests />
                 </AuthRoute>
               </ErrorBoundary>
             }
