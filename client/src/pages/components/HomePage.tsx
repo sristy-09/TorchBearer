@@ -21,7 +21,6 @@ export default function HomePage() {
   const dispatch = useAppDispatch();
   const { user } = useAppSelector((state) => state.auth);
   const { searchQuery, filterType, sortBy } = useAppSelector((state) => state.spaces);
-  const { user } = useAppSelector((state) => state.auth);
 
   // On mount: fetch all spaces AND auto-recommendations in parallel
   useEffect(() => {
