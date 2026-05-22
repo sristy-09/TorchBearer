@@ -6,61 +6,73 @@ import ErrorBoundary from "../../core/components/ErrorBoundary";
 
 export default function SpacesGrid() {
   const dispatch = useAppDispatch();
+
   const { spaces, loading, searchQuery, filterType, sortBy } = useAppSelector(
     (state) => state.spaces
   );
   const currentUser = useAppSelector((state) => state.auth.user);
 
-  // Fetch spaces from server with search query
+  // IDs of spaces already shown in the auto-recommendation section
+  const autoRecommendedIds = useAppSelector((state) =>
+    state.recommendations.autoRecommendations.map((r) => r.id)
+  );
+
+  // Debounced re-fetch when search query changes
   useEffect(() => {
     const timer = setTimeout(() => {
       dispatch(fetchSpaces({ keyword: searchQuery || undefined }));
-    }, 500); // Debounce search by 500ms
-
+    }, 500);
     return () => clearTimeout(timer);
   }, [dispatch, searchQuery]);
 
-  // Client-side filtering for "my" and "joined" spaces
-  // (Backend doesn't support these filters yet)
-  const filteredAndSortedSpaces = useMemo(() => {
+  // Filter + sort, and split into recommended vs other
+  const { otherSpaces } = useMemo(() => {
     let filtered = [...spaces];
 
-    // Apply filter type (client-side only)
+    // Client-side filter by ownership / membership
     if (filterType === "my" && currentUser) {
-      filtered = filtered.filter(
-        (space) => space.createdBy?._id === currentUser._id
-      );
+      filtered = filtered.filter((s) => s.createdBy?._id === currentUser._id);
     } else if (filterType === "joined" && currentUser) {
-      filtered = filtered.filter((space) =>
-        space.members?.some((member) => member === currentUser._id)
+      filtered = filtered.filter((s) =>
+        s.members?.some((m) => m === currentUser._id)
       );
     }
 
-    // Apply sorting (client-side)
+    // Sort
     if (sortBy === "name") {
       filtered.sort((a, b) => a.title.localeCompare(b.title));
-    } else if (sortBy === "latest") {
+    } else {
       filtered.sort(
-        (a, b) =>
-          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+        (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
       );
     }
 
-    return filtered;
-  }, [spaces, filterType, sortBy, currentUser]);
+    // Exclude spaces already shown in the AI recommendation section
+    const other = filtered.filter((s) => !autoRecommendedIds.includes(s._id));
 
-  if (loading) return <p>Loading spaces...</p>;
+    return { otherSpaces: other };
+  }, [spaces, filterType, sortBy, currentUser, autoRecommendedIds]);
 
-  if (filteredAndSortedSpaces.length === 0) {
+  if (loading) {
+    return (
+      <div className="grid md:grid-cols-3 gap-6">
+        {Array.from({ length: 6 }).map((_, i) => (
+          <div key={i} className="bg-white border border-gray-200 rounded-lg p-6 animate-pulse">
+            <div className="h-5 bg-gray-200 rounded w-2/3 mb-3" />
+            <div className="h-3 bg-gray-100 rounded w-full mb-2" />
+            <div className="h-3 bg-gray-100 rounded w-4/5 mb-4" />
+            <div className="h-3 bg-gray-100 rounded w-1/3" />
+          </div>
+        ))}
+      </div>
+    );
+  }
+
+  if (otherSpaces.length === 0) {
     let message = "No spaces available.";
-
-    if (searchQuery) {
-      message = "No spaces found matching your search.";
-    } else if (filterType === "my") {
-      message = "You haven't created any spaces yet.";
-    } else if (filterType === "joined") {
-      message = "You haven't joined any spaces yet.";
-    }
+    if (searchQuery) message = "No spaces found matching your search.";
+    else if (filterType === "my") message = "You haven't created any spaces yet.";
+    else if (filterType === "joined") message = "You haven't joined any spaces yet.";
 
     return (
       <div className="text-center py-12">
@@ -71,7 +83,7 @@ export default function SpacesGrid() {
 
   return (
     <div className="grid md:grid-cols-3 gap-6">
-      {filteredAndSortedSpaces.map((space) => (
+      {otherSpaces.map((space) => (
         <ErrorBoundary key={space._id} level="component">
           <SpaceCard space={space} />
         </ErrorBoundary>

@@ -15,6 +15,7 @@ import postRoutes from "./routes/Post.js";
 import commentRoutes from "./routes/commentRoutes.js";
 import userRoutes from "./routes/User.js";
 import notificationRoutes from "./routes/Notification.js";
+import recommendationRoutes from "./routes/recommendations.js";
 
 const app = express();
 const server = createServer(app);
@@ -44,6 +45,7 @@ app.use("/api/posts", postRoutes);
 app.use("/api/comments", commentRoutes);
 app.use("/api/auth", userRoutes);
 app.use("/api/notifications", notificationRoutes); // Notification routes
+app.use("/api/recommendations", recommendationRoutes); // AI recommendations
 
 
 // Default route

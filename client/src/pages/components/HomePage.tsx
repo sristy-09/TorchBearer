@@ -1,12 +1,13 @@
 import { useEffect } from "react";
 import Sidebar from "../../feature/core/components/Sidebar";
-import { Button } from "../../feature/core/components/ui/button";
 import { Input } from "../../feature/core/components/ui/input";
 import CreateSpaceDialog from "../../feature/Spaces/components/CreateSpaceDialog";
 import SpacesGrid from "../../feature/Spaces/components/SpacesGrid";
+import RecommendationsSection from "../../feature/Recommendations/components/RecommendationsSection";
 
 import { useAppDispatch, useAppSelector } from "../../store/hooks";
 import { fetchSpaces, setSearchQuery, setFilterType, setSortBy } from "../../store/Slice/spacesSlice";
+import { fetchMyRecommendations } from "../../store/Slice/recommendationsSlice";
 
 import {
   Select,
@@ -15,15 +16,17 @@ import {
   SelectTrigger,
   SelectValue,
 } from "../../feature/core/components/ui/select";
-import { Compass } from "lucide-react";
 
 export default function HomePage() {
   const dispatch = useAppDispatch();
+  const { user } = useAppSelector((state) => state.auth);
   const { searchQuery, filterType, sortBy } = useAppSelector((state) => state.spaces);
   const { user } = useAppSelector((state) => state.auth);
 
+  // On mount: fetch all spaces AND auto-recommendations in parallel
   useEffect(() => {
     dispatch(fetchSpaces({}));
+    dispatch(fetchMyRecommendations());
   }, [dispatch]);
 
   return (
@@ -35,7 +38,7 @@ export default function HomePage() {
         <div className="bg-white border-b px-8 py-6">
           <div className="max-w-7xl mx-auto">
             <h1 className="text-2xl font-semibold text-gray-900">
-              Your Spaces
+              Welcome back{user?.name ? `, ${user.name}` : ""}
             </h1>
             <p className="text-gray-600 mt-1">
               Connect with alumni and students in your areas of interest
@@ -44,34 +47,15 @@ export default function HomePage() {
         </div>
 
         <div className="max-w-7xl mx-auto px-8 py-8">
-          {/* Recommendation Section */}
-          <div className="mb-10">
-            <div className="bg-gradient-to-br from-blue-600 to-indigo-700 rounded-lg p-8 text-white">
-              <div className="max-w-3xl">
-                <h2 className="text-2xl font-semibold mb-2">
-                  Find Relevant Opportunities
-                </h2>
-                <p className="text-blue-100 mb-6">
-                  Get personalized space recommendations based on your skills and interests
-                </p>
 
-                <div className="flex gap-3">
-                  <Input
-                    placeholder="Enter skills (e.g. Python, React, Machine Learning)"
-                    className="bg-white/95 text-gray-900 border-0 h-11 flex-1"
-                  />
-                  <Button className="bg-white text-blue-600 hover:bg-blue-50 font-medium px-6">
-                    Search
-                  </Button>
-                </div>
-              </div>
-            </div>
-          </div>
+          {/* AI Recommendations (auto + manual search) */}
+          <RecommendationsSection />
 
+          {/* All Spaces section */}
           <div>
             <div className="flex items-center justify-between mb-6">
               <h2 className="text-xl font-semibold text-gray-900">
-                All Spaces
+                Other Spaces
               </h2>
               {user?.role === "admin" && <CreateSpaceDialog />}
             </div>
