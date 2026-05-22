@@ -13,11 +13,11 @@ export interface Post {
   topic: {
     _id: string;
     title: string;
-  };
+  } | null;
   space: {
     _id: string;
     title: string;
-  };
+  } | null;
   likes: string[];
   createdAt: string;
   updatedAt: string;

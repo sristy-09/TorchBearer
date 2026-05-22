@@ -5,6 +5,7 @@ import { deleteSpace } from "../../../store/Slice/spacesSlice";
 import type { Space } from "../types/space";
 import { Pencil, Trash2 } from "lucide-react";
 import EditSpaceDialog from "./EditSpaceDialog";
+import RequestJoinButton from "./RequestJoinButton";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -31,9 +32,14 @@ export default function SpaceCard({ space }: Props) {
   const isOwner = currentUser?._id === space.createdBy?._id;
   const isAdmin = currentUser?.role === "admin";
   const canModify = isOwner || isAdmin;
+  const isMember = space.members?.includes(currentUser?._id || "");
+  const canAccess = isMember || isAdmin;
 
   const handleClick = () => {
-    navigate(`/space/${space._id}/topics`);
+    // Only navigate if user can access the space
+    if (canAccess) {
+      navigate(`/space/${space._id}/topics`);
+    }
   };
 
   const handleEdit = (e: React.MouseEvent) => {
@@ -62,7 +68,8 @@ export default function SpaceCard({ space }: Props) {
     <>
       <div
         onClick={handleClick}
-        className="group border border-gray-200 rounded-lg p-6 bg-white hover:border-gray-300 hover:shadow-sm transition-all cursor-pointer relative"
+        className={`group border border-gray-200 rounded-lg p-6 bg-white hover:border-gray-300 hover:shadow-sm transition-all relative ${canAccess ? "cursor-pointer" : ""
+          }`}
       >
         {canModify && (
           <div className="absolute top-4 right-4 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
@@ -91,9 +98,12 @@ export default function SpaceCard({ space }: Props) {
           {space.description}
         </p>
 
-        <div className="mt-4 pt-4 border-t border-gray-100 text-sm text-gray-500">
-          Created by {space.createdBy?.name}
-        </div>
+        {/* Show RequestJoinButton if user is not a member and not admin */}
+        {!canAccess && (
+          <div className="mt-4 pt-4 border-t border-gray-100" onClick={(e) => e.stopPropagation()}>
+            <RequestJoinButton spaceId={space._id} isMember={isMember} />
+          </div>
+        )}
       </div>
 
       <EditSpaceDialog

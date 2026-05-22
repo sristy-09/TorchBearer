@@ -50,6 +50,35 @@ export const fetchTopicsBySpace = createAsyncThunk(
   }
 );
 
+export const fetchAllTopics = createAsyncThunk(
+  "topics/fetchAllTopics",
+  async (params: { keyword?: string; page?: number; limit?: number } = {}, { rejectWithValue }) => {
+    try {
+      const queryParams = new URLSearchParams();
+
+      if (params.keyword) {
+        queryParams.append("keyword", params.keyword);
+      }
+      if (params.page) {
+        queryParams.append("page", params.page.toString());
+      }
+      if (params.limit) {
+        queryParams.append("limit", params.limit.toString());
+      }
+
+      const queryString = queryParams.toString();
+      const url = `/api/topics${queryString ? `?${queryString}` : ""}`;
+
+      const res = await apiClient.get(url);
+      return res.data.data;
+    } catch (err: any) {
+      return rejectWithValue(
+        err.response?.data?.message || "Failed to fetch topics"
+      );
+    }
+  }
+);
+
 export const createTopic = createAsyncThunk(
   "topics/createTopic",
   async (
@@ -131,6 +160,21 @@ const topicsSlice = createSlice({
       })
 
       .addCase(fetchTopicsBySpace.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload as string;
+      })
+
+      .addCase(fetchAllTopics.pending, (state) => {
+        state.loading = true;
+      })
+
+      .addCase(fetchAllTopics.fulfilled, (state, action) => {
+        state.loading = false;
+        state.topics = action.payload;
+        state.currentSpaceId = null;
+      })
+
+      .addCase(fetchAllTopics.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload as string;
       })
