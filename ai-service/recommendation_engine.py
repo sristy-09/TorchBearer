@@ -126,7 +126,7 @@ class RecommendationEngine:
             tag_text = " ".join(normalized_tags)
 
             # Weight tags heavily
-            parts.extend([tag_text] * 4)
+            parts.extend([tag_text] * 8)
 
         return " ".join(parts)
 

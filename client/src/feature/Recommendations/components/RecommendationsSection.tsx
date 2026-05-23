@@ -15,6 +15,7 @@ import {
   clearSearchRecommendations,
   type RecommendedSpace,
 } from "../../../store/Slice/recommendationsSlice";
+import RequestJoinButton from "../../Spaces/components/RequestJoinButton";
 
 /* ─────────────────────────────────────────────────────────────
    Sub-components
@@ -37,12 +38,28 @@ function TagChip({ label, onRemove }: { label: string; onRemove: () => void }) {
 
 function SpaceResultCard({ space }: { space: RecommendedSpace }) {
   const navigate = useNavigate();
+  const currentUser = useAppSelector((state) => state.auth.user);
+  const spaces = useAppSelector((state) => state.spaces.spaces);
   const matchPercent = Math.round(space.similarity_score * 100);
+
+  // Find the full space object to check membership
+  const fullSpace = spaces.find((s) => s._id === space.id);
+  const isMember = fullSpace?.members?.includes(currentUser?._id || "");
+  const isAdmin = currentUser?.role === "admin";
+  const canAccess = isMember || isAdmin;
+
+  const handleClick = () => {
+    // Only navigate if user can access the space
+    if (canAccess) {
+      navigate(`/space/${space.id}/topics`);
+    }
+  };
 
   return (
     <div
-      onClick={() => navigate(`/space/${space.id}/topics`)}
-      className="group bg-white border border-gray-200 rounded-lg p-5 hover:border-blue-300 hover:shadow-md transition-all cursor-pointer"
+      onClick={handleClick}
+      className={`group bg-white border border-gray-200 rounded-lg p-5 hover:border-blue-300 hover:shadow-md transition-all ${canAccess ? "cursor-pointer" : ""
+        }`}
     >
       <div className="flex items-start justify-between gap-3 mb-2">
         <h3 className="font-semibold text-gray-900 group-hover:text-blue-600 transition-colors leading-snug">
@@ -84,8 +101,11 @@ function SpaceResultCard({ space }: { space: RecommendedSpace }) {
         </div>
       )}
 
-      {space.created_by && (
-        <p className="text-xs text-gray-400">Created by {space.created_by}</p>
+      {/* Show RequestJoinButton if user is not a member and not admin */}
+      {!canAccess && (
+        <div className="mt-3 pt-3 border-t border-gray-100" onClick={(e) => e.stopPropagation()}>
+          <RequestJoinButton spaceId={space.id} isMember={!!isMember} />
+        </div>
       )}
     </div>
   );
