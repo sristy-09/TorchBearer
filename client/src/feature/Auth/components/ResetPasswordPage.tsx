@@ -1,64 +1,61 @@
-import { useState } from "react"
-import axios from "axios"
-import { useParams, useNavigate } from "react-router-dom"
-import { Link } from "react-router"
-import { Button } from "../../core/components/ui/button"
+import { useState } from "react";
+import axios from "axios";
+import { useParams, useNavigate } from "react-router";
+import { Link } from "react-router";
+import { Button } from "../../core/components/ui/button";
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from "../../core/components/ui/card"
-import { Input } from "../../core/components/ui/input"
-import { Label } from "../../core/components/ui/label"
+} from "../../core/components/ui/card";
+import { Input } from "../../core/components/ui/input";
+import { Label } from "../../core/components/ui/label";
 
-const API_URL = import.meta.env.VITE_API_URL
+const API_URL = import.meta.env.VITE_API_URL;
 
 const ResetPasswordPage = () => {
-  const { token } = useParams()
-  const navigate = useNavigate()
-  const [password, setPassword] = useState("")
-  const [loading, setLoading] = useState(false)
-  const [errorMessage, setErrorMessage] = useState("")
+  const { token } = useParams();
+  const navigate = useNavigate();
+  const [password, setPassword] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [errorMessage, setErrorMessage] = useState("");
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setErrorMessage("")
+    e.preventDefault();
+    setErrorMessage("");
 
     if (password.length < 6) {
-      setErrorMessage("Password must be at least 6 characters.")
-      return
+      setErrorMessage("Password must be at least 6 characters.");
+      return;
     }
 
-    setLoading(true)
+    setLoading(true);
 
     try {
-      await axios.post(
-        `${API_URL}/api/auth/reset-password/${token}`,
-        { password }
-      )
+      await axios.post(`${API_URL}/api/auth/reset-password/${token}`, {
+        password,
+      });
       navigate("/login", {
         state: { message: "Password reset successful. You can now log in." },
-      })
+      });
     } catch (error: any) {
       const msg =
         error.response?.data?.message ??
-        "Something went wrong. Please try again."
-      setErrorMessage(msg)
+        "Something went wrong. Please try again.";
+      setErrorMessage(msg);
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   return (
     <div className="flex justify-center items-center min-h-screen bg-neutral-50 px-4">
       <Card className="w-full max-w-sm">
         <CardHeader>
           <CardTitle>Reset Password</CardTitle>
-          <CardDescription>
-            Enter your new password below.
-          </CardDescription>
+          <CardDescription>Enter your new password below.</CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit}>
@@ -98,7 +95,7 @@ const ResetPasswordPage = () => {
         </CardContent>
       </Card>
     </div>
-  )
-}
+  );
+};
 
-export default ResetPasswordPage
+export default ResetPasswordPage;
