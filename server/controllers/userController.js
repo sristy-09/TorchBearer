@@ -1,7 +1,9 @@
 import jwt from "jsonwebtoken";
 import { User } from "../models/User.js";
 import { TokenBlacklist } from "../models/TokenBlacklist.js";
-
+import crypto from "crypto"
+import bcrypt from "bcryptjs";
+import { sendEmail } from "../utils/sendEmail.js";
 /* ─── Helper: sign a JWT and send it back ───────────────────── */
 const signToken = (id) =>
   jwt.sign({ id }, process.env.JWT_SECRET, {
@@ -260,6 +262,126 @@ export const changePassword = async (req, res) => {
     await user.save();
 
     sendTokenResponse(user, 200, res); // issue a fresh token
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
+export const forgotPassword = async (req, res) => {
+  const { email } = req.body;
+
+  if (!email) {
+    return res.status(400).json({
+      success: false,
+      message: "Email is required.",
+    });
+  }
+
+  const user = await User.findOne({ email });
+
+  // Always respond with 200 to avoid leaking whether an email exists
+  if (!user) {
+    return res.status(200).json({
+      success: true,
+      message: "If that email is registered, a reset link has been sent.",
+    });
+  }
+
+  const resetToken = crypto.randomBytes(32).toString("hex");
+
+  const hashedToken = crypto
+    .createHash("sha256")
+    .update(resetToken)
+    .digest("hex");
+
+  user.resetPasswordToken = hashedToken;
+  user.resetPasswordExpire = Date.now() + 15 * 60 * 1000; // 15 minutes
+
+  await user.save({ validateBeforeSave: false });
+
+  const resetUrl = `${process.env.CLIENT_URL}/reset-password/${resetToken}`;
+
+  const message = `
+    <h2>Password Reset Request</h2>
+    <p>You requested a password reset for your TorchBearer account.</p>
+    <p>Click the link below to reset your password. This link expires in <strong>15 minutes</strong>.</p>
+    <a href="${resetUrl}" style="display:inline-block;padding:10px 20px;background:#4f46e5;color:#fff;text-decoration:none;border-radius:6px;">Reset Password</a>
+    <p>If you did not request this, you can safely ignore this email.</p>
+  `;
+
+  try {
+    await sendEmail({
+      email: user.email,
+      subject: "TorchBearer — Password Reset",
+      message,
+    });
+
+    res.status(200).json({
+      success: true,
+      message: "If that email is registered, a reset link has been sent.",
+    });
+  } catch (emailError) {
+    // Roll back the token so the user can try again
+    user.resetPasswordToken = undefined;
+    user.resetPasswordExpire = undefined;
+    await user.save({ validateBeforeSave: false });
+
+    console.error("sendEmail failed:", emailError);
+    res.status(500).json({
+      success: false,
+      message: "Failed to send reset email. Please try again later.",
+    });
+  }
+};
+
+export const resetPassword = async (req, res) => {
+  try {
+    const { password } = req.body;
+
+    if (!password) {
+      return res.status(400).json({
+        success: false,
+        message: "Password is required.",
+      });
+    }
+
+    if (password.length < 6) {
+      return res.status(400).json({
+        success: false,
+        message: "Password must be at least 6 characters.",
+      });
+    }
+
+    const hashedToken = crypto
+      .createHash("sha256")
+      .update(req.params.token)
+      .digest("hex");
+
+    const user = await User.findOne({
+      resetPasswordToken: hashedToken,
+      resetPasswordExpire: { $gt: Date.now() },
+    });
+
+    if (!user) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid or expired reset link. Please request a new one.",
+      });
+    }
+
+    user.password = password; // pre-save hook will hash it
+    user.resetPasswordToken = undefined;
+    user.resetPasswordExpire = undefined;
+
+    await user.save();
+
+    res.status(200).json({
+      success: true,
+      message: "Password reset successful. You can now log in.",
+    });
   } catch (error) {
     res.status(500).json({
       success: false,

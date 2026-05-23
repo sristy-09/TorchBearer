@@ -64,6 +64,13 @@ function LoginPage() {
                 {errors.password && (
                   <p className="text-sm text-red-600">{errors.password}</p>
                 )}
+                <div className="flex justify-end">
+                  <Link
+                  to= "/forgot-password"
+                  className="text-sm text-blue-600 hover:undeline">Forgot Password?
+                  </Link>
+
+                </div>
               </div>
 
               <Button
