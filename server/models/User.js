@@ -1,6 +1,7 @@
 import mongoose from "mongoose";
 import bcrypt from "bcryptjs";
 
+
 const userSchema = new mongoose.Schema(
   {
     name: {
@@ -69,6 +70,14 @@ const userSchema = new mongoose.Schema(
       type: String,
       default: "",
     },
+
+    //forgot password fields
+    resetPasswordToken: {
+      type:String,
+    },
+    resetPasswordExpire: {
+      type: Date,
+    }
   },
   { timestamps: true },
 );

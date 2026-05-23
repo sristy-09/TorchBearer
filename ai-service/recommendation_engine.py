@@ -198,15 +198,45 @@ class RecommendationEngine:
             space_vectors
         ).flatten()
 
+        # Normalize query terms for exact-match boosting
+        query_terms_lower = {t.lower() for t in query_terms}
+
+        # Hybrid scoring: TF-IDF cosine + exact keyword bonus
+        boosted_scores = []
+
+        for idx, space in enumerate(spaces):
+            tfidf_score = float(similarity_scores[idx])
+
+            # Exact tag match bonus
+            space_tags = {t.lower() for t in (space.get("tags") or [])}
+            space_title = (
+                space.get("title") or space.get("name") or ""
+            ).lower()
+
+            matched_tags = query_terms_lower & space_tags
+            title_match = any(t in space_title for t in query_terms_lower)
+
+            # Each matched tag adds 0.15, title match adds 0.1
+            tag_bonus = len(matched_tags) * 0.15
+            title_bonus = 0.1 if title_match else 0.0
+
+            # Combine: weight TF-IDF at 40%, keyword bonus at 60%
+            combined = (tfidf_score * 0.4) + tag_bonus + title_bonus
+
+            # Cap at 1.0
+            boosted_scores.append(min(combined, 1.0))
+
+        boosted_scores = np.array(boosted_scores)
+
         # Rank results
         ranked_indices = np.argsort(
-            similarity_scores
+            boosted_scores
         )[::-1]
 
         results = []
 
         for idx in ranked_indices[:top_n]:
-            score = float(similarity_scores[idx])
+            score = float(boosted_scores[idx])
 
             # Ignore very weak matches
             if score <= 0.01:
