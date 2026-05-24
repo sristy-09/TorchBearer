@@ -24,6 +24,27 @@ import {
   SelectValue,
 } from "../../../feature/core/components/ui/select";
 
+interface Post {
+  _id: string;
+  title: string;
+  description?: string;
+  content: string;
+  topic?: {
+    _id: string;
+    title: string;
+  };
+  space?: {
+    _id: string;
+    title: string;
+  };
+  author?: {
+    name: string;
+    role: string;
+  };
+  likes?: any[];
+  createdAt: string;
+}
+
 function AdminPostsList() {
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
@@ -90,7 +111,8 @@ function AdminPostsList() {
     setSelectedTopic(value);
   };
 
-  const handleDeleteClick = (postId: string) => {
+  const handleDeleteClick = (postId: string, e: React.MouseEvent) => {
+    e.stopPropagation(); // Prevent row click
     setPostToDelete(postId);
     setDeleteDialogOpen(true);
   };
@@ -107,6 +129,13 @@ function AdminPostsList() {
       console.error("Failed to delete post:", error);
     } finally {
       setIsDeleting(false);
+    }
+  };
+
+  const handleRowClick = (post: Post) => {
+    // Only navigate if post has space and topic
+    if (post.space && post.topic) {
+      navigate(`/space/${post.space._id}/topic/${post.topic._id}/posts#post-${post._id}`);
     }
   };
 
@@ -238,7 +267,11 @@ function AdminPostsList() {
                   </thead>
                   <tbody className="bg-white divide-y divide-gray-200">
                     {posts.map((post) => (
-                      <tr key={post._id} className="hover:bg-gray-50 transition-colors">
+                      <tr
+                        key={post._id}
+                        onClick={() => handleRowClick(post)}
+                        className="hover:bg-gray-50 transition-colors cursor-pointer"
+                      >
                         <td className="px-6 py-4">
                           <div>
                             <div className="text-sm font-medium text-gray-900 line-clamp-1">
@@ -302,7 +335,7 @@ function AdminPostsList() {
                         </td>
                         <td className="px-6 py-4 text-right">
                           <button
-                            onClick={() => handleDeleteClick(post._id)}
+                            onClick={(e) => handleDeleteClick(post._id, e)}
                             className="inline-flex items-center gap-1 px-3 py-1 text-sm text-red-600 hover:bg-red-50 rounded-md transition-colors"
                           >
                             <Trash2 size={16} />

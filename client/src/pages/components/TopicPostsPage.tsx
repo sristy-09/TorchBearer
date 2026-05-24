@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import { useParams, useNavigate } from "react-router";
+import { useParams, useNavigate, useLocation } from "react-router";
 import Sidebar from "../../feature/core/components/Sidebar";
 import { Button } from "../../feature/core/components/ui/button";
 import { Input } from "../../feature/core/components/ui/input";
@@ -19,10 +19,11 @@ import { ArrowLeft } from "lucide-react";
 export default function TopicPostsPage() {
   const { spaceId, topicId } = useParams<{ spaceId: string; topicId: string }>();
   const navigate = useNavigate();
+  const location = useLocation();
   const dispatch = useAppDispatch();
 
   const { topics } = useAppSelector((state) => state.topics);
-  const { searchQuery, sortBy } = useAppSelector((state) => state.posts);
+  const { searchQuery, sortBy, posts } = useAppSelector((state) => state.posts);
   const currentTopic = topics.find((t) => t._id === topicId);
 
   // Fetch posts with search query (debounced)
@@ -40,6 +41,26 @@ export default function TopicPostsPage() {
 
     return () => clearTimeout(timer);
   }, [dispatch, topicId, searchQuery]);
+
+  // Scroll to specific post if hash is present
+  useEffect(() => {
+    const hash = location.hash;
+    if (hash && posts.length > 0) {
+      // Wait for posts to load and render
+      const timer = setTimeout(() => {
+        const element = document.querySelector(hash);
+        if (element) {
+          element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          // Add a highlight effect
+          element.classList.add('ring-2', 'ring-blue-500', 'ring-offset-2');
+          setTimeout(() => {
+            element.classList.remove('ring-2', 'ring-blue-500', 'ring-offset-2');
+          }, 2000);
+        }
+      }, 1000);
+      return () => clearTimeout(timer);
+    }
+  }, [location.hash, posts]);
 
   return (
     <div className="flex h-screen bg-neutral-50">

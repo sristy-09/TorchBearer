@@ -530,6 +530,7 @@ export default function PostCard({ post }: Props) {
   return (
     <>
       <div
+        id={`post-${post._id}`}
         onClick={handlePostClick}
         className="bg-white border border-gray-200 rounded-lg p-6 hover:border-gray-300 transition cursor-pointer hover:shadow-md"
       >
