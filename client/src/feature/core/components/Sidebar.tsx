@@ -24,9 +24,9 @@ export default function Sidebar() {
     dispatch(fetchSpaces({}));
   }, [dispatch]);
 
-  // Get user's joined spaces
+  // Get user's joined spaces (members is an array of user IDs)
   const joinedSpaces = spaces.filter(
-    (space) => space.members?.some((member: any) => member._id === user?._id)
+    (space) => space.members?.includes(user?._id || "")
   );
 
   // Mark all notifications as read when dropdown opens
@@ -72,8 +72,8 @@ export default function Sidebar() {
         <button
           onClick={() => navigate("/dashboard")}
           className={`w-full flex items-center gap-3 px-3 py-2 rounded-md cursor-pointer transition-colors ${isActive("/dashboard")
-              ? "bg-orange-50 text-orange-600"
-              : "text-gray-700 hover:bg-gray-50"
+            ? "bg-orange-50 text-orange-600"
+            : "text-gray-700 hover:bg-gray-50"
             }`}
         >
           <Home size={20} />
@@ -83,8 +83,8 @@ export default function Sidebar() {
         <button
           onClick={() => navigate("/profile")}
           className={`w-full flex items-center gap-3 px-3 py-2 rounded-md cursor-pointer transition-colors ${isActive("/profile")
-              ? "bg-orange-50 text-orange-600"
-              : "text-gray-700 hover:bg-gray-50"
+            ? "bg-orange-50 text-orange-600"
+            : "text-gray-700 hover:bg-gray-50"
             }`}
         >
           <User size={20} />
@@ -231,13 +231,13 @@ export default function Sidebar() {
                 key={space._id}
                 onClick={() => navigate(`/space/${space._id}/topics`)}
                 className={`w-full flex items-center gap-3 px-3 py-2 rounded-md cursor-pointer transition-colors ${location.pathname.includes(`/space/${space._id}`)
-                    ? "bg-orange-50 text-orange-600"
-                    : "text-gray-700 hover:bg-gray-50"
+                  ? "bg-orange-50 text-orange-600 font-medium"
+                  : "text-gray-900 hover:bg-gray-50"
                   }`}
-                title={space.name}
+                title={space.title}
               >
                 <Hash size={18} className="flex-shrink-0" />
-                <span className="text-sm truncate">{space.name}</span>
+                <span className="text-sm font-medium truncate">{space.title}</span>
               </button>
             ))}
           </div>
