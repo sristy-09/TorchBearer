@@ -5,7 +5,7 @@ import { Button } from "../../feature/core/components/ui/button";
 import { Avatar } from "../../feature/core/components/ui/avatar";
 import { Badge } from "../../feature/core/components/ui/badge";
 import { Input } from "../../feature/core/components/ui/input";
-import { ArrowLeft, Users, Loader2, Search } from "lucide-react";
+import { ArrowLeft, Users, Loader2, Search, Menu } from "lucide-react";
 import { apiClient } from "../../store/Slice/authSlice";
 import { useAppSelector } from "../../store/hooks";
 
@@ -27,6 +27,7 @@ export default function SpaceMembersPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
+  const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
 
   const { spaces } = useAppSelector((state) => state.spaces);
   const currentSpace = spaces.find((s) => s._id === spaceId);
@@ -81,12 +82,23 @@ export default function SpaceMembersPage() {
 
   return (
     <div className="flex h-screen bg-gray-50">
-      <Sidebar />
+      <Sidebar
+        isMobileOpen={isMobileSidebarOpen}
+        onMobileClose={() => setIsMobileSidebarOpen(false)}
+      />
 
-      <div className="flex-1 ml-64 overflow-auto">
+      <div className="flex-1 lg:ml-64 overflow-auto">
         {/* Header */}
-        <div className="bg-gray-100 border-b px-6 py-4 shadow-sm">
-          <div className="flex items-center gap-4 mb-3">
+        <div className="bg-gray-100 border-b px-4 sm:px-6 py-4 shadow-sm">
+          <div className="flex items-center gap-2 sm:gap-4 mb-3">
+            {/* Hamburger Menu for Mobile */}
+            <button
+              onClick={() => setIsMobileSidebarOpen(true)}
+              className="lg:hidden p-2 hover:bg-gray-200 rounded-md transition-colors flex-shrink-0"
+            >
+              <Menu size={24} className="text-gray-700" />
+            </button>
+
             <Button
               variant="outline"
               size="sm"
@@ -94,30 +106,30 @@ export default function SpaceMembersPage() {
               className="flex items-center gap-2"
             >
               <ArrowLeft size={16} />
-              Back to Topics
+              <span className="hidden sm:inline">Back to Topics</span>
             </Button>
           </div>
 
           <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-2xl font-bold text-gray-800 flex items-center gap-2">
-                <Users className="w-6 h-6" />
-                Members of {currentSpace?.title || "Space"}
+            <div className="min-w-0 flex-1">
+              <h1 className="text-lg sm:text-2xl font-bold text-gray-800 flex items-center gap-2 truncate">
+                <Users className="w-5 h-5 sm:w-6 sm:h-6 flex-shrink-0" />
+                <span className="truncate">Members of {currentSpace?.title || "Space"}</span>
               </h1>
-              <p className="text-gray-600 mt-1">
+              <p className="text-sm sm:text-base text-gray-600 mt-1">
                 {members.length} member{members.length !== 1 ? "s" : ""} in this space
               </p>
             </div>
           </div>
         </div>
 
-        <div className="p-8">
+        <div className="p-4 sm:p-6 lg:p-8">
           {/* Search Bar */}
           <div className="mb-6">
             <div className="relative max-w-md">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
               <Input
-                placeholder="Search members by name, email, or department..."
+                placeholder="Search members..."
                 className="pl-10"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
@@ -151,7 +163,7 @@ export default function SpaceMembersPage() {
               </p>
             </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
               {filteredMembers.map((member) => (
                 <div
                   key={member._id}

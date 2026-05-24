@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useParams, useNavigate, useLocation } from "react-router";
 import Sidebar from "../../feature/core/components/Sidebar";
 import { Button } from "../../feature/core/components/ui/button";
@@ -14,13 +14,14 @@ import {
   SelectTrigger,
   SelectValue,
 } from "../../feature/core/components/ui/select";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, Menu } from "lucide-react";
 
 export default function TopicPostsPage() {
   const { spaceId, topicId } = useParams<{ spaceId: string; topicId: string }>();
   const navigate = useNavigate();
   const location = useLocation();
   const dispatch = useAppDispatch();
+  const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
 
   const { topics } = useAppSelector((state) => state.topics);
   const { searchQuery, sortBy, posts } = useAppSelector((state) => state.posts);
@@ -64,31 +65,44 @@ export default function TopicPostsPage() {
 
   return (
     <div className="flex h-screen bg-neutral-50">
-      <Sidebar />
+      <Sidebar
+        isMobileOpen={isMobileSidebarOpen}
+        onMobileClose={() => setIsMobileSidebarOpen(false)}
+      />
 
-      <div className="flex-1 ml-64 overflow-auto">
+      <div className="flex-1 lg:ml-64 overflow-auto">
         {/* Header */}
-        <div className="bg-white border-b px-8 py-6">
+        <div className="bg-white border-b px-4 sm:px-6 lg:px-8 py-4 sm:py-6">
           <div className="max-w-4xl mx-auto">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => navigate(`/space/${spaceId}/topics`)}
-              className="flex items-center gap-2 mb-4 -ml-2"
-            >
-              <ArrowLeft size={16} />
-              Back to Topics
-            </Button>
+            <div className="flex items-center gap-2 mb-4">
+              {/* Hamburger Menu for Mobile */}
+              <button
+                onClick={() => setIsMobileSidebarOpen(true)}
+                className="lg:hidden p-2 hover:bg-gray-100 rounded-md transition-colors flex-shrink-0"
+              >
+                <Menu size={24} className="text-gray-700" />
+              </button>
+
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => navigate(`/space/${spaceId}/topics`)}
+                className="flex items-center gap-2 -ml-2"
+              >
+                <ArrowLeft size={16} />
+                <span className="hidden sm:inline">Back to Topics</span>
+              </Button>
+            </div>
 
             <div>
-              <h1 className="text-2xl font-semibold text-gray-900">
+              <h1 className="text-xl sm:text-2xl font-semibold text-gray-900">
                 {currentTopic?.title || "Topic Posts"}
               </h1>
-              <p className="text-gray-600 mt-1">
+              <p className="text-sm sm:text-base text-gray-600 mt-1 line-clamp-2">
                 {currentTopic?.description || "Explore posts in this topic"}
               </p>
               {currentTopic?.space && (
-                <p className="text-sm text-gray-500 mt-1">
+                <p className="text-xs sm:text-sm text-gray-500 mt-1">
                   in {currentTopic.space.title}
                 </p>
               )}
@@ -96,20 +110,20 @@ export default function TopicPostsPage() {
           </div>
         </div>
 
-        <div className="max-w-4xl mx-auto px-8 py-8">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
           <div>
-            <div className="flex items-center justify-between mb-6">
-              <h2 className="text-xl font-semibold text-gray-900">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
+              <h2 className="text-lg sm:text-xl font-semibold text-gray-900">
                 Discussion
               </h2>
               {topicId && <CreatePostDialog topicId={topicId} />}
             </div>
 
             {/* Search + Filters */}
-            <div className="flex flex-wrap gap-3 items-center mb-6">
+            <div className="flex flex-col sm:flex-row flex-wrap gap-3 items-stretch sm:items-center mb-6">
               <Input
                 placeholder="Search posts..."
-                className="w-80"
+                className="w-full sm:w-80"
                 value={searchQuery}
                 onChange={(e) => dispatch(setSearchQuery(e.target.value))}
               />
@@ -120,7 +134,7 @@ export default function TopicPostsPage() {
                   dispatch(setSortBy(value))
                 }
               >
-                <SelectTrigger className="w-36">
+                <SelectTrigger className="w-full sm:w-36">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
