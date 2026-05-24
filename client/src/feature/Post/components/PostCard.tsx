@@ -10,6 +10,7 @@ import { Heart, MessageCircle, Calendar, Pencil, Trash2, Download, FileIcon, Ima
 import { Button } from "../../core/components/ui/button";
 import { Avatar } from "../../core/components/ui/avatar";
 import EditPostDialog from "./EditPostDialog";
+import EditCommentDialog from "./EditCommentDialog";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -47,6 +48,7 @@ interface CommentItemProps {
   handleDeleteComment: (id: string) => void;
 
   handleEditComment: (id: string, text: string) => void;
+  openEditDialog: (id: string, text: string) => void;
 
   toggleReplies: (id: string) => void;
 
@@ -71,6 +73,7 @@ const CommentItem = React.memo(
     handleLikeComment,
     handleDeleteComment,
     handleEditComment,
+    openEditDialog,
     toggleReplies,
 
     setActiveReplyId,
@@ -122,12 +125,7 @@ const CommentItem = React.memo(
             </button>
 
             <button
-              onClick={() =>
-                handleEditComment(
-                  comment._id,
-                  prompt("Edit comment", comment.text) || "",
-                )
-              }
+              onClick={() => openEditDialog(comment._id, comment.text)}
               className="hover:text-blue-600 font-medium"
             >
               Edit
@@ -208,6 +206,7 @@ const CommentItem = React.memo(
                   handleLikeComment={handleLikeComment}
                   handleDeleteComment={handleDeleteComment}
                   handleEditComment={handleEditComment}
+                  openEditDialog={openEditDialog}
                   toggleReplies={toggleReplies}
                   setActiveReplyId={setActiveReplyId}
                   setReplyTexts={setReplyTexts}
@@ -233,6 +232,11 @@ export default function PostCard({ post }: Props) {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [spaceAccessDialogOpen, setSpaceAccessDialogOpen] = useState(false);
+
+  // Edit comment dialog state
+  const [editCommentDialogOpen, setEditCommentDialogOpen] = useState(false);
+  const [editingCommentId, setEditingCommentId] = useState<string | null>(null);
+  const [editingCommentText, setEditingCommentText] = useState("");
 
   const [text, setText] = useState("");
 
@@ -366,6 +370,18 @@ export default function PostCard({ post }: Props) {
       setComments((prev) => prev.map((c) => (c._id === id ? data : c)));
     } catch (err) {
       console.error(err);
+    }
+  };
+
+  const openEditDialog = (id: string, text: string) => {
+    setEditingCommentId(id);
+    setEditingCommentText(text);
+    setEditCommentDialogOpen(true);
+  };
+
+  const handleSaveEditedComment = (newText: string) => {
+    if (editingCommentId) {
+      handleEditComment(editingCommentId, newText);
     }
   };
 
@@ -798,6 +814,7 @@ export default function PostCard({ post }: Props) {
                   handleLikeComment={handleLikeComment}
                   handleDeleteComment={handleDeleteComment}
                   handleEditComment={handleEditComment}
+                  openEditDialog={openEditDialog}
                   toggleReplies={toggleReplies}
                   setActiveReplyId={setActiveReplyId}
                   setReplyTexts={setReplyTexts}
@@ -813,6 +830,13 @@ export default function PostCard({ post }: Props) {
         open={editDialogOpen}
         onOpenChange={setEditDialogOpen}
         post={post}
+      />
+
+      <EditCommentDialog
+        open={editCommentDialogOpen}
+        onOpenChange={setEditCommentDialogOpen}
+        commentText={editingCommentText}
+        onSave={handleSaveEditedComment}
       />
 
       <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
