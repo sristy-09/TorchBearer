@@ -18,6 +18,7 @@ export interface FetchUsersParams {
   keyword?: string;
   role?: string;
   department?: string;
+  batchYear?: string;
 }
 
 export const fetchAllUsers = async (params: FetchUsersParams = {}) => {
@@ -31,6 +32,9 @@ export const fetchAllUsers = async (params: FetchUsersParams = {}) => {
   }
   if (params.department) {
     queryParams.append("department", params.department);
+  }
+  if (params.batchYear) {
+    queryParams.append("batchYear", params.batchYear);
   }
 
   const queryString = queryParams.toString();

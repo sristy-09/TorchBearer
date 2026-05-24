@@ -15,6 +15,7 @@ function AdminUsersList() {
   const [searchQuery, setSearchQuery] = useState("");
   const [roleFilter, setRoleFilter] = useState<string>("");
   const [departmentFilter, setDepartmentFilter] = useState<string>("");
+  const [batchYearFilter, setBatchYearFilter] = useState<string>("");
 
   useEffect(() => {
     if (!isAuthenticated || currentUser?.role !== "admin") {
@@ -26,7 +27,7 @@ function AdminUsersList() {
     if (isAuthenticated && currentUser?.role === "admin") {
       loadUsers();
     }
-  }, [isAuthenticated, currentUser, searchQuery, roleFilter, departmentFilter]);
+  }, [isAuthenticated, currentUser, searchQuery, roleFilter, departmentFilter, batchYearFilter]);
 
   const loadUsers = async () => {
     setLoading(true);
@@ -35,6 +36,7 @@ function AdminUsersList() {
         keyword: searchQuery,
         role: roleFilter,
         department: departmentFilter,
+        batchYear: batchYearFilter,
       });
       setUsers(data);
     } catch (error) {
@@ -54,6 +56,19 @@ function AdminUsersList() {
 
   const handleDepartmentFilter = (e: React.ChangeEvent<HTMLInputElement>) => {
     setDepartmentFilter(e.target.value);
+  };
+
+  const handleBatchYearFilter = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    setBatchYearFilter(e.target.value);
+  };
+
+  // Generate batch year options (2076-2084 as per backend validation)
+  const generateBatchYears = () => {
+    const years = [];
+    for (let year = 2084; year >= 2076; year--) {
+      years.push(year);
+    }
+    return years;
   };
 
   const formatDate = (dateString: string) => {
@@ -95,9 +110,9 @@ function AdminUsersList() {
           </div>
 
           {/* Filters */}
-          <div className="mb-6 grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="mb-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
             {/* Search Bar */}
-            <div className="relative md:col-span-2">
+            <div className="relative md:col-span-2 lg:col-span-2">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
               <input
                 type="text"
@@ -122,6 +137,23 @@ function AdminUsersList() {
                 <option value="student">Student</option>
               </select>
             </div>
+
+            {/* Batch Year Filter */}
+            <div className="relative">
+              <GraduationCap className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
+              <select
+                value={batchYearFilter}
+                onChange={handleBatchYearFilter}
+                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 appearance-none bg-white"
+              >
+                <option value="">All Batch Years</option>
+                {generateBatchYears().map((year) => (
+                  <option key={year} value={year}>
+                    {year}
+                  </option>
+                ))}
+              </select>
+            </div>
           </div>
 
           {/* Users Table */}
@@ -133,7 +165,7 @@ function AdminUsersList() {
             ) : users.length === 0 ? (
               <div className="text-center py-12">
                 <p className="text-gray-500">
-                  {searchQuery || roleFilter || departmentFilter
+                  {searchQuery || roleFilter || departmentFilter || batchYearFilter
                     ? "No users found matching your filters."
                     : "No users available yet."}
                 </p>
