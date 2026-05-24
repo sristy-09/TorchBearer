@@ -8,7 +8,7 @@ import { Avatar } from "../../core/components/ui/avatar";
 import { Button } from "../../core/components/ui/button";
 import Sidebar from "../../core/components/Sidebar";
 import EditProfileDialog from "./EditProfileDialog";
-import PostCard from "../../Post/components/PostCard";
+import ProfilePostCard from "../../Post/components/ProfilePostCard";
 import { apiClient } from "../../../store/Slice/authSlice";
 import {
   ArrowLeft,
@@ -315,7 +315,7 @@ export default function ProfilePage() {
                 {!postsLoading && !postsError && userPosts.length > 0 && (
                   <div className="space-y-4">
                     {userPosts.map((post) => (
-                      <PostCard key={post._id} post={post} />
+                      <ProfilePostCard key={post._id} post={post} />
                     ))}
                   </div>
                 )}
