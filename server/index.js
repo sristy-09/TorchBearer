@@ -21,6 +21,7 @@ import commentRoutes from "./routes/commentRoutes.js";
 import userRoutes from "./routes/User.js";
 import notificationRoutes from "./routes/Notification.js";
 import recommendationRoutes from "./routes/recommendations.js";
+import adminRoutes from "./routes/Admin.js";
 
 const app = express();
 const server = createServer(app);
@@ -54,6 +55,7 @@ app.use("/api/comments", commentRoutes);
 app.use("/api/auth", userRoutes);
 app.use("/api/notifications", notificationRoutes); // Notification routes
 app.use("/api/recommendations", recommendationRoutes); // AI recommendations
+app.use("/api/admin", adminRoutes); // Admin routes
 
 
 // Default route

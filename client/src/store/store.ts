@@ -5,6 +5,7 @@ import topicsReducer from "./Slice/topicsSlice";
 import postsReducer from "./Slice/postsSlice";
 import notificationReducer from "./Slice/notificationSlice";
 import recommendationsReducer from "./Slice/recommendationsSlice";
+import adminReducer from "./Slice/adminSlice";
 
 export const store = configureStore({
   reducer: {
@@ -14,6 +15,7 @@ export const store = configureStore({
     posts: postsReducer,
     notifications: notificationReducer,
     recommendations: recommendationsReducer,
+    admin: adminReducer,
   },
 });
 

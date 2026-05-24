@@ -1,15 +1,18 @@
 import { useEffect } from "react";
 import { useNavigate } from "react-router";
-import { useAppSelector } from "../../store/hooks";
+import { useAppSelector, useAppDispatch } from "../../store/hooks";
 import AdminSidebar from "../../feature/core/components/AdminSidebar";
 import { useNotifications } from "../../feature/Notifications/hooks/useNotifications";
+import { fetchAdminStats } from "../../store/Slice/adminSlice";
 import { FaUsers, FaComments, FaLayerGroup } from "react-icons/fa";
 import { Bell } from "lucide-react";
 
 function AdminDashboard() {
   const navigate = useNavigate();
+  const dispatch = useAppDispatch();
   const { user, isAuthenticated } = useAppSelector((state) => state.auth);
   const { pendingRequests } = useNotifications();
+  const { stats, loading: statsLoading } = useAppSelector((state) => state.admin);
 
   useEffect(() => {
     // Redirect if not authenticated or not an admin
@@ -17,6 +20,13 @@ function AdminDashboard() {
       navigate("/admin/login");
     }
   }, [isAuthenticated, user, navigate]);
+
+  useEffect(() => {
+    // Fetch admin stats when component mounts
+    if (isAuthenticated && user?.role === "admin") {
+      dispatch(fetchAdminStats());
+    }
+  }, [isAuthenticated, user, dispatch]);
 
   // Don't render if not admin
   if (!isAuthenticated || user?.role !== "admin") {
@@ -41,19 +51,19 @@ function AdminDashboard() {
             <StatCard
               icon={<FaUsers className="w-6 h-6" />}
               title="Total Users"
-              value="0"
+              value={statsLoading ? "..." : stats?.totalUsers.toString() || "0"}
               bgColor="bg-blue-500"
             />
             <StatCard
               icon={<FaLayerGroup className="w-6 h-6" />}
               title="Total Spaces"
-              value="0"
+              value={statsLoading ? "..." : stats?.totalSpaces.toString() || "0"}
               bgColor="bg-green-500"
             />
             <StatCard
               icon={<FaComments className="w-6 h-6" />}
               title="Total Topics"
-              value="0"
+              value={statsLoading ? "..." : stats?.totalTopics.toString() || "0"}
               bgColor="bg-purple-500"
             />
             <StatCard
