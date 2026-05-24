@@ -1,20 +1,33 @@
-import { Home, Clock, Star, User, LogOut, ChevronRight, Bell } from "lucide-react";
+import { Home, Users, Star, User, LogOut, ChevronRight, Bell, Hash, Settings } from "lucide-react";
 import { useAppDispatch, useAppSelector } from "../../../store/hooks";
 import { logoutUser } from "../../../store/Slice/authSlice";
-import { useNavigate } from "react-router";
+import { useNavigate, useLocation } from "react-router";
 import { useState, useEffect } from "react";
 import { Avatar } from "./ui/avatar";
 import { useNotifications } from "../../Notifications/hooks/useNotifications";
 import { markAllAsRead } from "../../../store/Slice/notificationSlice";
 import { formatDistanceToNow } from "../lib/utils";
+import { fetchSpaces } from "../../../store/Slice/spacesSlice";
 
 export default function Sidebar() {
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
+  const location = useLocation();
   const { user } = useAppSelector((state) => state.auth);
   const { notifications, unreadCount } = useNotifications();
+  const { spaces } = useAppSelector((state) => state.spaces);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isNotificationOpen, setIsNotificationOpen] = useState(false);
+
+  // Fetch spaces on mount to populate sidebar
+  useEffect(() => {
+    dispatch(fetchSpaces({}));
+  }, [dispatch]);
+
+  // Get user's joined spaces
+  const joinedSpaces = spaces.filter(
+    (space) => space.members?.some((member: any) => member._id === user?._id)
+  );
 
   // Mark all notifications as read when dropdown opens
   useEffect(() => {
@@ -37,6 +50,8 @@ export default function Sidebar() {
     setIsMenuOpen(!isMenuOpen);
   };
 
+  const isActive = (path: string) => location.pathname === path;
+
   return (
     <div className="fixed left-0 top-0 w-64 bg-white border-r flex flex-col h-screen z-30">
       {/* Logo Section */}
@@ -53,20 +68,28 @@ export default function Sidebar() {
       </div>
 
       <nav className="flex-1 px-3 py-4 overflow-y-auto">
-        <div className="flex items-center gap-3 px-3 py-2 text-gray-700 hover:bg-gray-50 rounded-md cursor-pointer transition-colors">
+        {/* Main Navigation */}
+        <button
+          onClick={() => navigate("/dashboard")}
+          className={`w-full flex items-center gap-3 px-3 py-2 rounded-md cursor-pointer transition-colors ${isActive("/dashboard")
+              ? "bg-orange-50 text-orange-600"
+              : "text-gray-700 hover:bg-gray-50"
+            }`}
+        >
           <Home size={20} />
           <span className="text-sm font-medium">Home</span>
-        </div>
+        </button>
 
-        <div className="flex items-center gap-3 px-3 py-2 text-gray-700 hover:bg-gray-50 rounded-md cursor-pointer transition-colors">
-          <Clock size={20} />
-          <span className="text-sm font-medium">Recent</span>
-        </div>
-
-        <div className="flex items-center gap-3 px-3 py-2 text-gray-700 hover:bg-gray-50 rounded-md cursor-pointer transition-colors">
-          <Star size={20} />
-          <span className="text-sm font-medium">Starred</span>
-        </div>
+        <button
+          onClick={() => navigate("/profile")}
+          className={`w-full flex items-center gap-3 px-3 py-2 rounded-md cursor-pointer transition-colors ${isActive("/profile")
+              ? "bg-orange-50 text-orange-600"
+              : "text-gray-700 hover:bg-gray-50"
+            }`}
+        >
+          <User size={20} />
+          <span className="text-sm font-medium">My Profile</span>
+        </button>
 
         {/* Notifications */}
         <div className="relative">
@@ -189,9 +212,45 @@ export default function Sidebar() {
           )}
         </div>
 
-        <div className="px-3 mt-6 mb-2 text-xs font-semibold text-gray-500 uppercase tracking-wider">
-          Spaces
+        {/* Divider */}
+        <div className="my-4 border-t border-gray-200"></div>
+
+        {/* My Spaces Section */}
+        <div className="px-3 mb-2 text-xs font-semibold text-gray-500 uppercase tracking-wider">
+          My Spaces
         </div>
+
+        {joinedSpaces.length === 0 ? (
+          <div className="px-3 py-2 text-sm text-gray-500">
+            No spaces joined yet
+          </div>
+        ) : (
+          <div className="space-y-1">
+            {joinedSpaces.slice(0, 10).map((space: any) => (
+              <button
+                key={space._id}
+                onClick={() => navigate(`/space/${space._id}/topics`)}
+                className={`w-full flex items-center gap-3 px-3 py-2 rounded-md cursor-pointer transition-colors ${location.pathname.includes(`/space/${space._id}`)
+                    ? "bg-orange-50 text-orange-600"
+                    : "text-gray-700 hover:bg-gray-50"
+                  }`}
+                title={space.name}
+              >
+                <Hash size={18} className="flex-shrink-0" />
+                <span className="text-sm truncate">{space.name}</span>
+              </button>
+            ))}
+          </div>
+        )}
+
+        {joinedSpaces.length > 10 && (
+          <button
+            onClick={() => navigate("/dashboard")}
+            className="w-full mt-2 px-3 py-2 text-sm text-orange-600 hover:text-orange-700 font-medium text-left"
+          >
+            View all spaces →
+          </button>
+        )}
       </nav>
 
       {/* User Profile Section */}
