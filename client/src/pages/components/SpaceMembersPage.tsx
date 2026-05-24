@@ -83,7 +83,7 @@ export default function SpaceMembersPage() {
     <div className="flex h-screen bg-gray-50">
       <Sidebar />
 
-      <div className="flex-1 overflow-auto">
+      <div className="flex-1 ml-64 overflow-auto">
         {/* Header */}
         <div className="bg-gray-100 border-b px-6 py-4 shadow-sm">
           <div className="flex items-center gap-4 mb-3">

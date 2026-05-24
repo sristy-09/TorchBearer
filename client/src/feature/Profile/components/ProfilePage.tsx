@@ -132,7 +132,7 @@ export default function ProfilePage() {
     <div className="flex h-screen bg-neutral-50">
       <Sidebar />
 
-      <div className="flex-1 overflow-auto">
+      <div className="flex-1 ml-64 overflow-auto">
         {/* Header */}
         <div className="bg-white border-b px-8 py-6">
           <div className="max-w-3xl mx-auto">

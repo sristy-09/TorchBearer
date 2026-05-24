@@ -133,9 +133,9 @@ export default function AdminSidebar() {
   const isActive = (path: string) => location.pathname === path;
 
   return (
-    <div className="w-64 bg-white border-r border-gray-200 flex flex-col h-screen">
+    <div className="fixed left-0 top-0 w-64 bg-white border-r border-gray-200 flex flex-col h-screen z-30">
       {/* Logo Section */}
-      <div className="px-5 py-6 border-b border-gray-200">
+      <div className="px-5 py-6 border-b border-gray-200 flex-shrink-0">
         <button
           onClick={() => navigate("/admin/dashboard")}
           className="flex items-center gap-2.5 hover:opacity-80 transition-opacity cursor-pointer"
@@ -201,7 +201,7 @@ export default function AdminSidebar() {
       </nav>
 
       {/* User Profile Section */}
-      <div className="border-t border-gray-200">
+      <div className="border-t border-gray-200 flex-shrink-0">
         {/* Collapsible Menu */}
         {isUserMenuOpen && (
           <div className="px-3 py-3 space-y-1 border-b border-gray-200 bg-gray-50">

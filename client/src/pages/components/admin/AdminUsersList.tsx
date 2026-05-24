@@ -103,7 +103,7 @@ function AdminUsersList() {
   return (
     <div className="flex min-h-screen bg-neutral-50">
       <AdminSidebar />
-      <div className="flex-1 p-8">
+      <div className="flex-1 ml-64 p-8">
         <div className="max-w-7xl mx-auto">
           {/* Header */}
           <div className="mb-8">

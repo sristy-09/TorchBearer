@@ -38,9 +38,9 @@ export default function Sidebar() {
   };
 
   return (
-    <div className="w-64 bg-white border-r flex flex-col h-screen">
+    <div className="fixed left-0 top-0 w-64 bg-white border-r flex flex-col h-screen z-30">
       {/* Logo Section */}
-      <div className="px-5 py-6 border-b">
+      <div className="px-5 py-6 border-b flex-shrink-0">
         <button
           onClick={() => navigate("/dashboard")}
           className="flex items-center gap-2.5 hover:opacity-80 transition-opacity cursor-pointer"
@@ -195,7 +195,7 @@ export default function Sidebar() {
       </nav>
 
       {/* User Profile Section */}
-      <div className="border-t">
+      <div className="border-t flex-shrink-0">
         {/* Collapsible Menu */}
         {isMenuOpen && (
           <div className="px-3 py-3 space-y-1 border-b bg-gray-50">

@@ -20,7 +20,7 @@ function AdminAdmitUsers() {
   return (
     <div className="flex min-h-screen bg-neutral-50">
       <AdminSidebar />
-      <div className="flex-1 p-8">
+      <div className="flex-1 ml-64 p-8">
         <div className="max-w-7xl mx-auto">
           <div className="mb-8">
             <h1 className="text-3xl font-bold text-gray-900">Admit Users</h1>
