@@ -111,7 +111,8 @@ function AdminTopicsList() {
     setSelectedSpace(value);
   };
 
-  const handleDeleteClick = (topicId: string) => {
+  const handleDeleteClick = (topicId: string, e: React.MouseEvent) => {
+    e.stopPropagation(); // Prevent row click
     setTopicToDelete(topicId);
     setDeleteDialogOpen(true);
   };
@@ -131,7 +132,8 @@ function AdminTopicsList() {
     }
   };
 
-  const handleEditClick = (topic: Topic) => {
+  const handleEditClick = (topic: Topic, e: React.MouseEvent) => {
+    e.stopPropagation(); // Prevent row click
     setTopicToEdit(topic);
     setEditForm({
       title: topic.title,
@@ -168,6 +170,13 @@ function AdminTopicsList() {
       console.error("Failed to update topic:", error);
     } finally {
       setIsUpdating(false);
+    }
+  };
+
+  const handleRowClick = (topic: Topic) => {
+    // Only navigate if topic has a space
+    if (topic.space) {
+      navigate(`/space/${topic.space._id}/topic/${topic._id}/posts`);
     }
   };
 
@@ -272,7 +281,11 @@ function AdminTopicsList() {
                   </thead>
                   <tbody className="bg-white divide-y divide-gray-200">
                     {topics.map((topic) => (
-                      <tr key={topic._id} className="hover:bg-gray-50 transition-colors">
+                      <tr
+                        key={topic._id}
+                        onClick={() => handleRowClick(topic)}
+                        className="hover:bg-gray-50 transition-colors cursor-pointer"
+                      >
                         <td className="px-6 py-4">
                           <div>
                             <div className="text-sm font-medium text-gray-900">
@@ -318,14 +331,14 @@ function AdminTopicsList() {
                         <td className="px-6 py-4 text-right">
                           <div className="flex items-center justify-end gap-2">
                             <button
-                              onClick={() => handleEditClick(topic)}
+                              onClick={(e) => handleEditClick(topic, e)}
                               className="inline-flex items-center gap-1 px-3 py-1 text-sm text-blue-600 hover:bg-blue-50 rounded-md transition-colors"
                             >
                               <Edit size={16} />
                               Edit
                             </button>
                             <button
-                              onClick={() => handleDeleteClick(topic._id)}
+                              onClick={(e) => handleDeleteClick(topic._id, e)}
                               className="inline-flex items-center gap-1 px-3 py-1 text-sm text-red-600 hover:bg-red-50 rounded-md transition-colors"
                             >
                               <Trash2 size={16} />
