@@ -2,8 +2,10 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router";
 import { useAppSelector, useAppDispatch } from "../../../store/hooks";
 import { fetchAllPosts, deletePost } from "../../../store/Slice/postsSlice";
+import { fetchSpaces } from "../../../store/Slice/spacesSlice";
+import { fetchAllTopics } from "../../../store/Slice/topicsSlice";
 import AdminSidebar from "../../../feature/core/components/AdminSidebar";
-import { Trash2, Heart, Calendar, Search, Loader2, Layers, BookOpen, User } from "lucide-react";
+import { Trash2, Heart, Calendar, Search, Loader2, Layers, BookOpen, User, Filter } from "lucide-react";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -14,14 +16,25 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "../../../feature/core/components/ui/alert-dialog";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "../../../feature/core/components/ui/select";
 
 function AdminPostsList() {
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
   const { user, isAuthenticated } = useAppSelector((state) => state.auth);
   const { posts, loading } = useAppSelector((state) => state.posts);
+  const { spaces } = useAppSelector((state) => state.spaces);
+  const { topics } = useAppSelector((state) => state.topics);
 
   const [searchQuery, setSearchQuery] = useState("");
+  const [selectedSpace, setSelectedSpace] = useState<string>("all");
+  const [selectedTopic, setSelectedTopic] = useState<string>("all");
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [postToDelete, setPostToDelete] = useState<string | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -32,14 +45,49 @@ function AdminPostsList() {
     }
   }, [isAuthenticated, user, navigate]);
 
+  // Fetch spaces and topics for filter dropdowns
   useEffect(() => {
     if (isAuthenticated && user?.role === "admin") {
-      dispatch(fetchAllPosts({ keyword: searchQuery }));
+      dispatch(fetchSpaces({}));
+      dispatch(fetchAllTopics({}));
     }
-  }, [dispatch, isAuthenticated, user, searchQuery]);
+  }, [dispatch, isAuthenticated, user]);
+
+  // Fetch posts with filters
+  useEffect(() => {
+    if (isAuthenticated && user?.role === "admin") {
+      const params: { keyword?: string; space?: string; topic?: string } = {};
+
+      if (searchQuery) {
+        params.keyword = searchQuery;
+      }
+
+      if (selectedSpace && selectedSpace !== "all") {
+        params.space = selectedSpace;
+      }
+
+      if (selectedTopic && selectedTopic !== "all") {
+        params.topic = selectedTopic;
+      }
+
+      dispatch(fetchAllPosts(params));
+    }
+  }, [dispatch, isAuthenticated, user, searchQuery, selectedSpace, selectedTopic]);
 
   const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSearchQuery(e.target.value);
+  };
+
+  const handleSpaceFilter = (value: string) => {
+    setSelectedSpace(value);
+    // Reset topic filter when space changes
+    if (value === "all") {
+      setSelectedTopic("all");
+    }
+  };
+
+  const handleTopicFilter = (value: string) => {
+    setSelectedTopic(value);
   };
 
   const handleDeleteClick = (postId: string) => {
@@ -87,9 +135,10 @@ function AdminPostsList() {
             </p>
           </div>
 
-          {/* Search Bar */}
-          <div className="mb-6">
-            <div className="relative">
+          {/* Search and Filter Bar */}
+          <div className="mb-6 flex gap-4">
+            {/* Search Input */}
+            <div className="flex-1 relative">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
               <input
                 type="text"
@@ -98,6 +147,50 @@ function AdminPostsList() {
                 onChange={handleSearch}
                 className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
+            </div>
+
+            {/* Space Filter */}
+            <div className="w-56">
+              <Select value={selectedSpace} onValueChange={handleSpaceFilter}>
+                <SelectTrigger className="w-full">
+                  <div className="flex items-center gap-2">
+                    <Layers size={16} className="text-gray-400" />
+                    <SelectValue placeholder="Filter by space" />
+                  </div>
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Spaces</SelectItem>
+                  {spaces.map((space) => (
+                    <SelectItem key={space._id} value={space._id}>
+                      {space.title}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Topic Filter */}
+            <div className="w-56">
+              <Select value={selectedTopic} onValueChange={handleTopicFilter}>
+                <SelectTrigger className="w-full">
+                  <div className="flex items-center gap-2">
+                    <BookOpen size={16} className="text-gray-400" />
+                    <SelectValue placeholder="Filter by topic" />
+                  </div>
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Topics</SelectItem>
+                  {topics
+                    .filter((topic) =>
+                      selectedSpace === "all" || topic.space?._id === selectedSpace
+                    )
+                    .map((topic) => (
+                      <SelectItem key={topic._id} value={topic._id}>
+                        {topic.title}
+                      </SelectItem>
+                    ))}
+                </SelectContent>
+              </Select>
             </div>
           </div>
 
@@ -110,7 +203,9 @@ function AdminPostsList() {
             ) : posts.length === 0 ? (
               <div className="text-center py-12">
                 <p className="text-gray-500">
-                  {searchQuery ? "No posts found matching your search." : "No posts available yet."}
+                  {searchQuery || selectedSpace !== "all" || selectedTopic !== "all"
+                    ? "No posts found matching your filters."
+                    : "No posts available yet."}
                 </p>
               </div>
             ) : (
@@ -226,6 +321,17 @@ function AdminPostsList() {
           {!loading && posts.length > 0 && (
             <div className="mt-4 text-sm text-gray-600">
               Showing {posts.length} post{posts.length !== 1 ? "s" : ""}
+              {(selectedSpace !== "all" || selectedTopic !== "all") && (
+                <span className="ml-2">
+                  {selectedSpace !== "all" && (
+                    <span>in {spaces.find(s => s._id === selectedSpace)?.title || "selected space"}</span>
+                  )}
+                  {selectedSpace !== "all" && selectedTopic !== "all" && <span> / </span>}
+                  {selectedTopic !== "all" && (
+                    <span>{topics.find(t => t._id === selectedTopic)?.title || "selected topic"}</span>
+                  )}
+                </span>
+              )}
             </div>
           )}
         </div>

@@ -46,12 +46,18 @@ export const fetchPostsByTopic = createAsyncThunk(
 
 export const fetchAllPosts = createAsyncThunk(
   "posts/fetchAllPosts",
-  async (params: { keyword?: string; page?: number; limit?: number } = {}, { rejectWithValue }) => {
+  async (params: { keyword?: string; space?: string; topic?: string; page?: number; limit?: number } = {}, { rejectWithValue }) => {
     try {
       const queryParams = new URLSearchParams();
 
       if (params.keyword) {
         queryParams.append("keyword", params.keyword);
+      }
+      if (params.space) {
+        queryParams.append("space", params.space);
+      }
+      if (params.topic) {
+        queryParams.append("topic", params.topic);
       }
       if (params.page) {
         queryParams.append("page", params.page.toString());
