@@ -3,6 +3,7 @@ export interface Space {
   title: string;
   description: string;
   tags?: string[];
+  topicsCount?: number;
   members?: string[];
   createdAt: string;
   createdBy: {

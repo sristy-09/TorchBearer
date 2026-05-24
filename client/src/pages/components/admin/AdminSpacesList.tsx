@@ -2,8 +2,9 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router";
 import { useAppSelector, useAppDispatch } from "../../../store/hooks";
 import { fetchSpaces, deleteSpace, updateSpace } from "../../../store/Slice/spacesSlice";
+import type { Space } from "../../../feature/Spaces/types/space";
 import AdminSidebar from "../../../feature/core/components/AdminSidebar";
-import { Trash2, Users, Calendar, Search, Loader2, Edit } from "lucide-react";
+import { Trash2, Users, Calendar, Search, Loader2, Edit, MessageSquare } from "lucide-react";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -26,19 +27,6 @@ import { Button } from "../../../feature/core/components/ui/button";
 import { Input } from "../../../feature/core/components/ui/input";
 import { Textarea } from "../../../feature/core/components/ui/textarea";
 import { Label } from "../../../feature/core/components/ui/label";
-
-interface Space {
-  _id: string;
-  title: string;
-  description: string;
-  tags?: string[];
-  createdBy: {
-    name: string;
-    role: string;
-  };
-  members?: any[];
-  createdAt: string;
-}
 
 function AdminSpacesList() {
   const navigate = useNavigate();
@@ -77,7 +65,8 @@ function AdminSpacesList() {
     setSearchQuery(e.target.value);
   };
 
-  const handleDeleteClick = (spaceId: string) => {
+  const handleDeleteClick = (spaceId: string, e: React.MouseEvent) => {
+    e.stopPropagation(); // Prevent row click
     setSpaceToDelete(spaceId);
     setDeleteDialogOpen(true);
   };
@@ -97,7 +86,8 @@ function AdminSpacesList() {
     }
   };
 
-  const handleEditClick = (space: Space) => {
+  const handleEditClick = (space: Space, e: React.MouseEvent) => {
+    e.stopPropagation(); // Prevent row click
     setSpaceToEdit(space);
     setEditForm({
       title: space.title,
@@ -142,6 +132,10 @@ function AdminSpacesList() {
     } finally {
       setIsUpdating(false);
     }
+  };
+
+  const handleRowClick = (spaceId: string) => {
+    navigate(`/space/${spaceId}/topics`);
   };
 
   const formatDate = (dateString: string) => {
@@ -207,6 +201,9 @@ function AdminSpacesList() {
                         Created By
                       </th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Topics
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                         Members
                       </th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -219,7 +216,11 @@ function AdminSpacesList() {
                   </thead>
                   <tbody className="bg-white divide-y divide-gray-200">
                     {spaces.map((space) => (
-                      <tr key={space._id} className="hover:bg-gray-50 transition-colors">
+                      <tr
+                        key={space._id}
+                        onClick={() => handleRowClick(space._id)}
+                        className="hover:bg-gray-50 transition-colors cursor-pointer"
+                      >
                         <td className="px-6 py-4">
                           <div>
                             <div className="text-sm font-medium text-gray-900">
@@ -240,6 +241,12 @@ function AdminSpacesList() {
                         </td>
                         <td className="px-6 py-4">
                           <div className="flex items-center gap-1 text-sm text-gray-600">
+                            <MessageSquare size={16} />
+                            <span>{space.topicsCount || 0}</span>
+                          </div>
+                        </td>
+                        <td className="px-6 py-4">
+                          <div className="flex items-center gap-1 text-sm text-gray-600">
                             <Users size={16} />
                             <span>{space.members?.length || 0}</span>
                           </div>
@@ -253,14 +260,14 @@ function AdminSpacesList() {
                         <td className="px-6 py-4 text-right">
                           <div className="flex items-center justify-end gap-2">
                             <button
-                              onClick={() => handleEditClick(space)}
+                              onClick={(e) => handleEditClick(space, e)}
                               className="inline-flex items-center gap-1 px-3 py-1 text-sm text-blue-600 hover:bg-blue-50 rounded-md transition-colors"
                             >
                               <Edit size={16} />
                               Edit
                             </button>
                             <button
-                              onClick={() => handleDeleteClick(space._id)}
+                              onClick={(e) => handleDeleteClick(space._id, e)}
                               className="inline-flex items-center gap-1 px-3 py-1 text-sm text-red-600 hover:bg-red-50 rounded-md transition-colors"
                             >
                               <Trash2 size={16} />
