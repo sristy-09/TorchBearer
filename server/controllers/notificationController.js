@@ -414,7 +414,7 @@ export const getPendingJoinRequests = async (req, res) => {
       to: req.user._id,
       status: "pending",
     })
-      .populate("from", "name email avatar role department batchYear")
+      .populate("from", "name email avatar role department batchYear registrationNumber")
       .populate("space", "title description")
       .sort({ createdAt: -1 })
       .limit(parseInt(limit))

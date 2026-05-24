@@ -7,7 +7,7 @@ import {
   rejectRequest,
 } from "../../../store/Slice/notificationSlice";
 import AdminSidebar from "../../../feature/core/components/AdminSidebar";
-import { CheckCircle, XCircle, Clock, User, Mail, Calendar } from "lucide-react";
+import { CheckCircle, XCircle, Clock, User, Mail, Calendar, Hash } from "lucide-react";
 import { Button } from "../../../feature/core/components/ui/button";
 import {
   AlertDialog,
@@ -160,6 +160,13 @@ function AdminPendingRequests() {
                               <span>• {request.from.department}</span>
                             )}
                           </div>
+
+                          {request.from.registrationNumber && (
+                            <div className="flex items-center gap-2 text-sm text-gray-600">
+                              <Hash className="w-4 h-4" />
+                              <span>Reg. No: {request.from.registrationNumber}</span>
+                            </div>
+                          )}
 
                           {request.from.batchYear && (
                             <div className="flex items-center gap-2 text-sm text-gray-600">
