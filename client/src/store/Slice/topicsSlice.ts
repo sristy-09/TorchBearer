@@ -52,12 +52,15 @@ export const fetchTopicsBySpace = createAsyncThunk(
 
 export const fetchAllTopics = createAsyncThunk(
   "topics/fetchAllTopics",
-  async (params: { keyword?: string; page?: number; limit?: number } = {}, { rejectWithValue }) => {
+  async (params: { keyword?: string; space?: string; page?: number; limit?: number } = {}, { rejectWithValue }) => {
     try {
       const queryParams = new URLSearchParams();
 
       if (params.keyword) {
         queryParams.append("keyword", params.keyword);
+      }
+      if (params.space) {
+        queryParams.append("space", params.space);
       }
       if (params.page) {
         queryParams.append("page", params.page.toString());
