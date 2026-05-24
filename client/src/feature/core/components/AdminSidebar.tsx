@@ -95,6 +95,11 @@ export default function AdminSidebar() {
           icon: <UserPlus size={18} />,
         },
         {
+          label: "User Management",
+          path: "/admin/user-management",
+          icon: <Users size={18} />,
+        },
+        {
           label: "Pending Requests",
           path: "/admin/pending-requests",
           icon: <Bell size={18} />,

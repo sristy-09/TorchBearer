@@ -15,6 +15,7 @@ import AdminPostsList from "./pages/components/admin/AdminPostsList";
 import AdminUsersList from "./pages/components/admin/AdminUsersList";
 import AdminCreateSpace from "./pages/components/admin/AdminCreateSpace";
 import AdminAdmitUsers from "./pages/components/admin/AdminAdmitUsers";
+import AdminUserManagement from "./pages/components/admin/AdminUserManagement";
 import AdminPendingRequests from "./pages/components/admin/AdminPendingRequests";
 import SpaceTopicsPage from "./pages/components/SpaceTopicsPage";
 import TopicPostsPage from "./pages/components/TopicPostsPage";
@@ -224,6 +225,17 @@ const App = () => {
               <ErrorBoundary level="page">
                 <AuthRoute mode="private">
                   <AdminAdmitUsers />
+                </AuthRoute>
+              </ErrorBoundary>
+            }
+            errorElement={<RouteErrorBoundary />}
+          />
+          <Route
+            path="/admin/user-management"
+            element={
+              <ErrorBoundary level="page">
+                <AuthRoute mode="private">
+                  <AdminUserManagement />
                 </AuthRoute>
               </ErrorBoundary>
             }
