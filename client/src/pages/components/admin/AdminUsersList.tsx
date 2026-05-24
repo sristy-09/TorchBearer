@@ -92,6 +92,10 @@ function AdminUsersList() {
     }
   };
 
+  const handleRowClick = (userId: string) => {
+    navigate(`/profile/${userId}`);
+  };
+
   if (!isAuthenticated || currentUser?.role !== "admin") {
     return null;
   }
@@ -197,7 +201,11 @@ function AdminUsersList() {
                   </thead>
                   <tbody className="bg-white divide-y divide-gray-200">
                     {users.map((user) => (
-                      <tr key={user._id} className="hover:bg-gray-50 transition-colors">
+                      <tr
+                        key={user._id}
+                        onClick={() => handleRowClick(user._id)}
+                        className="hover:bg-gray-50 transition-colors cursor-pointer"
+                      >
                         <td className="px-6 py-4">
                           <div className="flex items-center gap-3">
                             <Avatar name={user.name} avatarUrl={user.avatar} size="md" />
