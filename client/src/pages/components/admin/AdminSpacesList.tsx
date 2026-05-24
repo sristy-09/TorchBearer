@@ -1,9 +1,9 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router";
 import { useAppSelector, useAppDispatch } from "../../../store/hooks";
-import { fetchSpaces, deleteSpace } from "../../../store/Slice/spacesSlice";
+import { fetchSpaces, deleteSpace, updateSpace } from "../../../store/Slice/spacesSlice";
 import AdminSidebar from "../../../feature/core/components/AdminSidebar";
-import { Trash2, Users, Calendar, Search, Loader2 } from "lucide-react";
+import { Trash2, Users, Calendar, Search, Loader2, Edit } from "lucide-react";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -14,6 +14,31 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "../../../feature/core/components/ui/alert-dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "../../../feature/core/components/ui/dialog";
+import { Button } from "../../../feature/core/components/ui/button";
+import { Input } from "../../../feature/core/components/ui/input";
+import { Textarea } from "../../../feature/core/components/ui/textarea";
+import { Label } from "../../../feature/core/components/ui/label";
+
+interface Space {
+  _id: string;
+  title: string;
+  description: string;
+  tags?: string[];
+  createdBy: {
+    name: string;
+    role: string;
+  };
+  members?: any[];
+  createdAt: string;
+}
 
 function AdminSpacesList() {
   const navigate = useNavigate();
@@ -25,6 +50,16 @@ function AdminSpacesList() {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [spaceToDelete, setSpaceToDelete] = useState<string | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
+
+  // Edit state
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [spaceToEdit, setSpaceToEdit] = useState<Space | null>(null);
+  const [editForm, setEditForm] = useState({
+    title: "",
+    description: "",
+    tags: "",
+  });
+  const [isUpdating, setIsUpdating] = useState(false);
 
   useEffect(() => {
     if (!isAuthenticated || user?.role !== "admin") {
@@ -59,6 +94,53 @@ function AdminSpacesList() {
       console.error("Failed to delete space:", error);
     } finally {
       setIsDeleting(false);
+    }
+  };
+
+  const handleEditClick = (space: Space) => {
+    setSpaceToEdit(space);
+    setEditForm({
+      title: space.title,
+      description: space.description,
+      tags: space.tags?.join(", ") || "",
+    });
+    setEditDialogOpen(true);
+  };
+
+  const handleEditFormChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+  ) => {
+    const { name, value } = e.target;
+    setEditForm((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const handleEditConfirm = async () => {
+    if (!spaceToEdit) return;
+
+    setIsUpdating(true);
+    try {
+      const tagsArray = editForm.tags
+        .split(",")
+        .map((tag) => tag.trim())
+        .filter((tag) => tag.length > 0);
+
+      await dispatch(
+        updateSpace({
+          id: spaceToEdit._id,
+          data: {
+            title: editForm.title,
+            description: editForm.description,
+            tags: tagsArray,
+          },
+        })
+      ).unwrap();
+
+      setEditDialogOpen(false);
+      setSpaceToEdit(null);
+    } catch (error) {
+      console.error("Failed to update space:", error);
+    } finally {
+      setIsUpdating(false);
     }
   };
 
@@ -169,13 +251,22 @@ function AdminSpacesList() {
                           </div>
                         </td>
                         <td className="px-6 py-4 text-right">
-                          <button
-                            onClick={() => handleDeleteClick(space._id)}
-                            className="inline-flex items-center gap-1 px-3 py-1 text-sm text-red-600 hover:bg-red-50 rounded-md transition-colors"
-                          >
-                            <Trash2 size={16} />
-                            Delete
-                          </button>
+                          <div className="flex items-center justify-end gap-2">
+                            <button
+                              onClick={() => handleEditClick(space)}
+                              className="inline-flex items-center gap-1 px-3 py-1 text-sm text-blue-600 hover:bg-blue-50 rounded-md transition-colors"
+                            >
+                              <Edit size={16} />
+                              Edit
+                            </button>
+                            <button
+                              onClick={() => handleDeleteClick(space._id)}
+                              className="inline-flex items-center gap-1 px-3 py-1 text-sm text-red-600 hover:bg-red-50 rounded-md transition-colors"
+                            >
+                              <Trash2 size={16} />
+                              Delete
+                            </button>
+                          </div>
                         </td>
                       </tr>
                     ))}
@@ -223,6 +314,75 @@ function AdminSpacesList() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Edit Space Dialog */}
+      <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
+        <DialogContent className="sm:max-w-[525px]">
+          <DialogHeader>
+            <DialogTitle>Edit Space</DialogTitle>
+            <DialogDescription>
+              Update the space details below. Click save when you're done.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <div className="grid gap-2">
+              <Label htmlFor="title">Title</Label>
+              <Input
+                id="title"
+                name="title"
+                value={editForm.title}
+                onChange={handleEditFormChange}
+                placeholder="Enter space title"
+              />
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="description">Description</Label>
+              <Textarea
+                id="description"
+                name="description"
+                value={editForm.description}
+                onChange={handleEditFormChange}
+                placeholder="Enter space description"
+                rows={4}
+              />
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="tags">Tags (comma-separated)</Label>
+              <Input
+                id="tags"
+                name="tags"
+                value={editForm.tags}
+                onChange={handleEditFormChange}
+                placeholder="e.g., technology, programming, web"
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setEditDialogOpen(false)}
+              disabled={isUpdating}
+            >
+              Cancel
+            </Button>
+            <Button
+              type="button"
+              onClick={handleEditConfirm}
+              disabled={isUpdating || !editForm.title || !editForm.description}
+            >
+              {isUpdating ? (
+                <>
+                  <Loader2 className="animate-spin mr-2" size={16} />
+                  Saving...
+                </>
+              ) : (
+                "Save Changes"
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
