@@ -4,7 +4,7 @@ import { likePost, deletePost } from "../../../store/Slice/postsSlice";
 import type { Post } from "../types/post";
 import { useNavigate } from "react-router";
 
-import { Heart, MessageCircle, Calendar, Pencil, Trash2 } from "lucide-react";
+import { Heart, MessageCircle, Calendar, Pencil, Trash2, Download, FileIcon, ImageIcon, VideoIcon, FileTextIcon, ChevronLeft, ChevronRight } from "lucide-react";
 
 import { Button } from "../../core/components/ui/button";
 import { Avatar } from "../../core/components/ui/avatar";
@@ -27,6 +27,8 @@ import {
   editComment,
   replyToComment,
 } from "../api/commentApi";
+
+import { linkifyText, renderTextWithLinksAndMentions } from "../utils/linkify";
 
 interface Props {
   post: Post;
@@ -57,23 +59,6 @@ interface CommentItemProps {
 
   submitReply: (id: string) => void;
 }
-const renderTextWithMentions = (text: string) => {
-  if (!text) return null;
-
-  const parts = text.split(/(@\[[^\]]+\])/g);
-
-  return parts.map((part, index) => {
-    const isMention = /^@\[[^\]]+\]$/.test(part);
-
-    return isMention ? (
-      <span key={index} className="text-blue-600 font-medium">
-        {part.replace(/@|\[|\]/g, "")}
-      </span>
-    ) : (
-      <span key={index}>{part}</span>
-    );
-  });
-};
 const CommentItem = React.memo(
   ({
     comment,
@@ -103,7 +88,7 @@ const CommentItem = React.memo(
           {/* TEXT */}
 
           <p className="text-gray-700 text-sm mt-1.5 wrap-break-words leading-relaxed">
-            {renderTextWithMentions(comment.text)}
+            {renderTextWithLinksAndMentions(comment.text)}
           </p>
 
           {/* LIKE */}
@@ -262,6 +247,9 @@ export default function PostCard({ post }: Props) {
   const [expandedReplies, setExpandedReplies] = useState<string[]>([]);
 
   const [likedComments, setLikedComments] = useState<string[]>([]);
+
+  // Image/Video slider state
+  const [currentSlide, setCurrentSlide] = useState(0);
 
   useEffect(() => {
     const fetchComments = async () => {
@@ -435,6 +423,47 @@ export default function PostCard({ post }: Props) {
   const isAdmin = currentUser?.role === "admin";
   const canModify = isOwner || isAdmin;
 
+  const getAttachmentIcon = (mimetype: string) => {
+    if (mimetype.startsWith("image/")) return <ImageIcon className="h-5 w-5" />;
+    if (mimetype.startsWith("video/")) return <VideoIcon className="h-5 w-5" />;
+    if (mimetype === "application/pdf") return <FileTextIcon className="h-5 w-5" />;
+    return <FileIcon className="h-5 w-5" />;
+  };
+
+  const formatFileSize = (bytes: number) => {
+    if (bytes === 0) return "0 Bytes";
+    const k = 1024;
+    const sizes = ["Bytes", "KB", "MB", "GB"];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return Math.round(bytes / Math.pow(k, i) * 100) / 100 + " " + sizes[i];
+  };
+
+  const getBackendUrl = () => {
+    return import.meta.env.VITE_API_URL || "http://localhost:3000";
+  };
+
+  // Filter media attachments (images and videos) for slider
+  const mediaAttachments = post.attachments?.filter(
+    (att) => att.mimetype.startsWith("image/") || att.mimetype.startsWith("video/")
+  ) || [];
+
+  // Filter non-media attachments (PDFs, etc.)
+  const documentAttachments = post.attachments?.filter(
+    (att) => !att.mimetype.startsWith("image/") && !att.mimetype.startsWith("video/")
+  ) || [];
+
+  const nextSlide = () => {
+    setCurrentSlide((prev) => (prev + 1) % mediaAttachments.length);
+  };
+
+  const prevSlide = () => {
+    setCurrentSlide((prev) => (prev - 1 + mediaAttachments.length) % mediaAttachments.length);
+  };
+
+  const goToSlide = (index: number) => {
+    setCurrentSlide(index);
+  };
+
   return (
     <>
       <div className="bg-white border border-gray-200 rounded-lg p-6 hover:border-gray-300 transition">
@@ -492,7 +521,131 @@ export default function PostCard({ post }: Props) {
 
         {/* CONTENT */}
 
-        <div className="text-gray-700 leading-relaxed mb-4">{post.content}</div>
+        <div className="text-gray-700 leading-relaxed mb-4 whitespace-pre-wrap">
+          {linkifyText(post.content)}
+        </div>
+
+        {/* MEDIA ATTACHMENTS - Instagram Style Slider */}
+        {mediaAttachments.length > 0 && (
+          <div className="mb-4 relative bg-black rounded-lg overflow-hidden" style={{ height: '500px' }}>
+            {/* Main Media Display */}
+            <div className="relative w-full h-full">
+              {mediaAttachments.map((attachment, index) => {
+                const fullUrl = `${getBackendUrl()}${attachment.path}`;
+                const isImage = attachment.mimetype.startsWith("image/");
+                const isVideo = attachment.mimetype.startsWith("video/");
+
+                return (
+                  <div
+                    key={index}
+                    className={`absolute inset-0 transition-opacity duration-500 ${index === currentSlide ? 'opacity-100' : 'opacity-0 pointer-events-none'
+                      }`}
+                  >
+                    {isImage && (
+                      <img
+                        src={fullUrl}
+                        alt={attachment.originalName}
+                        className="w-full h-full object-contain"
+                      />
+                    )}
+
+                    {isVideo && (
+                      <video
+                        controls
+                        className="w-full h-full object-contain"
+                        key={index === currentSlide ? 'active' : 'inactive'}
+                      >
+                        <source src={fullUrl} type={attachment.mimetype} />
+                        Your browser does not support the video tag.
+                      </video>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* Navigation Arrows - Only show if more than 1 media */}
+            {mediaAttachments.length > 1 && (
+              <>
+                <button
+                  onClick={prevSlide}
+                  className="absolute left-2 top-1/2 -translate-y-1/2 bg-white/80 hover:bg-white text-gray-800 rounded-full p-2 shadow-lg transition-all z-10"
+                  aria-label="Previous image"
+                >
+                  <ChevronLeft size={24} />
+                </button>
+                <button
+                  onClick={nextSlide}
+                  className="absolute right-2 top-1/2 -translate-y-1/2 bg-white/80 hover:bg-white text-gray-800 rounded-full p-2 shadow-lg transition-all z-10"
+                  aria-label="Next image"
+                >
+                  <ChevronRight size={24} />
+                </button>
+              </>
+            )}
+
+            {/* Slide Indicators - Only show if more than 1 media */}
+            {mediaAttachments.length > 1 && (
+              <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2 z-10">
+                {mediaAttachments.map((_, index) => (
+                  <button
+                    key={index}
+                    onClick={() => goToSlide(index)}
+                    className={`w-2 h-2 rounded-full transition-all ${index === currentSlide
+                        ? 'bg-white w-6'
+                        : 'bg-white/50 hover:bg-white/75'
+                      }`}
+                    aria-label={`Go to slide ${index + 1}`}
+                  />
+                ))}
+              </div>
+            )}
+
+            {/* Media Counter */}
+            {mediaAttachments.length > 1 && (
+              <div className="absolute top-4 right-4 bg-black/60 text-white px-3 py-1 rounded-full text-sm font-medium">
+                {currentSlide + 1} / {mediaAttachments.length}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* DOCUMENT ATTACHMENTS (PDFs, etc.) */}
+        {documentAttachments.length > 0 && (
+          <div className="mb-4 space-y-2">
+            {documentAttachments.map((attachment, index) => {
+              const fullUrl = `${getBackendUrl()}${attachment.path}`;
+              return (
+                <div
+                  key={index}
+                  className="flex items-center justify-between p-3 bg-gray-50 rounded-lg border border-gray-200"
+                >
+                  <div className="flex items-center gap-3 flex-1 min-w-0">
+                    {getAttachmentIcon(attachment.mimetype)}
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium text-gray-900 truncate">
+                        {attachment.originalName}
+                      </p>
+                      <p className="text-xs text-gray-500">
+                        {formatFileSize(attachment.size)}
+                      </p>
+                    </div>
+                  </div>
+                  <a
+                    href={fullUrl}
+                    download={attachment.originalName}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="ml-3 p-2 bg-blue-50 hover:bg-blue-100 text-blue-600 rounded-md transition-colors"
+                    title="Download file"
+                  >
+                    <Download size={16} />
+                  </a>
+                </div>
+              );
+            })}
+          </div>
+        )}
 
         {/* ACTIONS */}
 

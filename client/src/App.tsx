@@ -26,8 +26,8 @@ import { socketService } from "./services/socket";
 import { useNotificationPermission } from "./feature/Notifications/hooks/useNotifications";
 import ErrorBoundary from "./feature/core/components/ErrorBoundary";
 import RouteErrorBoundary from "./feature/core/components/RouteErrorBoundary";
-import ForgotPasswordPage from  "./feature/Auth/components/ForgotPasswordPage"
-import ResetPasswordPage from  "./feature/Auth/components/ResetPasswordPage"
+import ForgotPasswordPage from "./feature/Auth/components/ForgotPasswordPage"
+import ResetPasswordPage from "./feature/Auth/components/ResetPasswordPage"
 
 const App = () => {
   const dispatch = useAppDispatch();
@@ -283,8 +283,8 @@ const App = () => {
             errorElement={<RouteErrorBoundary />}
           />
 
-          <Route path = "/forgot-password" element ={<ForgotPasswordPage />}/>
-          < Route path="/reset-password/:token" element={<ResetPasswordPage />}/>
+          <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+          <Route path="/reset-password/:token" element={<ResetPasswordPage />} />
         </Routes>
       </Router>
     </ErrorBoundary>

@@ -82,11 +82,30 @@ export const createPost = createAsyncThunk(
       description?: string;
       image?: string;
       topicId: string;
+      files?: File[];
     },
     { rejectWithValue }
   ) => {
     try {
-      const res = await apiClient.post("/api/posts", data);
+      const formData = new FormData();
+      formData.append("title", data.title);
+      formData.append("content", data.content);
+      if (data.description) formData.append("description", data.description);
+      if (data.image) formData.append("image", data.image);
+      formData.append("topicId", data.topicId);
+
+      // Append files if any
+      if (data.files && data.files.length > 0) {
+        data.files.forEach((file) => {
+          formData.append("attachments", file);
+        });
+      }
+
+      const res = await apiClient.post("/api/posts", formData, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      });
       return res.data.data;
     } catch (err: any) {
       return rejectWithValue(
@@ -133,11 +152,28 @@ export const addComment = createAsyncThunk(
 export const updatePost = createAsyncThunk(
   "posts/updatePost",
   async (
-    { id, data }: { id: string; data: { title: string; content: string } },
+    { id, data }: { id: string; data: { title: string; content: string; description?: string; image?: string; files?: File[] } },
     { rejectWithValue }
   ) => {
     try {
-      const res = await apiClient.put(`/api/posts/${id}`, data);
+      const formData = new FormData();
+      formData.append("title", data.title);
+      formData.append("content", data.content);
+      if (data.description) formData.append("description", data.description);
+      if (data.image) formData.append("image", data.image);
+
+      // Append files if any
+      if (data.files && data.files.length > 0) {
+        data.files.forEach((file) => {
+          formData.append("attachments", file);
+        });
+      }
+
+      const res = await apiClient.put(`/api/posts/${id}`, formData, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      });
       return res.data.data;
     } catch (err: any) {
       return rejectWithValue(

@@ -5,6 +5,7 @@ import APIFunctionality from "../utils/apiFunctionality.js";
 /* =========================================
    1. CREATE Post  (must belong to a Topic → Space)
    Body: { title, content, description, image, userId, topicId }
+   Files: attachments (optional)
    ========================================= */
 export const createPost = async (req, res) => {
   try {
@@ -24,11 +25,26 @@ export const createPost = async (req, res) => {
         .json({ success: false, message: "Parent topic not found" });
     }
 
+    // Process uploaded files
+    const attachments = [];
+    if (req.files && req.files.length > 0) {
+      for (const file of req.files) {
+        attachments.push({
+          filename: file.filename,
+          originalName: file.originalname,
+          path: `/uploads/${file.filename}`,
+          mimetype: file.mimetype,
+          size: file.size,
+        });
+      }
+    }
+
     const newPost = await Post.create({
       title,
       content,
       description,
       image,
+      attachments,
       author: req.user._id,
       topic: topicId,
       space: topic.space, // denormalized from topic's parent space
@@ -146,9 +162,26 @@ export const updatePost = async (req, res) => {
     // Prevent overwriting relational fields via update
     const { title, content, description, image } = req.body;
 
+    // Process new uploaded files
+    const newAttachments = [];
+    if (req.files && req.files.length > 0) {
+      for (const file of req.files) {
+        newAttachments.push({
+          filename: file.filename,
+          originalName: file.originalname,
+          path: `/uploads/${file.filename}`,
+          mimetype: file.mimetype,
+          size: file.size,
+        });
+      }
+    }
+
+    // Merge existing attachments with new ones
+    const attachments = [...(post.attachments || []), ...newAttachments];
+
     const updatedPost = await Post.findByIdAndUpdate(
       req.params.id,
-      { title, content, description, image },
+      { title, content, description, image, attachments },
       { returnDocument: 'after', runValidators: true },
     )
       .populate("author", "name role avatar")
