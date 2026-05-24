@@ -1,7 +1,16 @@
-import { ArrowRight, Moon, Sun } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 import { Button } from "@/feature/core/components/ui/button";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Link } from "react-router";
+import { useTheme } from "@/feature/core/context/themeProvider";
+
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/feature/core/components/ui/dropdown-menu";
+import { Moon, Sun } from "lucide-react";
 
 const NAV_LINKS = [
   { name: "About", href: "#about" },
@@ -9,24 +18,9 @@ const NAV_LINKS = [
 ];
 
 export default function LandingPage() {
-  const [dark, setDark] = useState(() => {
-    if (typeof window !== "undefined") {
-      return localStorage.getItem("theme") === "dark";
-    }
-    return false;
-  });
   const [openFAQ, setOpenFAQ] = useState<number | null>(null);
 
-  //dark mode
-  useEffect(() => {
-    if (dark) {
-      document.documentElement.classList.add("dark");
-      localStorage.setItem("theme", "dark");
-    } else {
-      document.documentElement.classList.remove("dark");
-      localStorage.setItem("theme", "light");
-    }
-  }, [dark]);
+  const { setTheme } = useTheme();
 
   return (
     <div className="min-h-screen bg-background text-foreground flex flex-col">
@@ -49,12 +43,26 @@ export default function LandingPage() {
         </nav>
 
         <div className="flex items-center gap-2">
-          <button
-            onClick={() => setDark(!dark)}
-            className="p-2 rounded-md border border-border cursor-pointer"
-          >
-            {dark ? <Sun size={16} /> : <Moon size={16} />}
-          </button>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" size="icon">
+                <Sun className="h-[1.2rem] w-[1.2rem] scale-100 rotate-0 transition-all dark:scale-0 dark:-rotate-90" />
+                <Moon className="absolute h-[1.2rem] w-[1.2rem] scale-0 rotate-90 transition-all dark:scale-100 dark:rotate-0" />
+                <span className="sr-only">Toggle theme</span>
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem onClick={() => setTheme("light")}>
+                Light
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => setTheme("dark")}>
+                Dark
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => setTheme("system")}>
+                System
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
 
           <Link to="/login" className="cursor-pointer">
             <Button variant="ghost" size="sm">
@@ -88,7 +96,8 @@ export default function LandingPage() {
 
         {/* Subheadline */}
         <p className="text-muted-foreground text-lg max-w-xl leading-relaxed">
-          A platform for meaningful connections between graduates and current students.
+          A platform for meaningful connections between graduates and current
+          students.
           <br />
           Network, find mentorship, and explore career opportunities.
         </p>
@@ -97,7 +106,9 @@ export default function LandingPage() {
         id="faq"
         className="px-6 md:px-16 py-20 border-t border-border max-w-4xl mx-auto w-full"
       >
-        <h2 className="text-2xl font-bold mb-8 text-center">Frequently Asked Questions</h2>
+        <h2 className="text-2xl font-bold mb-8 text-center">
+          Frequently Asked Questions
+        </h2>
         {[
           {
             q: "What is TorchBearer?",
@@ -137,14 +148,34 @@ export default function LandingPage() {
           <div className="flex gap-8">
             <div className="flex flex-col gap-2">
               <span className="font-medium text-foreground"> Product </span>
-              <a href="#" className="cursor-pointer hover:text-foreground transition-colors">Features</a>
-              <a href="#" className="cursor-pointer hover:text-foreground transition-colors">Pricing</a>
+              <a
+                href="#"
+                className="cursor-pointer hover:text-foreground transition-colors"
+              >
+                Features
+              </a>
+              <a
+                href="#"
+                className="cursor-pointer hover:text-foreground transition-colors"
+              >
+                Pricing
+              </a>
             </div>
 
             <div className="flex flex-col gap-2">
               <span className="font-medium text-foreground">Legal</span>
-              <a href="#" className="cursor-pointer hover:text-foreground transition-colors">Privacy</a>
-              <a href="#" className="cursor-pointer hover:text-foreground transition-colors">Terms</a>
+              <a
+                href="#"
+                className="cursor-pointer hover:text-foreground transition-colors"
+              >
+                Privacy
+              </a>
+              <a
+                href="#"
+                className="cursor-pointer hover:text-foreground transition-colors"
+              >
+                Terms
+              </a>
             </div>
           </div>
         </div>
