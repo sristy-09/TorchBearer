@@ -464,14 +464,28 @@ export default function PostCard({ post }: Props) {
     setCurrentSlide(index);
   };
 
+  const handlePostClick = () => {
+    if (post.topic && post.space) {
+      // Navigate to the topic page where this post exists
+      // The post will be visible in the list of posts in that topic
+      navigate(`/space/${post.space._id}/topic/${post.topic._id}/posts`);
+    }
+  };
+
   return (
     <>
-      <div className="bg-white border border-gray-200 rounded-lg p-6 hover:border-gray-300 transition">
+      <div
+        onClick={handlePostClick}
+        className="bg-white border border-gray-200 rounded-lg p-6 hover:border-gray-300 transition cursor-pointer hover:shadow-md"
+      >
         {/* HEADER */}
 
         <div className="flex items-start gap-3 mb-4">
           <button
-            onClick={() => navigate(`/profile/${post.author._id}`)}
+            onClick={(e) => {
+              e.stopPropagation();
+              navigate(`/profile/${post.author._id}`);
+            }}
             className="shrink-0 rounded-full focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
             aria-label={`View ${post.author.name}'s profile`}
           >
@@ -502,14 +516,20 @@ export default function PostCard({ post }: Props) {
           {canModify && (
             <div className="flex gap-2">
               <button
-                onClick={handleEdit}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleEdit();
+                }}
                 className="p-2 bg-blue-50 hover:bg-blue-100 text-blue-600 rounded-md transition-colors"
                 title="Edit post"
               >
                 <Pencil size={16} />
               </button>
               <button
-                onClick={handleDeleteClick}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleDeleteClick();
+                }}
                 className="p-2 bg-red-50 hover:bg-red-100 text-red-600 rounded-md transition-colors"
                 title="Delete post"
               >
@@ -568,14 +588,20 @@ export default function PostCard({ post }: Props) {
             {mediaAttachments.length > 1 && (
               <>
                 <button
-                  onClick={prevSlide}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    prevSlide();
+                  }}
                   className="absolute left-2 top-1/2 -translate-y-1/2 bg-white/80 hover:bg-white text-gray-800 rounded-full p-2 shadow-lg transition-all z-10"
                   aria-label="Previous image"
                 >
                   <ChevronLeft size={24} />
                 </button>
                 <button
-                  onClick={nextSlide}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    nextSlide();
+                  }}
                   className="absolute right-2 top-1/2 -translate-y-1/2 bg-white/80 hover:bg-white text-gray-800 rounded-full p-2 shadow-lg transition-all z-10"
                   aria-label="Next image"
                 >
@@ -590,10 +616,13 @@ export default function PostCard({ post }: Props) {
                 {mediaAttachments.map((_, index) => (
                   <button
                     key={index}
-                    onClick={() => goToSlide(index)}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      goToSlide(index);
+                    }}
                     className={`w-2 h-2 rounded-full transition-all ${index === currentSlide
-                        ? 'bg-white w-6'
-                        : 'bg-white/50 hover:bg-white/75'
+                      ? 'bg-white w-6'
+                      : 'bg-white/50 hover:bg-white/75'
                       }`}
                     aria-label={`Go to slide ${index + 1}`}
                   />
@@ -651,7 +680,10 @@ export default function PostCard({ post }: Props) {
 
         <div className="flex items-center gap-2 border-t border-gray-100 pt-4">
           <Button
-            onClick={handleLike}
+            onClick={(e) => {
+              e.stopPropagation();
+              handleLike();
+            }}
             disabled={isLiking}
             variant="ghost"
             className={`border rounded-md px-4 ${isLikedByCurrentUser
@@ -678,7 +710,10 @@ export default function PostCard({ post }: Props) {
           </Button>
 
           <Button
-            onClick={() => setShowComments(!showComments)}
+            onClick={(e) => {
+              e.stopPropagation();
+              setShowComments(!showComments);
+            }}
             variant="ghost"
             className="border border-gray-200 hover:bg-gray-50 rounded-md px-4"
           >
@@ -691,7 +726,7 @@ export default function PostCard({ post }: Props) {
         {/* COMMENTS */}
 
         {showComments && (
-          <div className="mt-5 border-t border-gray-100 pt-5">
+          <div className="mt-5 border-t border-gray-100 pt-5" onClick={(e) => e.stopPropagation()}>
             {/* ADD COMMENT */}
 
             <div className="flex gap-2 mb-5">
