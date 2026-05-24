@@ -3,8 +3,9 @@ import { useAppDispatch, useAppSelector } from "../../../store/hooks";
 import { likePost, deletePost } from "../../../store/Slice/postsSlice";
 import type { Post } from "../types/post";
 import { useNavigate } from "react-router";
+import { apiClient } from "../../../store/Slice/authSlice";
 
-import { Heart, MessageCircle, Calendar, Pencil, Trash2, Download, FileIcon, ImageIcon, VideoIcon, FileTextIcon, ChevronLeft, ChevronRight } from "lucide-react";
+import { Heart, MessageCircle, Calendar, Pencil, Trash2, Download, FileIcon, ImageIcon, VideoIcon, FileTextIcon, ChevronLeft, ChevronRight, Lock } from "lucide-react";
 
 import { Button } from "../../core/components/ui/button";
 import { Avatar } from "../../core/components/ui/avatar";
@@ -231,6 +232,7 @@ export default function PostCard({ post }: Props) {
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [spaceAccessDialogOpen, setSpaceAccessDialogOpen] = useState(false);
 
   const [text, setText] = useState("");
 
@@ -466,9 +468,46 @@ export default function PostCard({ post }: Props) {
 
   const handlePostClick = () => {
     if (post.topic && post.space) {
-      // Navigate to the topic page where this post exists
-      // The post will be visible in the list of posts in that topic
-      navigate(`/space/${post.space._id}/topic/${post.topic._id}/posts`);
+      // Check if user is a member of the space
+      // Admin can access all spaces
+      if (currentUser?.role === 'admin') {
+        navigate(`/space/${post.space._id}/topic/${post.topic._id}/posts`);
+      } else {
+        // For non-admin users, check membership
+        // We'll need to fetch space details to check membership
+        checkSpaceAccessAndNavigate();
+      }
+    }
+  };
+
+  const checkSpaceAccessAndNavigate = async () => {
+    try {
+      // Fetch space details to check membership
+      const response = await apiClient.get(`/api/spaces/${post.space?._id}`);
+      const spaceData = response.data.data;
+
+      // Check if current user is a member
+      const isMember = spaceData.members?.includes(currentUser?._id);
+
+      if (isMember) {
+        // User is a member, navigate to the post
+        navigate(`/space/${post.space._id}/topic/${post.topic._id}/posts`);
+      } else {
+        // User is not a member, show dialog
+        setSpaceAccessDialogOpen(true);
+      }
+    } catch (error) {
+      console.error('Failed to check space access:', error);
+      // On error, show the dialog to be safe
+      setSpaceAccessDialogOpen(true);
+    }
+  };
+
+  const handleRequestJoin = () => {
+    // Navigate to the space page where user can request to join
+    if (post.space) {
+      navigate(`/dashboard`);
+      setSpaceAccessDialogOpen(false);
     }
   };
 
@@ -792,6 +831,36 @@ export default function PostCard({ post }: Props) {
               className="bg-red-600 hover:bg-red-700"
             >
               {isDeleting ? "Deleting..." : "Delete"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Space Access Dialog */}
+      <AlertDialog open={spaceAccessDialogOpen} onOpenChange={setSpaceAccessDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <div className="flex items-center gap-3 mb-2">
+              <div className="p-3 bg-blue-50 rounded-full">
+                <Lock className="h-6 w-6 text-blue-600" />
+              </div>
+              <div>
+                <AlertDialogTitle>Space Access Required</AlertDialogTitle>
+              </div>
+            </div>
+            <AlertDialogDescription className="text-base">
+              You are not a member of <span className="font-semibold text-gray-900">{post.space?.title}</span>.
+              <br /><br />
+              To view this post and participate in discussions, you need to request to join this space.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleRequestJoin}
+              className="bg-blue-600 hover:bg-blue-700"
+            >
+              Go to Spaces
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
