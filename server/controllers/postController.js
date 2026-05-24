@@ -160,7 +160,17 @@ export const updatePost = async (req, res) => {
     }
 
     // Prevent overwriting relational fields via update
-    const { title, content, description, image } = req.body;
+    let { title, content, description, image, filesToRemove } = req.body;
+
+    // Parse filesToRemove if it's a JSON string (from FormData)
+    if (typeof filesToRemove === 'string') {
+      try {
+        filesToRemove = JSON.parse(filesToRemove);
+      } catch (err) {
+        console.error('Failed to parse filesToRemove:', err);
+        filesToRemove = [];
+      }
+    }
 
     // Process new uploaded files
     const newAttachments = [];
@@ -176,8 +186,31 @@ export const updatePost = async (req, res) => {
       }
     }
 
-    // Merge existing attachments with new ones
-    const attachments = [...(post.attachments || []), ...newAttachments];
+    // Handle file removal
+    let existingAttachments = post.attachments || [];
+    if (filesToRemove && Array.isArray(filesToRemove) && filesToRemove.length > 0) {
+      // Filter out files marked for removal
+      existingAttachments = existingAttachments.filter(
+        (att) => !filesToRemove.includes(att.filename)
+      );
+
+      // Optional: Delete physical files from disk
+      const fs = await import('fs');
+      const path = await import('path');
+      for (const filename of filesToRemove) {
+        const filePath = path.join(process.cwd(), 'uploads', filename);
+        try {
+          if (fs.existsSync(filePath)) {
+            fs.unlinkSync(filePath);
+          }
+        } catch (err) {
+          console.error(`Failed to delete file ${filename}:`, err);
+        }
+      }
+    }
+
+    // Merge existing attachments (after removal) with new ones
+    const attachments = [...existingAttachments, ...newAttachments];
 
     const updatedPost = await Post.findByIdAndUpdate(
       req.params.id,

@@ -152,7 +152,7 @@ export const addComment = createAsyncThunk(
 export const updatePost = createAsyncThunk(
   "posts/updatePost",
   async (
-    { id, data }: { id: string; data: { title: string; content: string; description?: string; image?: string; files?: File[] } },
+    { id, data }: { id: string; data: { title: string; content: string; description?: string; image?: string; files?: File[]; filesToRemove?: string[] } },
     { rejectWithValue }
   ) => {
     try {
@@ -161,6 +161,11 @@ export const updatePost = createAsyncThunk(
       formData.append("content", data.content);
       if (data.description) formData.append("description", data.description);
       if (data.image) formData.append("image", data.image);
+
+      // Append files to remove
+      if (data.filesToRemove && data.filesToRemove.length > 0) {
+        formData.append("filesToRemove", JSON.stringify(data.filesToRemove));
+      }
 
       // Append files if any
       if (data.files && data.files.length > 0) {

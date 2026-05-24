@@ -25,18 +25,18 @@ export default function EditPostDialog({ open, onOpenChange, post }: Props) {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [title, setTitle] = useState(post.title);
   const [content, setContent] = useState(post.content);
-  const [description, setDescription] = useState(post.description || "");
   const [files, setFiles] = useState<File[]>([]);
   const [loading, setLoading] = useState(false);
   const [dragActive, setDragActive] = useState(false);
   const [validationErrors, setValidationErrors] = useState<string[]>([]);
+  const [filesToRemove, setFilesToRemove] = useState<string[]>([]); // Track files to remove
 
   useEffect(() => {
     if (open) {
       setTitle(post.title);
       setContent(post.content);
-      setDescription(post.description || "");
       setFiles([]);
+      setFilesToRemove([]);
       setDragActive(false);
       setValidationErrors([]);
     }
@@ -153,6 +153,14 @@ export default function EditPostDialog({ open, onOpenChange, post }: Props) {
     setFiles((prev) => prev.filter((_, i) => i !== index));
   };
 
+  const toggleRemoveExistingFile = (filename: string) => {
+    setFilesToRemove((prev) =>
+      prev.includes(filename)
+        ? prev.filter((name) => name !== filename)
+        : [...prev, filename]
+    );
+  };
+
   const getFileIcon = (file: File) => {
     if (file.type.startsWith("image/")) return <ImageIcon className="h-5 w-5 text-blue-500" />;
     if (file.type.startsWith("video/")) return <VideoIcon className="h-5 w-5 text-purple-500" />;
@@ -189,8 +197,8 @@ export default function EditPostDialog({ open, onOpenChange, post }: Props) {
           data: {
             title,
             content,
-            description: description || undefined,
-            files
+            files,
+            filesToRemove
           },
         })
       ).unwrap();
@@ -206,14 +214,14 @@ export default function EditPostDialog({ open, onOpenChange, post }: Props) {
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
+      <DialogContent className="sm:max-w-[900px] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Edit Post</DialogTitle>
         </DialogHeader>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit} className="space-y-5">
           <div>
-            <Label htmlFor="title">Title</Label>
+            <Label htmlFor="title">Title *</Label>
             <Input
               id="title"
               value={title}
@@ -224,35 +232,25 @@ export default function EditPostDialog({ open, onOpenChange, post }: Props) {
           </div>
 
           <div>
-            <Label htmlFor="description">Short Description</Label>
-            <Input
-              id="description"
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              placeholder="Brief summary (optional)"
-            />
-          </div>
-
-          <div>
-            <Label htmlFor="content">Content</Label>
+            <Label htmlFor="content">Content *</Label>
             <Textarea
               id="content"
               value={content}
               onChange={(e) => setContent(e.target.value)}
               placeholder="Enter post content"
-              rows={6}
+              rows={10}
               required
             />
           </div>
 
           <div>
-            <Label htmlFor="attachments" className="text-sm font-medium">
-              Add More Attachments
+            <Label htmlFor="attachments" className="text-sm font-medium mb-2 block">
+              Attachments
             </Label>
 
             {/* Validation Errors */}
             {validationErrors.length > 0 && (
-              <div className="mt-2 p-3 bg-red-50 border border-red-200 rounded-lg">
+              <div className="mb-3 p-3 bg-red-50 border border-red-200 rounded-lg">
                 <div className="flex items-start gap-2">
                   <AlertCircle className="h-4 w-4 text-red-600 mt-0.5 flex-shrink-0" />
                   <div className="flex-1">
@@ -282,23 +280,23 @@ export default function EditPostDialog({ open, onOpenChange, post }: Props) {
               onDragLeave={handleDrag}
               onDragOver={handleDrag}
               onDrop={handleDrop}
-              className={`mt-2 border-2 border-dashed rounded-lg transition-all ${dragActive
+              className={`border-2 border-dashed rounded-lg transition-all ${dragActive
                 ? "border-blue-500 bg-blue-50"
                 : "border-gray-300 bg-gray-50 hover:border-gray-400"
                 }`}
             >
-              <div className="p-4 text-center">
-                <div className="flex justify-center mb-2">
-                  <div className={`p-2 rounded-full ${dragActive ? "bg-blue-100" : "bg-gray-100"}`}>
-                    <Upload className={`h-5 w-5 ${dragActive ? "text-blue-600" : "text-gray-400"}`} />
+              <div className="p-6 text-center">
+                <div className="flex justify-center mb-3">
+                  <div className={`p-3 rounded-full ${dragActive ? "bg-blue-100" : "bg-gray-100"}`}>
+                    <Upload className={`h-6 w-6 ${dragActive ? "text-blue-600" : "text-gray-400"}`} />
                   </div>
                 </div>
 
                 <div className="mb-2">
-                  <p className="text-xs font-medium text-gray-700">
-                    {dragActive ? "Drop files here" : "Drag and drop files"}
+                  <p className="text-sm font-medium text-gray-700">
+                    {dragActive ? "Drop files here" : "Drag and drop files here"}
                   </p>
-                  <p className="text-xs text-gray-500 mt-0.5">or</p>
+                  <p className="text-xs text-gray-500 mt-1">or</p>
                 </div>
 
                 <Button
@@ -306,10 +304,10 @@ export default function EditPostDialog({ open, onOpenChange, post }: Props) {
                   variant="outline"
                   size="sm"
                   onClick={() => fileInputRef.current?.click()}
-                  className="mt-1"
+                  className="mt-2"
                   disabled={files.length >= 5}
                 >
-                  <Paperclip className="h-3 w-3 mr-1.5" />
+                  <Paperclip className="h-4 w-4 mr-2" />
                   Browse Files
                 </Button>
 
@@ -323,7 +321,7 @@ export default function EditPostDialog({ open, onOpenChange, post }: Props) {
                   className="hidden"
                 />
 
-                <p className="text-xs text-gray-500 mt-2">
+                <p className="text-xs text-gray-500 mt-3">
                   Images, Videos, PDFs • Max 5 files • 50MB each
                 </p>
               </div>
@@ -331,9 +329,9 @@ export default function EditPostDialog({ open, onOpenChange, post }: Props) {
 
             {/* New Files List */}
             {files.length > 0 && (
-              <div className="mt-3 space-y-2">
+              <div className="mt-4 space-y-2">
                 <div className="flex items-center justify-between mb-2">
-                  <p className="text-xs font-medium text-gray-700">
+                  <p className="text-sm font-medium text-gray-700">
                     New Files ({files.length}/5)
                   </p>
                   <Button
@@ -341,17 +339,17 @@ export default function EditPostDialog({ open, onOpenChange, post }: Props) {
                     variant="ghost"
                     size="sm"
                     onClick={() => setFiles([])}
-                    className="text-xs text-red-600 hover:text-red-700 hover:bg-red-50 h-6 px-2"
+                    className="text-xs text-red-600 hover:text-red-700 hover:bg-red-50 h-7 px-3"
                   >
                     Clear All
                   </Button>
                 </div>
 
-                <div className="space-y-2 max-h-48 overflow-y-auto">
+                <div className="space-y-2 max-h-60 overflow-y-auto">
                   {files.map((file, index) => (
                     <div
                       key={index}
-                      className="flex items-center gap-2 p-2 bg-white rounded-lg border border-gray-200 hover:border-gray-300 transition-colors group"
+                      className="flex items-center gap-3 p-3 bg-white rounded-lg border border-gray-200 hover:border-gray-300 transition-colors group"
                     >
                       <div className="flex-shrink-0">
                         {getFileIcon(file)}
@@ -359,7 +357,7 @@ export default function EditPostDialog({ open, onOpenChange, post }: Props) {
 
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2">
-                          <p className="text-xs font-medium text-gray-900 truncate">
+                          <p className="text-sm font-medium text-gray-900 truncate">
                             {file.name}
                           </p>
                           <span className="text-xs px-1.5 py-0.5 bg-gray-100 text-gray-600 rounded flex-shrink-0">
@@ -376,9 +374,9 @@ export default function EditPostDialog({ open, onOpenChange, post }: Props) {
                         variant="ghost"
                         size="sm"
                         onClick={() => removeFile(index)}
-                        className="opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-50 hover:text-red-600 h-7 w-7 p-0"
+                        className="opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-50 hover:text-red-600"
                       >
-                        <X className="h-3 w-3" />
+                        <X className="h-4 w-4" />
                       </Button>
                     </div>
                   ))}
@@ -388,27 +386,88 @@ export default function EditPostDialog({ open, onOpenChange, post }: Props) {
 
             {/* Existing Attachments */}
             {post.attachments && post.attachments.length > 0 && (
-              <div className="mt-3 p-3 bg-blue-50 border border-blue-100 rounded-lg">
-                <p className="text-xs font-medium text-blue-900 mb-2">
-                  Existing Attachments ({post.attachments.length})
-                </p>
-                <div className="space-y-1">
-                  {post.attachments.map((attachment, index) => (
-                    <div key={index} className="flex items-center gap-2 text-xs text-blue-700">
-                      <div className="w-1 h-1 bg-blue-400 rounded-full"></div>
-                      <span className="truncate">{attachment.originalName}</span>
-                    </div>
-                  ))}
+              <div className="mt-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                <div className="flex items-center justify-between mb-3">
+                  <p className="text-sm font-medium text-blue-900 flex items-center gap-2">
+                    <FileIcon className="h-4 w-4" />
+                    Existing Attachments ({post.attachments.length - filesToRemove.length}/{post.attachments.length})
+                  </p>
+                  {filesToRemove.length > 0 && (
+                    <button
+                      type="button"
+                      onClick={() => setFilesToRemove([])}
+                      className="text-xs text-blue-600 hover:text-blue-800 font-medium"
+                    >
+                      Restore All
+                    </button>
+                  )}
                 </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                  {post.attachments.map((attachment, index) => {
+                    const isMarkedForRemoval = filesToRemove.includes(attachment.filename);
+                    return (
+                      <div
+                        key={index}
+                        className={`flex items-center gap-2 p-2 rounded border transition-all group ${isMarkedForRemoval
+                          ? 'bg-red-50 border-red-200 opacity-50'
+                          : 'bg-white border-blue-100 hover:border-blue-200'
+                          }`}
+                      >
+                        <div className="flex items-center gap-2 flex-1 min-w-0">
+                          {attachment.mimetype.startsWith("image/") && (
+                            <ImageIcon className="h-4 w-4 text-blue-600 flex-shrink-0" />
+                          )}
+                          {attachment.mimetype.startsWith("video/") && (
+                            <VideoIcon className="h-4 w-4 text-purple-600 flex-shrink-0" />
+                          )}
+                          {attachment.mimetype === "application/pdf" && (
+                            <FileTextIcon className="h-4 w-4 text-red-600 flex-shrink-0" />
+                          )}
+                          <span
+                            className={`text-xs truncate flex-1 ${isMarkedForRemoval ? 'text-red-600 line-through' : 'text-blue-700'
+                              }`}
+                          >
+                            {attachment.originalName}
+                          </span>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => toggleRemoveExistingFile(attachment.filename)}
+                          className={`flex-shrink-0 p-1 rounded transition-all ${isMarkedForRemoval
+                            ? 'bg-green-100 hover:bg-green-200 text-green-700'
+                            : 'bg-red-100 hover:bg-red-200 text-red-600 opacity-0 group-hover:opacity-100'
+                            }`}
+                          title={isMarkedForRemoval ? 'Restore file' : 'Remove file'}
+                        >
+                          {isMarkedForRemoval ? (
+                            <span className="text-xs font-medium px-1">Undo</span>
+                          ) : (
+                            <X className="h-3 w-3" />
+                          )}
+                        </button>
+                      </div>
+                    );
+                  })}
+                </div>
+                {filesToRemove.length > 0 ? (
+                  <p className="text-xs text-red-600 mt-3 font-medium">
+                    ⚠️ {filesToRemove.length} file(s) will be permanently deleted when you update the post.
+                  </p>
+                ) : (
+                  <p className="text-xs text-blue-600 mt-3">
+                    Hover over a file and click the X to mark it for removal.
+                  </p>
+                )}
               </div>
             )}
           </div>
 
-          <div className="flex justify-end gap-2">
+          <div className="flex justify-end gap-3 pt-4 border-t">
             <Button
               type="button"
               variant="outline"
               onClick={() => onOpenChange(false)}
+              disabled={loading}
             >
               Cancel
             </Button>
