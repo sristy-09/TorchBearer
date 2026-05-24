@@ -40,7 +40,7 @@ export default function ProfilePostCard({ post }: Props) {
       // Check if user is a member of the space
       // Admin can access all spaces
       if (currentUser?.role === 'admin') {
-        navigate(`/space/${post.space._id}/topic/${post.topic._id}/posts`);
+        navigate(`/space/${post.space._id}/topic/${post.topic._id}/posts#post-${post._id}`);
       } else {
         // For non-admin users, check membership
         checkSpaceAccessAndNavigate();
@@ -58,8 +58,8 @@ export default function ProfilePostCard({ post }: Props) {
       const isMember = spaceData.members?.includes(currentUser?._id);
 
       if (isMember) {
-        // User is a member, navigate to the post
-        navigate(`/space/${post.space._id}/topic/${post.topic._id}/posts`);
+        // User is a member, navigate to the post with hash for scrolling
+        navigate(`/space/${post.space._id}/topic/${post.topic._id}/posts#post-${post._id}`);
       } else {
         // User is not a member, show dialog
         setSpaceAccessDialogOpen(true);
