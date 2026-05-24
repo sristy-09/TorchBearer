@@ -21,12 +21,44 @@ import {
   Wrench,
   FileText,
   Loader2,
+  Link as LinkIcon,
 } from "lucide-react";
+import { FaFacebook, FaInstagram, FaLinkedin, FaGithub } from "react-icons/fa";
 
 const roleBadgeColors: Record<string, string> = {
   admin: "bg-red-100 text-red-700",
   student: "bg-blue-100 text-blue-700",
   alumni: "bg-green-100 text-green-700",
+};
+
+// Helper function to extract username from social media URLs
+const extractUsername = (url: string, platform: string): string => {
+  if (!url) return "";
+
+  try {
+    // Remove trailing slashes
+    const cleanUrl = url.replace(/\/$/, "");
+
+    // Extract the last part of the URL path
+    const urlObj = new URL(cleanUrl);
+    const pathParts = urlObj.pathname.split("/").filter(Boolean);
+
+    if (pathParts.length === 0) return "";
+
+    // For LinkedIn, handle /in/ or /company/ paths
+    if (platform === "linkedin") {
+      if (pathParts[0] === "in" || pathParts[0] === "company") {
+        return pathParts[1] || "";
+      }
+    }
+
+    // For most platforms, the username is the last part of the path
+    return pathParts[pathParts.length - 1] || "";
+  } catch (e) {
+    // If URL parsing fails, try to extract from string
+    const parts = url.split("/").filter(Boolean);
+    return parts[parts.length - 1] || url;
+  }
 };
 
 export default function ProfilePage() {
@@ -261,6 +293,70 @@ export default function ProfilePage() {
                   </div>
                 </div>
               )}
+
+              {/* Social Media Links */}
+              {profileUser.socialLinks &&
+                (profileUser.socialLinks.facebook ||
+                  profileUser.socialLinks.instagram ||
+                  profileUser.socialLinks.linkedin ||
+                  profileUser.socialLinks.github) && (
+                  <div className="bg-white border border-gray-200 rounded-xl p-6">
+                    <h3 className="text-base font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                      <LinkIcon size={16} />
+                      Social Links
+                    </h3>
+                    <div className="flex flex-wrap gap-3">
+                      {profileUser.socialLinks.facebook && (
+                        <a
+                          href={profileUser.socialLinks.facebook}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="flex items-center gap-2 px-4 py-2 bg-blue-50 hover:bg-blue-100 text-blue-700 rounded-lg transition-colors font-medium text-sm"
+                          title="Facebook"
+                        >
+                          <FaFacebook size={18} />
+                          @{extractUsername(profileUser.socialLinks.facebook, "facebook")}
+                        </a>
+                      )}
+                      {profileUser.socialLinks.instagram && (
+                        <a
+                          href={profileUser.socialLinks.instagram}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="flex items-center gap-2 px-4 py-2 bg-pink-50 hover:bg-pink-100 text-pink-700 rounded-lg transition-colors font-medium text-sm"
+                          title="Instagram"
+                        >
+                          <FaInstagram size={18} />
+                          @{extractUsername(profileUser.socialLinks.instagram, "instagram")}
+                        </a>
+                      )}
+                      {profileUser.socialLinks.linkedin && (
+                        <a
+                          href={profileUser.socialLinks.linkedin}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="flex items-center gap-2 px-4 py-2 bg-blue-50 hover:bg-blue-100 text-blue-800 rounded-lg transition-colors font-medium text-sm"
+                          title="LinkedIn"
+                        >
+                          <FaLinkedin size={18} />
+                          @{extractUsername(profileUser.socialLinks.linkedin, "linkedin")}
+                        </a>
+                      )}
+                      {profileUser.socialLinks.github && (
+                        <a
+                          href={profileUser.socialLinks.github}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="flex items-center gap-2 px-4 py-2 bg-gray-50 hover:bg-gray-100 text-gray-800 rounded-lg transition-colors font-medium text-sm"
+                          title="GitHub"
+                        >
+                          <FaGithub size={18} />
+                          @{extractUsername(profileUser.socialLinks.github, "github")}
+                        </a>
+                      )}
+                    </div>
+                  </div>
+                )}
 
               {/* Empty state for own profile with no skills/interests */}
               {isOwnProfile &&

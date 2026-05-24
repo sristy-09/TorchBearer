@@ -175,7 +175,7 @@ export const getMe = async (req, res) => {
    PUT /api/auth/update-profile
    Requires: protect middleware
    Body: { name, department, batchYear, registrationNumber,
-           skills, interests, avatar }
+           skills, interests, avatar, socialLinks }
    ========================================= */
 export const updateProfile = async (req, res) => {
   try {
@@ -188,6 +188,7 @@ export const updateProfile = async (req, res) => {
       "skills",
       "interests",
       "avatar",
+      "socialLinks",
     ];
 
     const updates = {};
