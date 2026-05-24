@@ -1,12 +1,15 @@
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router";
-import { useAppSelector } from "../../../store/hooks";
+import { useAppSelector, useAppDispatch } from "../../../store/hooks";
 import { getUserById } from "../api/userApi";
 import type { User } from "../../Auth/types/types";
+import type { Post } from "../../Post/types/post";
 import { Avatar } from "../../core/components/ui/avatar";
 import { Button } from "../../core/components/ui/button";
 import Sidebar from "../../core/components/Sidebar";
 import EditProfileDialog from "./EditProfileDialog";
+import PostCard from "../../Post/components/PostCard";
+import { apiClient } from "../../../store/Slice/authSlice";
 import {
   ArrowLeft,
   Pencil,
@@ -16,6 +19,8 @@ import {
   Calendar,
   Lightbulb,
   Wrench,
+  FileText,
+  Loader2,
 } from "lucide-react";
 
 const roleBadgeColors: Record<string, string> = {
@@ -33,6 +38,11 @@ export default function ProfilePage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [editOpen, setEditOpen] = useState(false);
+
+  // Posts state
+  const [userPosts, setUserPosts] = useState<Post[]>([]);
+  const [postsLoading, setPostsLoading] = useState(false);
+  const [postsError, setPostsError] = useState<string | null>(null);
 
   // Determine if we're viewing our own profile
   const isOwnProfile = !userId || userId === currentUser?._id;
@@ -63,6 +73,28 @@ export default function ProfilePage() {
       setProfileUser(currentUser);
     }
   }, [currentUser, isOwnProfile]);
+
+  // Fetch user's posts
+  useEffect(() => {
+    const fetchUserPosts = async () => {
+      if (!profileUser?._id) return;
+
+      setPostsLoading(true);
+      setPostsError(null);
+
+      try {
+        const response = await apiClient.get(`/api/posts?author=${profileUser._id}`);
+        setUserPosts(response.data.data || []);
+      } catch (err: any) {
+        console.error("Failed to fetch user posts:", err);
+        setPostsError("Failed to load posts");
+      } finally {
+        setPostsLoading(false);
+      }
+    };
+
+    fetchUserPosts();
+  }, [profileUser?._id]);
 
   return (
     <div className="flex h-screen bg-neutral-50">
@@ -119,10 +151,9 @@ export default function ProfilePage() {
                         {profileUser.email}
                       </p>
                       <span
-                        className={`inline-block mt-2 px-2.5 py-0.5 rounded-full text-xs font-medium capitalize ${
-                          roleBadgeColors[profileUser.role] ??
+                        className={`inline-block mt-2 px-2.5 py-0.5 rounded-full text-xs font-medium capitalize ${roleBadgeColors[profileUser.role] ??
                           "bg-gray-100 text-gray-700"
-                        }`}
+                          }`}
                       >
                         {profileUser.role}
                       </span>
@@ -250,6 +281,45 @@ export default function ProfilePage() {
                     </Button>
                   </div>
                 )}
+
+              {/* User Posts Section */}
+              <div className="bg-white border border-gray-200 rounded-xl p-6">
+                <h3 className="text-base font-semibold text-gray-900 mb-5 flex items-center gap-2">
+                  <FileText size={16} />
+                  Posts ({userPosts.length})
+                </h3>
+
+                {postsLoading && (
+                  <div className="flex items-center justify-center py-12">
+                    <Loader2 className="animate-spin text-blue-600" size={32} />
+                  </div>
+                )}
+
+                {postsError && (
+                  <div className="bg-red-50 border border-red-200 rounded-lg p-4 text-red-700 text-sm">
+                    {postsError}
+                  </div>
+                )}
+
+                {!postsLoading && !postsError && userPosts.length === 0 && (
+                  <div className="text-center py-12">
+                    <FileText className="mx-auto h-12 w-12 text-gray-300 mb-3" />
+                    <p className="text-gray-500 text-sm">
+                      {isOwnProfile
+                        ? "You haven't created any posts yet."
+                        : "This user hasn't created any posts yet."}
+                    </p>
+                  </div>
+                )}
+
+                {!postsLoading && !postsError && userPosts.length > 0 && (
+                  <div className="space-y-4">
+                    {userPosts.map((post) => (
+                      <PostCard key={post._id} post={post} />
+                    ))}
+                  </div>
+                )}
+              </div>
             </div>
           )}
         </div>
