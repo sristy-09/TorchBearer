@@ -17,93 +17,77 @@ import {
 } from "../../../store/Slice/recommendationsSlice";
 import RequestJoinButton from "../../Spaces/components/RequestJoinButton";
 
-/* ─────────────────────────────────────────────────────────────
-   Sub-components
-───────────────────────────────────────────────────────────── */
-
+/* ─── Tag chip ─────────────────────────────────────────────── */
 function TagChip({ label, onRemove }: { label: string; onRemove: () => void }) {
   return (
-    <span className="inline-flex items-center gap-1 bg-blue-100 text-blue-700 text-xs font-medium px-2.5 py-1 rounded-full">
+    <span className="inline-flex items-center gap-1 text-xs font-semibold px-2.5 py-1 rounded-full"
+      style={{ background: "#8B5CF6", color: "#fff" }}>
       {label}
-      <button
-        onClick={onRemove}
-        className="hover:text-blue-900 transition-colors"
-        aria-label={`Remove ${label}`}
-      >
-        <X size={12} />
+      <button onClick={onRemove} className="hover:opacity-70 transition-opacity" aria-label={`Remove ${label}`}>
+        <X size={11} />
       </button>
     </span>
   );
 }
 
+/* ─── Space result card ────────────────────────────────────── */
 function SpaceResultCard({ space }: { space: RecommendedSpace }) {
   const navigate = useNavigate();
   const currentUser = useAppSelector((state) => state.auth.user);
   const spaces = useAppSelector((state) => state.spaces.spaces);
   const matchPercent = Math.round(space.similarity_score * 100);
 
-  // Find the full space object to check membership
   const fullSpace = spaces.find((s) => s._id === space.id);
   const isMember = fullSpace?.members?.includes(currentUser?._id || "");
   const isAdmin = currentUser?.role === "admin";
   const canAccess = isMember || isAdmin;
 
-  const handleClick = () => {
-    // Only navigate if user can access the space
-    if (canAccess) {
-      navigate(`/space/${space.id}/topics`);
-    }
-  };
-
   return (
     <div
-      onClick={handleClick}
-      className={`group bg-white border border-gray-200 rounded-lg p-5 hover:border-blue-300 hover:shadow-md transition-all ${canAccess ? "cursor-pointer" : ""
-        }`}
+      onClick={() => canAccess && navigate(`/space/${space.id}/topics`)}
+      className={`group rounded-2xl p-5 border card-hover transition-all ${canAccess ? "cursor-pointer" : ""}`}
+      style={{ background: "var(--card)", borderColor: "var(--border)" }}
     >
       <div className="flex items-start justify-between gap-3 mb-2">
-        <h3 className="font-semibold text-gray-900 group-hover:text-blue-600 transition-colors leading-snug">
+        <h3 className="font-semibold text-foreground group-hover:text-primary transition-colors leading-snug text-sm">
           {space.title}
         </h3>
         <span
-          className="shrink-0 text-xs font-semibold px-2 py-0.5 rounded-full"
+          className="shrink-0 text-xs font-bold px-2.5 py-0.5 rounded-full"
           style={{
-            backgroundColor:
-              matchPercent >= 60 ? "#dcfce7" : matchPercent >= 30 ? "#fef9c3" : "#f3f4f6",
-            color:
-              matchPercent >= 60 ? "#15803d" : matchPercent >= 30 ? "#854d0e" : "#6b7280",
+            background: matchPercent >= 60 ? "var(--primary)" : matchPercent >= 30 ? "#F59E0B" : "var(--muted)",
+            color: matchPercent >= 60 ? "#fff" : matchPercent >= 30 ? "#fff" : "var(--muted-foreground)",
           }}
         >
           {matchPercent}% match
         </span>
       </div>
 
-      <p className="text-sm text-gray-600 line-clamp-2 leading-relaxed mb-3">
+      <p className="text-xs text-muted-foreground line-clamp-2 leading-relaxed mb-3">
         {space.description}
       </p>
 
       {space.tags.length > 0 && (
         <div className="flex flex-wrap gap-1.5 mb-3">
           {space.tags.slice(0, 5).map((tag) => (
-            <Badge
-              key={tag}
-              variant="secondary"
-              className="text-xs px-2 py-0.5 bg-gray-100 text-gray-600"
-            >
+            <Badge key={tag} variant="secondary"
+              className="text-xs px-2 py-0.5 rounded-full"
+              style={{ background: "var(--secondary)", color: "var(--secondary-foreground)" }}>
               {tag}
             </Badge>
           ))}
           {space.tags.length > 5 && (
-            <Badge variant="secondary" className="text-xs px-2 py-0.5 bg-gray-100 text-gray-500">
+            <Badge variant="secondary" className="text-xs px-2 py-0.5 rounded-full"
+              style={{ background: "var(--muted)", color: "var(--muted-foreground)" }}>
               +{space.tags.length - 5} more
             </Badge>
           )}
         </div>
       )}
 
-      {/* Show RequestJoinButton if user is not a member and not admin */}
       {!canAccess && (
-        <div className="mt-3 pt-3 border-t border-gray-100" onClick={(e) => e.stopPropagation()}>
+        <div className="mt-3 pt-3" style={{ borderTop: "1px solid var(--border)" }}
+          onClick={(e) => e.stopPropagation()}>
           <RequestJoinButton spaceId={space.id} isMember={!!isMember} />
         </div>
       )}
@@ -111,17 +95,19 @@ function SpaceResultCard({ space }: { space: RecommendedSpace }) {
   );
 }
 
+/* ─── Skeleton ─────────────────────────────────────────────── */
 function SkeletonCards({ count = 3 }: { count?: number }) {
   return (
     <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
       {Array.from({ length: count }).map((_, i) => (
-        <div key={i} className="bg-white border border-gray-200 rounded-lg p-5 animate-pulse">
-          <div className="h-4 bg-gray-200 rounded w-3/4 mb-3" />
-          <div className="h-3 bg-gray-100 rounded w-full mb-2" />
-          <div className="h-3 bg-gray-100 rounded w-5/6 mb-4" />
+        <div key={i} className="rounded-2xl p-5 border animate-pulse"
+          style={{ background: "var(--card)", borderColor: "var(--border)" }}>
+          <div className="h-4 rounded-lg w-3/4 mb-3" style={{ background: "var(--muted)" }} />
+          <div className="h-3 rounded-lg w-full mb-2" style={{ background: "var(--muted)" }} />
+          <div className="h-3 rounded-lg w-5/6 mb-4" style={{ background: "var(--muted)" }} />
           <div className="flex gap-2">
-            <div className="h-5 bg-gray-100 rounded-full w-16" />
-            <div className="h-5 bg-gray-100 rounded-full w-20" />
+            <div className="h-5 rounded-full w-16" style={{ background: "var(--muted)" }} />
+            <div className="h-5 rounded-full w-20" style={{ background: "var(--muted)" }} />
           </div>
         </div>
       ))}
@@ -129,10 +115,7 @@ function SkeletonCards({ count = 3 }: { count?: number }) {
   );
 }
 
-/* ─────────────────────────────────────────────────────────────
-   Main component
-───────────────────────────────────────────────────────────── */
-
+/* ─── Main ─────────────────────────────────────────────────── */
 export default function RecommendationsSection() {
   const dispatch = useAppDispatch();
   const { user } = useAppSelector((state) => state.auth);
@@ -153,24 +136,17 @@ export default function RecommendationsSection() {
   const [tags, setTags] = useState<string[]>([]);
 
   const profileTerms = user
-    ? user.role === "alumni"
-      ? (user.skills ?? [])
-      : (user.interests ?? [])
+    ? user.role === "alumni" ? (user.skills ?? []) : (user.interests ?? [])
     : [];
-
   const hasProfileTerms = profileTerms.length > 0;
 
   const addTag = (value: string) => {
     const trimmed = value.trim().toLowerCase();
-    if (trimmed && !tags.includes(trimmed)) {
-      setTags((prev) => [...prev, trimmed]);
-    }
+    if (trimmed && !tags.includes(trimmed)) setTags((prev) => [...prev, trimmed]);
     setInputValue("");
   };
 
-  const removeTag = (tag: string) => {
-    setTags((prev) => prev.filter((t) => t !== tag));
-  };
+  const removeTag = (tag: string) => setTags((prev) => prev.filter((t) => t !== tag));
 
   const handleKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
     if (e.key === "Enter" || e.key === ",") {
@@ -183,10 +159,9 @@ export default function RecommendationsSection() {
 
   const handleSearch = () => {
     if (tags.length === 0) return;
-    const payload =
-      user?.role === "alumni"
-        ? { skills: tags, top_n: 5 }
-        : { interests: tags, top_n: 5 };
+    const payload = user?.role === "alumni"
+      ? { skills: tags, top_n: 5 }
+      : { interests: tags, top_n: 5 };
     dispatch(fetchRecommendations(payload));
   };
 
@@ -196,49 +171,47 @@ export default function RecommendationsSection() {
     dispatch(clearSearchRecommendations());
   };
 
-  const placeholder =
-    user?.role === "alumni"
-      ? "Type a skill and press Enter (e.g. Python, React)…"
-      : "Type an interest and press Enter (e.g. AI, Security)…";
+  const placeholder = user?.role === "alumni"
+    ? "Type a skill and press Enter (e.g. Python, React)…"
+    : "Type an interest and press Enter (e.g. AI, Security)…";
 
-  /* ── Render ── */
   return (
     <div className="mb-10 space-y-8">
 
-      {/* ══════════════════════════════════════════════════════
-          SECTION 1 — Auto recommendations from profile
-      ══════════════════════════════════════════════════════ */}
+      {/* ── Auto Recommendations ── */}
       <div>
-        <div className="flex items-center gap-2 mb-4">
-          <Sparkles size={20} className="text-blue-600" />
-          <h2 className="text-xl font-semibold text-gray-900">
-            Recommended for You
-          </h2>
-          {hasProfileTerms && (
-            <span className="text-xs text-gray-400 ml-1">
-              · based on your {user?.role === "alumni" ? "skills" : "interests"}
-            </span>
-          )}
+        <div className="flex items-center gap-2.5 mb-5">
+          <div className="w-8 h-8 rounded-xl flex items-center justify-center"
+            style={{ background: "var(--secondary)" }}>
+            <Sparkles size={16} style={{ color: "var(--primary)" }} />
+          </div>
+          <div>
+            <h2 className="text-lg font-semibold text-foreground leading-none">Recommended for You</h2>
+            {hasProfileTerms && (
+              <p className="text-xs text-muted-foreground mt-0.5">
+                Based on your {user?.role === "alumni" ? "skills" : "interests"}
+              </p>
+            )}
+          </div>
         </div>
 
-        {/* Loading */}
         {autoLoading && <SkeletonCards count={3} />}
 
-        {/* Error */}
         {!autoLoading && autoError && (
-          <div className="flex items-center gap-3 bg-red-50 border border-red-200 rounded-lg px-4 py-3 text-red-700 text-sm">
-            <AlertCircle size={18} className="shrink-0" />
+          <div className="flex items-center gap-3 rounded-xl px-4 py-3 text-sm"
+            style={{ background: "rgba(239,68,68,0.08)", border: "1px solid rgba(239,68,68,0.2)", color: "#EF4444" }}>
+            <AlertCircle size={16} className="shrink-0" />
             <div>
               <p className="font-medium">Could not load recommendations</p>
-              <p className="text-xs mt-0.5 text-red-500">{autoError}</p>
+              <p className="text-xs mt-0.5 opacity-80">{autoError}</p>
             </div>
           </div>
         )}
 
-        {/* No profile terms */}
         {!autoLoading && !autoError && !hasProfileTerms && (
-          <div className="bg-amber-50 border border-amber-200 rounded-lg px-5 py-4 text-sm text-amber-800 flex items-center gap-3">
-            <Sparkles size={18} className="shrink-0 text-amber-500" />
+          <div className="rounded-xl px-5 py-4 text-sm flex items-center gap-3"
+            style={{ background: "rgba(245,158,11,0.08)", border: "1px solid rgba(245,158,11,0.2)", color: "#B45309" }}>
+            <Sparkles size={16} className="shrink-0" style={{ color: "#F59E0B" }} />
             <span>
               Complete your profile with{" "}
               <strong>{user?.role === "alumni" ? "skills" : "interests"}</strong> to get
@@ -247,7 +220,6 @@ export default function RecommendationsSection() {
           </div>
         )}
 
-        {/* Results */}
         {!autoLoading && !autoError && autoRecommendations.length > 0 && (
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
             {autoRecommendations.map((space) => (
@@ -256,81 +228,94 @@ export default function RecommendationsSection() {
           </div>
         )}
 
-        {/* Has profile terms but no matches */}
         {!autoLoading && !autoError && hasProfileTerms && autoRecommendations.length === 0 && (
-          <div className="text-center py-8 text-gray-500">
-            <Sparkles size={28} className="mx-auto mb-2 text-gray-300" />
+          <div className="text-center py-10 text-muted-foreground">
+            <Sparkles size={28} className="mx-auto mb-2 opacity-30" />
             <p className="text-sm">No matching spaces found for your profile yet.</p>
           </div>
         )}
       </div>
 
-      {/* ══════════════════════════════════════════════════════
-          SECTION 2 — Manual search
-      ══════════════════════════════════════════════════════ */}
-      <div className="bg-gradient-to-br from-blue-600 to-indigo-700 rounded-xl p-7 text-white">
-        <h3 className="text-lg font-semibold mb-1">Search by Skills or Interests</h3>
-        <p className="text-blue-100 text-sm mb-5">
-          Discover spaces by entering any skills or topics manually.
-        </p>
+      {/* ── Manual Search ── */}
+      <div className="relative">
+        {/* Glow effect */}
+        <div className="absolute inset-0 rounded-2xl lavender-glow pointer-events-none" />
 
-        {/* Tag input */}
-        <div className="bg-white rounded-lg p-3 flex flex-wrap gap-2 items-center min-h-[48px]">
-          {tags.map((tag) => (
-            <TagChip key={tag} label={tag} onRemove={() => removeTag(tag)} />
-          ))}
-          <input
-            type="text"
-            value={inputValue}
-            onChange={(e) => setInputValue(e.target.value)}
-            onKeyDown={handleKeyDown}
-            onBlur={() => inputValue.trim() && addTag(inputValue)}
-            placeholder={tags.length === 0 ? placeholder : "Add more…"}
-            className="flex-1 min-w-[160px] text-sm text-gray-800 outline-none placeholder:text-gray-400 bg-transparent"
-          />
+        <div className="relative rounded-2xl p-7 text-white overflow-hidden"
+          style={{ background: "linear-gradient(135deg, #9F7AEA 0%, #B794F4 45%, #C4B5FD 100%)" }}>
+          {/* Decorative circles */}
+          <div className="absolute -top-8 -right-8 w-40 h-40 rounded-full opacity-20"
+            style={{ background: "rgba(255,255,255,0.3)" }} />
+          <div className="absolute -bottom-6 -left-6 w-28 h-28 rounded-full opacity-15"
+            style={{ background: "rgba(255,255,255,0.3)" }} />
+
+          <div className="relative">
+            <div className="flex items-center gap-2 mb-1">
+              <Search size={18} className="opacity-90" />
+              <h3 className="text-lg font-semibold">Search by Skills or Interests</h3>
+            </div>
+            <p className="text-white/75 text-sm mb-5">
+              Discover spaces by entering any skills or topics manually.
+            </p>
+
+            {/* Tag input */}
+            <div className="rounded-xl p-3 flex flex-wrap gap-2 items-center min-h-[52px]"
+              style={{ background: "rgba(255,255,255,0.95)" }}>
+              {tags.map((tag) => (
+                <TagChip key={tag} label={tag} onRemove={() => removeTag(tag)} />
+              ))}
+              <input
+                type="text"
+                value={inputValue}
+                onChange={(e) => setInputValue(e.target.value)}
+                onKeyDown={handleKeyDown}
+                onBlur={() => inputValue.trim() && addTag(inputValue)}
+                placeholder={tags.length === 0 ? placeholder : "Add more…"}
+                className="flex-1 min-w-[160px] text-sm outline-none bg-transparent"
+                style={{ color: "#1E293B" }}
+              />
+            </div>
+
+            <div className="flex gap-3 mt-4">
+              <Button
+                onClick={handleSearch}
+                disabled={ searchLoading}
+                className="rounded-lg font-semibold px-6 shadow-sm transition-all disabled:opacity-60"
+                style={{ background: "#fff", color: "var(--primary)" }}
+              >
+                {searchLoading ? (
+                  <><Loader2 size={15} className="animate-spin mr-2" />Searching…</>
+                ) : (
+                  <><Search size={15} className="mr-2" />Search</>
+                )}
+              </Button>
+
+              {hasSearched && (
+                <Button
+                  onClick={handleClearSearch}
+                  variant="ghost"
+                  className="font-medium rounded-lg"
+                  style={{ color: "rgba(255,255,255,0.85)" }}
+                >
+                  Clear
+                </Button>
+              )}
+            </div>
+
+            <p className="text-white/60 text-xs mt-3">
+              Press Enter or comma to add · Backspace to remove the last tag
+            </p>
+          </div>
         </div>
-
-        <div className="flex gap-3 mt-3">
-          <Button
-            onClick={handleSearch}
-            disabled={tags.length === 0 || searchLoading}
-            className="bg-white text-blue-600 hover:bg-blue-50 font-medium px-6 disabled:opacity-60"
-          >
-            {searchLoading ? (
-              <>
-                <Loader2 size={16} className="animate-spin mr-2" />
-                Searching…
-              </>
-            ) : (
-              <>
-                <Search size={16} className="mr-2" />
-                Search
-              </>
-            )}
-          </Button>
-
-          {hasSearched && (
-            <Button
-              onClick={handleClearSearch}
-              variant="ghost"
-              className="text-white hover:bg-white/20 font-medium"
-            >
-              Clear
-            </Button>
-          )}
-        </div>
-
-        <p className="text-blue-200 text-xs mt-3">
-          Press Enter or comma to add · Backspace to remove the last tag
-        </p>
       </div>
 
       {/* Manual search results */}
       {hasSearched && (
         <div>
           {searchError && (
-            <div className="flex items-center gap-3 bg-red-50 border border-red-200 rounded-lg px-4 py-3 text-red-700 text-sm">
-              <AlertCircle size={18} className="shrink-0" />
+            <div className="flex items-center gap-3 rounded-xl px-4 py-3 text-sm"
+              style={{ background: "rgba(239,68,68,0.08)", border: "1px solid rgba(239,68,68,0.2)", color: "#EF4444" }}>
+              <AlertCircle size={16} className="shrink-0" />
               <span>{searchError}</span>
             </div>
           )}
@@ -338,8 +323,8 @@ export default function RecommendationsSection() {
           {searchLoading && <SkeletonCards count={5} />}
 
           {!searchLoading && !searchError && searchRecommendations.length === 0 && (
-            <div className="text-center py-8 text-gray-500">
-              <Search size={28} className="mx-auto mb-2 text-gray-300" />
+            <div className="text-center py-10 text-muted-foreground">
+              <Search size={28} className="mx-auto mb-2 opacity-30" />
               <p className="font-medium text-sm">No spaces matched your search.</p>
               <p className="text-xs mt-1">Try different terms.</p>
             </div>
@@ -347,15 +332,11 @@ export default function RecommendationsSection() {
 
           {!searchLoading && !searchError && searchRecommendations.length > 0 && (
             <>
-              <p className="text-sm text-gray-500 mb-4">
+              <p className="text-sm text-muted-foreground mb-4">
                 Found{" "}
-                <span className="font-semibold text-gray-800">
-                  {searchRecommendations.length}
-                </span>{" "}
+                <span className="font-semibold text-foreground">{searchRecommendations.length}</span>{" "}
                 spaces for{" "}
-                <span className="font-semibold text-gray-800">
-                  {queryTerms.join(", ")}
-                </span>{" "}
+                <span className="font-semibold text-foreground">{queryTerms.join(", ")}</span>{" "}
                 · {totalSpacesAnalyzed} spaces analyzed
               </p>
               <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">

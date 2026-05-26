@@ -3,15 +3,9 @@ import axios from "axios";
 import { useParams, useNavigate } from "react-router";
 import { Link } from "react-router";
 import { Button } from "../../core/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "../../core/components/ui/card";
 import { Input } from "../../core/components/ui/input";
 import { Label } from "../../core/components/ui/label";
+import { KeyRound } from "lucide-react";
 
 const API_URL = import.meta.env.VITE_API_URL;
 
@@ -32,68 +26,71 @@ const ResetPasswordPage = () => {
     }
 
     setLoading(true);
-
     try {
-      await axios.post(`${API_URL}/api/auth/reset-password/${token}`, {
-        password,
-      });
+      await axios.post(`${API_URL}/api/auth/reset-password/${token}`, { password });
       navigate("/login", {
         state: { message: "Password reset successful. You can now log in." },
       });
     } catch (error: any) {
-      const msg =
-        error.response?.data?.message ??
-        "Something went wrong. Please try again.";
-      setErrorMessage(msg);
+      setErrorMessage(error.response?.data?.message ?? "Something went wrong. Please try again.");
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="flex justify-center items-center min-h-screen bg-neutral-50 px-4">
-      <Card className="w-full max-w-sm">
-        <CardHeader>
-          <CardTitle>Reset Password</CardTitle>
-          <CardDescription>Enter your new password below.</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <form onSubmit={handleSubmit}>
-            <div className="flex flex-col gap-6">
-              <div className="grid gap-2">
-                <Label htmlFor="password">New Password</Label>
-                <Input
-                  id="password"
-                  type="password"
-                  placeholder="Min. 6 characters"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  required
-                />
-              </div>
+    <div className="flex min-h-screen items-center justify-center px-6 py-12"
+      style={{ background: "var(--background)" }}>
+      <div className="w-full max-w-sm">
 
-              {errorMessage && (
-                <p className="text-sm text-red-600">{errorMessage}</p>
-              )}
+        <div className="mb-8">
+          <div className="w-12 h-12 rounded-2xl flex items-center justify-center mb-5"
+            style={{ background: "var(--secondary)" }}>
+            <KeyRound size={22} style={{ color: "var(--primary)" }} />
+          </div>
+          <h1 className="text-2xl font-bold text-foreground tracking-tight">Reset password</h1>
+          <p className="text-muted-foreground text-sm mt-1">Enter your new password below.</p>
+        </div>
 
-              <Button
-                type="submit"
-                className="w-full bg-blue-600 hover:bg-blue-700"
-                disabled={loading}
-              >
-                {loading ? "Resetting..." : "Reset Password"}
-              </Button>
+        <form onSubmit={handleSubmit} className="space-y-5">
+          <div className="space-y-1.5">
+            <Label htmlFor="password" className="text-sm font-medium text-foreground">New Password</Label>
+            <Input
+              id="password"
+              type="password"
+              placeholder="Min. 6 characters"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
+              className="rounded-xl h-11"
+              style={{ background: "var(--card)", borderColor: "var(--border)" }}
+            />
+          </div>
 
-              <div className="text-center text-sm text-muted-foreground">
-                Remember your password?{" "}
-                <Link to="/login" className="text-blue-600 hover:underline">
-                  Sign in
-                </Link>
-              </div>
-            </div>
-          </form>
-        </CardContent>
-      </Card>
+          {errorMessage && (
+            <p className="text-xs text-red-500 rounded-lg px-3 py-2"
+              style={{ background: "rgba(239,68,68,0.08)" }}>
+              {errorMessage}
+            </p>
+          )}
+
+          <Button
+            type="submit"
+            className="w-full h-11 rounded-xl font-semibold text-white shadow-sm"
+            style={{ background: "var(--primary)" }}
+            disabled={loading}
+          >
+            {loading ? "Resetting..." : "Reset Password"}
+          </Button>
+        </form>
+
+        <p className="text-center text-sm text-muted-foreground mt-6">
+          Remember your password?{" "}
+          <Link to="/login" className="font-semibold transition-colors" style={{ color: "var(--primary)" }}>
+            Sign in
+          </Link>
+        </p>
+      </div>
     </div>
   );
 };

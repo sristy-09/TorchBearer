@@ -55,13 +55,14 @@ export default function SpacesGrid() {
 
   if (loading) {
     return (
-      <div className="grid md:grid-cols-3 gap-6">
+      <div className="grid md:grid-cols-3 gap-5">
         {Array.from({ length: 6 }).map((_, i) => (
-          <div key={i} className="bg-white border border-gray-200 rounded-lg p-6 animate-pulse">
-            <div className="h-5 bg-gray-200 rounded w-2/3 mb-3" />
-            <div className="h-3 bg-gray-100 rounded w-full mb-2" />
-            <div className="h-3 bg-gray-100 rounded w-4/5 mb-4" />
-            <div className="h-3 bg-gray-100 rounded w-1/3" />
+          <div key={i} className="rounded-2xl p-5 border animate-pulse"
+            style={{ background: "var(--card)", borderColor: "var(--border)" }}>
+            <div className="w-10 h-10 rounded-xl mb-3" style={{ background: "var(--muted)" }} />
+            <div className="h-4 rounded-lg w-2/3 mb-2" style={{ background: "var(--muted)" }} />
+            <div className="h-3 rounded-lg w-full mb-1.5" style={{ background: "var(--muted)" }} />
+            <div className="h-3 rounded-lg w-4/5" style={{ background: "var(--muted)" }} />
           </div>
         ))}
       </div>
@@ -75,14 +76,14 @@ export default function SpacesGrid() {
     else if (filterType === "joined") message = "You haven't joined any spaces yet.";
 
     return (
-      <div className="text-center py-12">
-        <p className="text-gray-500 text-lg">{message}</p>
+      <div className="text-center py-14 text-muted-foreground">
+        <p className="text-base">{message}</p>
       </div>
     );
   }
 
   return (
-    <div className="grid md:grid-cols-3 gap-6">
+    <div className="grid md:grid-cols-3 gap-5">
       {otherSpaces.map((space) => (
         <ErrorBoundary key={space._id} level="component">
           <SpaceCard space={space} />

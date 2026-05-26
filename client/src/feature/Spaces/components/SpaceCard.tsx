@@ -3,7 +3,7 @@ import { useNavigate } from "react-router";
 import { useAppDispatch, useAppSelector } from "../../../store/hooks";
 import { deleteSpace } from "../../../store/Slice/spacesSlice";
 import type { Space } from "../types/space";
-import { Pencil, Trash2 } from "lucide-react";
+import { Pencil, Trash2, Users } from "lucide-react";
 import EditSpaceDialog from "./EditSpaceDialog";
 import RequestJoinButton from "./RequestJoinButton";
 import {
@@ -36,10 +36,7 @@ export default function SpaceCard({ space }: Props) {
   const canAccess = isMember || isAdmin;
 
   const handleClick = () => {
-    // Only navigate if user can access the space
-    if (canAccess) {
-      navigate(`/space/${space._id}/topics`);
-    }
+    if (canAccess) navigate(`/space/${space._id}/topics`);
   };
 
   const handleEdit = (e: React.MouseEvent) => {
@@ -68,49 +65,62 @@ export default function SpaceCard({ space }: Props) {
     <>
       <div
         onClick={handleClick}
-        className={`group border border-gray-200 rounded-lg p-6 bg-white hover:border-gray-300 hover:shadow-sm transition-all relative ${canAccess ? "cursor-pointer" : ""
-          }`}
+        className={`group rounded-2xl p-5 border card-hover transition-all relative ${canAccess ? "cursor-pointer" : ""}`}
+        style={{ background: "var(--card)", borderColor: "var(--border)" }}
       >
+        {/* Modify actions */}
         {canModify && (
-          <div className="absolute top-4 right-4 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+          <div className="absolute top-4 right-4 flex gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity">
             <button
               onClick={handleEdit}
-              className="p-2 bg-blue-50 hover:bg-blue-100 text-blue-600 rounded-md transition-colors"
+              className="p-1.5 rounded-lg transition-colors"
+              style={{ background: "var(--secondary)", color: "var(--primary)" }}
               title="Edit space"
             >
-              <Pencil size={16} />
+              <Pencil size={14} />
             </button>
             <button
               onClick={handleDeleteClick}
-              className="p-2 bg-red-50 hover:bg-red-100 text-red-600 rounded-md transition-colors"
+              className="p-1.5 rounded-lg transition-colors"
+              style={{ background: "rgba(239,68,68,0.1)", color: "#EF4444" }}
               title="Delete space"
             >
-              <Trash2 size={16} />
+              <Trash2 size={14} />
             </button>
           </div>
         )}
 
-        <h2 className="font-semibold text-lg text-gray-900 group-hover:text-blue-600 transition-colors pr-20">
+        <h2 className="font-semibold text-base text-foreground group-hover:text-primary transition-colors pr-16 leading-snug">
           {space.title}
         </h2>
 
-        <p className="text-gray-600 mt-2 text-sm line-clamp-2 leading-relaxed">
+        <p className="text-muted-foreground mt-1.5 text-xs line-clamp-2 leading-relaxed">
           {space.description}
         </p>
 
-        {/* Show RequestJoinButton if user is not a member and not admin */}
+        {/* Footer */}
+        <div className="mt-4 pt-3 flex items-center justify-between" style={{ borderTop: "1px solid var(--border)" }}>
+          <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+            <Users size={13} />
+            <span>{space.members?.length || 0} members</span>
+          </div>
+          {canAccess && (
+            <span className="text-xs font-medium px-2 py-0.5 rounded-full"
+              style={{ background: "var(--secondary)", color: "var(--primary)" }}>
+              Member
+            </span>
+          )}
+        </div>
+
+        {/* Join button */}
         {!canAccess && (
-          <div className="mt-4 pt-4 border-t border-gray-100" onClick={(e) => e.stopPropagation()}>
-            <RequestJoinButton spaceId={space._id} isMember={isMember} />
+          <div className="mt-3" onClick={(e) => e.stopPropagation()}>
+            <RequestJoinButton spaceId={space._id} isMember={!!isMember} />
           </div>
         )}
       </div>
 
-      <EditSpaceDialog
-        open={editDialogOpen}
-        onOpenChange={setEditDialogOpen}
-        space={space}
-      />
+      <EditSpaceDialog open={editDialogOpen} onOpenChange={setEditDialogOpen} space={space} />
 
       <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
         <AlertDialogContent onClick={(e) => e.stopPropagation()}>
@@ -122,11 +132,8 @@ export default function SpaceCard({ space }: Props) {
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel disabled={isDeleting}>Cancel</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={handleDeleteConfirm}
-              disabled={isDeleting}
-              className="bg-red-600 hover:bg-red-700"
-            >
+            <AlertDialogAction onClick={handleDeleteConfirm} disabled={isDeleting}
+              className="bg-red-600 hover:bg-red-700">
               {isDeleting ? "Deleting..." : "Delete"}
             </AlertDialogAction>
           </AlertDialogFooter>

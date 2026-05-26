@@ -9,10 +9,7 @@ interface RequestJoinButtonProps {
   isMember: boolean;
 }
 
-export default function RequestJoinButton({
-  spaceId,
-  isMember,
-}: RequestJoinButtonProps) {
+export default function RequestJoinButton({ spaceId, isMember }: RequestJoinButtonProps) {
   const dispatch = useAppDispatch();
   const { user } = useAppSelector((state) => state.auth);
   const { notifications } = useAppSelector((state) => state.notifications);
@@ -21,7 +18,6 @@ export default function RequestJoinButton({
   const [requestSent, setRequestSent] = useState(false);
   const [error, setError] = useState("");
 
-  // Check if user already has a pending request for this space
   const hasPendingRequest = notifications.some(
     (n) =>
       n.type === "space_join_request" &&
@@ -31,19 +27,10 @@ export default function RequestJoinButton({
   );
 
   const handleRequestJoin = async () => {
-    if (!user) {
-      setError("Please login to join spaces");
-      return;
-    }
-
-    if (user.role === "admin") {
-      setError("Admins don't need to request access");
-      return;
-    }
-
+    if (!user) { setError("Please login to join spaces"); return; }
+    if (user.role === "admin") { setError("Admins don't need to request access"); return; }
     setLoading(true);
     setError("");
-
     try {
       await dispatch(requestJoinSpace(spaceId)).unwrap();
       setRequestSent(true);
@@ -54,48 +41,48 @@ export default function RequestJoinButton({
     }
   };
 
-  // If user is already a member
   if (isMember) {
     return (
-      <Button disabled className="bg-green-600">
-        <Check className="w-4 h-4 mr-2" />
+      <Button disabled className="rounded-xl text-xs h-8 px-3 font-medium"
+        style={{ background: "rgba(16,185,129,0.12)", color: "#10B981", border: "none" }}>
+        <Check className="w-3.5 h-3.5 mr-1.5" />
         Member
       </Button>
     );
   }
 
-  // If request was just sent (local state)
   if (requestSent) {
     return (
-      <Button disabled className="bg-green-600">
-        <CheckCircle className="w-4 h-4 mr-2" />
+      <Button disabled className="rounded-xl text-xs h-8 px-3 font-medium"
+        style={{ background: "rgba(16,185,129,0.12)", color: "#10B981", border: "none" }}>
+        <CheckCircle className="w-3.5 h-3.5 mr-1.5" />
         Request Sent
       </Button>
     );
   }
 
-  // If user has a pending request (from notifications)
   if (hasPendingRequest) {
     return (
-      <Button disabled className="bg-yellow-600">
-        <Clock className="w-4 h-4 mr-2" />
+      <Button disabled className="rounded-xl text-xs h-8 px-3 font-medium"
+        style={{ background: "rgba(245,158,11,0.12)", color: "#D97706", border: "none" }}>
+        <Clock className="w-3.5 h-3.5 mr-1.5" />
         Request Pending
       </Button>
     );
   }
 
-  // Request to join button
   return (
     <div>
       <Button
         onClick={handleRequestJoin}
         disabled={loading}
-        className="bg-blue-600 hover:bg-blue-700"
+        className="rounded-xl text-xs h-8 px-3 font-semibold text-white transition-all"
+        style={{ background: "var(--primary)" }}
       >
-        <UserPlus className="w-4 h-4 mr-2" />
+        <UserPlus className="w-3.5 h-3.5 mr-1.5" />
         {loading ? "Sending..." : "Request to Join"}
       </Button>
-      {error && <p className="text-sm text-red-600 mt-2">{error}</p>}
+      {error && <p className="text-xs text-red-500 mt-1.5">{error}</p>}
     </div>
   );
 }
