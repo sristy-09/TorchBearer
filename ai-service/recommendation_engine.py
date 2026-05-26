@@ -63,7 +63,6 @@ class RecommendationEngine:
                     "title": 1,
                     "name": 1,
                     "description": 1,
-                    # Use $ifNull so spaces without tags field return []
                     "tags": {"$ifNull": ["$tags", []]},
                     "creator": {
                         "$arrayElemAt": ["$creator.name", 0]
@@ -198,51 +197,62 @@ class RecommendationEngine:
             space_vectors
         ).flatten()
 
-        # Normalize query terms for exact-match boosting
-        query_terms_lower = {t.lower() for t in query_terms}
-
-        # Hybrid scoring: TF-IDF cosine + exact keyword bonus
-        boosted_scores = []
-
-        for idx, space in enumerate(spaces):
-            tfidf_score = float(similarity_scores[idx])
-
-            # Exact tag match bonus
-            space_tags = {t.lower() for t in (space.get("tags") or [])}
-            space_title = (
-                space.get("title") or space.get("name") or ""
-            ).lower()
-
-            matched_tags = query_terms_lower & space_tags
-            title_match = any(t in space_title for t in query_terms_lower)
-
-            # Each matched tag adds 0.15, title match adds 0.1
-            tag_bonus = len(matched_tags) * 0.15
-            title_bonus = 0.1 if title_match else 0.0
-
-            # Combine: weight TF-IDF at 40%, keyword bonus at 60%
-            combined = (tfidf_score * 0.4) + tag_bonus + title_bonus
-
-            # Cap at 1.0
-            boosted_scores.append(min(combined, 1.0))
-
-        boosted_scores = np.array(boosted_scores)
-
         # Rank results
         ranked_indices = np.argsort(
-            boosted_scores
+            similarity_scores
         )[::-1]
 
         results = []
 
-        for idx in ranked_indices[:top_n]:
-            score = float(boosted_scores[idx])
+        # Normalize query terms for keyword boosting
+        query_terms_lower = set(
+            t.lower().replace(" ", "").replace("/", " ")
+            for t in query_terms
+        ) | set(t.lower() for t in query_terms)
 
-            # Ignore very weak matches
-            if score <= 0.01:
-                break
+        for idx in ranked_indices[:top_n]:
+            score = float(similarity_scores[idx])
 
             space = spaces[idx]
+
+            # --- Keyword boost ---
+            # Reward direct matches in title or tags so that
+            # e.g. searching "mern" gives "MERN Space" a high score.
+            # Boost is computed BEFORE the threshold check so that
+            # short/common queries like "design" can still surface
+            # spaces whose title or tags contain the term.
+            title = (space.get("title") or space.get("name") or "").lower()
+            tags_lower = [t.lower() for t in (space.get("tags") or [])]
+            tags_nospace = [t.replace(" ", "") for t in tags_lower]
+            # Also split multi-word tags into individual words for partial matching
+            tags_words = set(
+                word
+                for tag in tags_lower
+                for word in tag.split()
+            )
+            title_words = set(title.split())
+
+            boost = 0.0
+            for term in query_terms_lower:
+                # Exact tag match (full tag string)
+                if term in tags_lower or term in tags_nospace:
+                    boost += 0.2
+                # Exact word match inside a tag or title word
+                elif term in tags_words or term in title_words:
+                    boost += 0.25
+                # Term appears as substring in title
+                elif term in title:
+                    boost += 0.2
+                # Term appears as substring in any tag
+                elif any(term in tag for tag in tags_lower):
+                    boost += 0.2
+
+            boosted_score = min(score + boost, 1.0)
+
+            # Ignore very weak matches (checked after boost so keyword
+            # hits on low-IDF terms like "design" are not discarded)
+            if boosted_score <= 0.01:
+                continue
 
             results.append(
                 {
@@ -254,9 +264,12 @@ class RecommendationEngine:
                     ),
                     "description": space.get("description") or "",
                     "tags": space.get("tags") or [],
-                    "similarity_score": round(score, 4),
+                    "similarity_score": round(boosted_score, 4),
                     "created_by": space.get("creator") or None,
                 }
             )
+
+        # Re-sort after boosting since boost can change ranking
+        results.sort(key=lambda r: r["similarity_score"], reverse=True)
 
         return results, len(spaces)

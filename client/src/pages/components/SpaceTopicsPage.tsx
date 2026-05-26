@@ -25,46 +25,38 @@ export default function SpaceTopicsPage() {
   const { searchQuery, sortBy } = useAppSelector((state) => state.topics);
   const currentSpace = spaces.find((s) => s._id === spaceId);
 
-  // Fetch topics with search query (debounced)
   useEffect(() => {
     if (!spaceId) return;
-
     const timer = setTimeout(() => {
-      dispatch(
-        fetchTopicsBySpace({
-          spaceId,
-          keyword: searchQuery || undefined,
-        })
-      );
-    }, 500); // Debounce search by 500ms
-
+      dispatch(fetchTopicsBySpace({ spaceId, keyword: searchQuery || undefined }));
+    }, 500);
     return () => clearTimeout(timer);
   }, [dispatch, spaceId, searchQuery]);
 
   return (
-    <div className="flex h-screen bg-neutral-50">
+    <div className="flex h-screen" style={{ background: "var(--background)" }}>
       <Sidebar />
 
       <div className="flex-1 overflow-auto">
         {/* Header */}
-        <div className="bg-white border-b px-8 py-6">
+        <div className="px-8 pt-7 pb-5" style={{ borderBottom: "1px solid var(--border)", background: "var(--card)" }}>
           <div className="max-w-7xl mx-auto">
             <Button
               variant="ghost"
               size="sm"
               onClick={() => navigate("/dashboard")}
-              className="flex items-center gap-2 mb-4 -ml-2"
+              className="flex items-center gap-2 mb-4 -ml-2 text-muted-foreground hover:text-foreground rounded-lg"
             >
-              <ArrowLeft size={16} />
+              <ArrowLeft size={15} />
               Back to Spaces
             </Button>
 
             <div className="flex items-start justify-between">
               <div className="flex-1">
-                <h1 className="text-2xl font-semibold text-gray-900">
+                <h1 className="text-2xl font-bold text-foreground tracking-tight">
                   {currentSpace?.title || "Space Topics"}
                 </h1>
-                <p className="text-gray-600 mt-1">
+                <p className="text-muted-foreground mt-1 text-sm">
                   {currentSpace?.description || "Explore topics in this space"}
                 </p>
               </div>
@@ -72,9 +64,10 @@ export default function SpaceTopicsPage() {
               <Button
                 variant="outline"
                 onClick={() => navigate(`/space/${spaceId}/members`)}
-                className="flex items-center gap-2"
+                className="flex items-center gap-2 rounded-xl"
+                style={{ borderColor: "var(--border)", background: "var(--background)" }}
               >
-                <Users size={18} />
+                <Users size={16} />
                 Members
               </Button>
             </div>
@@ -82,41 +75,38 @@ export default function SpaceTopicsPage() {
         </div>
 
         <div className="max-w-7xl mx-auto px-8 py-8">
-          <div>
-            <div className="flex items-center justify-between mb-6">
-              <h2 className="text-xl font-semibold text-gray-900">
-                Topics
-              </h2>
-              {spaceId && <CreateTopicDialog spaceId={spaceId} />}
+          <div className="flex items-center justify-between mb-5">
+            <div>
+              <h2 className="text-lg font-semibold text-foreground">Topics</h2>
+              <p className="text-xs text-muted-foreground mt-0.5">Browse and join discussions</p>
             </div>
-
-            {/* Search + Filters */}
-            <div className="flex flex-wrap gap-3 items-center mb-6">
-              <Input
-                placeholder="Search topics..."
-                className="w-80"
-                value={searchQuery}
-                onChange={(e) => dispatch(setSearchQuery(e.target.value))}
-              />
-
-              <Select
-                value={sortBy}
-                onValueChange={(value: "latest" | "name") =>
-                  dispatch(setSortBy(value))
-                }
-              >
-                <SelectTrigger className="w-36">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="latest">Latest</SelectItem>
-                  <SelectItem value="name">Name</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            <TopicsGrid />
+            {spaceId && <CreateTopicDialog spaceId={spaceId} />}
           </div>
+
+          {/* Search + Filters */}
+          <div className="flex flex-wrap gap-3 items-center mb-6">
+            <Input
+              placeholder="Search topics..."
+              className="w-72 rounded-xl"
+              style={{ background: "var(--card)", borderColor: "var(--border)" }}
+              value={searchQuery}
+              onChange={(e) => dispatch(setSearchQuery(e.target.value))}
+            />
+            <Select
+              value={sortBy}
+              onValueChange={(value: "latest" | "name") => dispatch(setSortBy(value))}
+            >
+              <SelectTrigger className="w-36 rounded-xl" style={{ background: "var(--card)", borderColor: "var(--border)" }}>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="latest">Latest</SelectItem>
+                <SelectItem value="name">Name</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          <TopicsGrid />
         </div>
       </div>
     </div>

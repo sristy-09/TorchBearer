@@ -1,82 +1,76 @@
 import { Button } from "../../core/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "../../core/components/ui/card";
 import { Input } from "../../core/components/ui/input";
 import { Label } from "../../core/components/ui/label";
 import { useAdminLogin } from "../hooks/useAdminLogin";
-import { FaShieldAlt } from "react-icons/fa";
+import { ShieldCheck } from "lucide-react";
 
 function AdminLoginPage() {
   const { myForm, handleChange, handleSubmit, errors } = useAdminLogin();
 
   return (
-    <div className="flex justify-center items-center min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 px-4">
-      <Card className="w-full max-w-sm border-slate-700 bg-slate-800/50 backdrop-blur">
-        <CardHeader className="space-y-3">
-          <div className="flex justify-center">
-            <div className="p-3 bg-blue-600/20 rounded-full">
-              <FaShieldAlt className="w-8 h-8 text-blue-500" />
-            </div>
+    <div className="flex min-h-screen items-center justify-center px-6 py-12"
+      style={{ background: "#18171F" }}>
+      <div className="w-full max-w-sm">
+        {/* Logo */}
+        <div className="flex flex-col items-center mb-10">
+          <div className="w-14 h-14 rounded-2xl flex items-center justify-center mb-4 shadow-lg"
+            style={{ background: "linear-gradient(135deg, #8B5CF6 0%, #A855F7 100%)" }}>
+            <ShieldCheck size={28} className="text-white" />
           </div>
-          <CardTitle className="text-center text-white">Admin Portal</CardTitle>
-          <CardDescription className="text-center text-slate-400">
+          <h1 className="text-xl font-bold text-white">Admin Portal</h1>
+          <p className="text-sm mt-1" style={{ color: "#C9C5D3" }}>
             Sign in to access the admin dashboard
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <form onSubmit={handleSubmit}>
-            <div className="flex flex-col gap-6">
-              <div className="grid gap-2">
-                <Label htmlFor="email" className="text-slate-300">
-                  Email
-                </Label>
-                <Input
-                  id="email"
-                  type="email"
-                  placeholder="admin@example.com"
-                  name="email"
-                  value={myForm.email}
-                  onChange={handleChange}
-                  className="bg-slate-900/50 border-slate-600 text-white placeholder:text-slate-500"
-                  required
-                />
-                {errors.email && (
-                  <p className="text-sm text-red-400">{errors.email}</p>
-                )}
-              </div>
-              <div className="grid gap-2">
-                <Label htmlFor="password" className="text-slate-300">
-                  Password
-                </Label>
-                <Input
-                  id="password"
-                  type="password"
-                  name="password"
-                  value={myForm.password}
-                  onChange={handleChange}
-                  className="bg-slate-900/50 border-slate-600 text-white"
-                  required
-                />
-                {errors.password && (
-                  <p className="text-sm text-red-400">{errors.password}</p>
-                )}
-              </div>
+          </p>
+        </div>
 
-              <Button
-                type="submit"
-                className="w-full bg-blue-600 hover:bg-blue-700 text-white"
-              >
-                Sign in as Admin
-              </Button>
+        <div className="rounded-2xl p-7 space-y-5"
+          style={{ background: "#2A2736", border: "1px solid rgba(255,255,255,0.08)" }}>
+          <form onSubmit={handleSubmit} className="space-y-5">
+            <div className="space-y-1.5">
+              <Label htmlFor="email" className="text-sm font-medium" style={{ color: "#C9C5D3" }}>
+                Email
+              </Label>
+              <Input
+                id="email"
+                type="email"
+                placeholder="admin@example.com"
+                name="email"
+                value={myForm.email}
+                onChange={handleChange}
+                required
+                className="rounded-xl h-11 text-white placeholder:text-white/30"
+                style={{ background: "rgba(255,255,255,0.06)", borderColor: "rgba(255,255,255,0.1)" }}
+              />
+              {errors.email && <p className="text-xs text-red-400">{errors.email}</p>}
             </div>
+
+            <div className="space-y-1.5">
+              <Label htmlFor="password" className="text-sm font-medium" style={{ color: "#C9C5D3" }}>
+                Password
+              </Label>
+              <Input
+                id="password"
+                type="password"
+                name="password"
+                value={myForm.password}
+                onChange={handleChange}
+                required
+                className="rounded-xl h-11 text-white"
+                style={{ background: "rgba(255,255,255,0.06)", borderColor: "rgba(255,255,255,0.1)" }}
+              />
+              {errors.password && <p className="text-xs text-red-400">{errors.password}</p>}
+            </div>
+
+            <Button
+              type="submit"
+              className="w-full h-11 rounded-xl font-semibold text-white shadow-sm transition-all"
+              style={{ background: "linear-gradient(135deg, #8B5CF6 0%, #A855F7 100%)" }}
+            >
+              Sign in as Admin
+            </Button>
           </form>
-        </CardContent>
-      </Card>
+        </div>
+      </div>
     </div>
   );
 }

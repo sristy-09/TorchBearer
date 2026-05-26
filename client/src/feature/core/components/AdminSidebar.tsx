@@ -12,13 +12,13 @@ import {
   UserPlus,
   FolderPlus,
   Bell,
+  ShieldCheck,
 } from "lucide-react";
 import { useAppDispatch, useAppSelector } from "../../../store/hooks";
 import { logoutUser } from "../../../store/Slice/authSlice";
 import { useNavigate, useLocation } from "react-router";
 import { useState } from "react";
 import { Avatar } from "./ui/avatar";
-import { FaShieldAlt } from "react-icons/fa";
 
 interface SubMenuItem {
   label: string;
@@ -45,60 +45,28 @@ export default function AdminSidebar() {
   const menuItems: MenuItem[] = [
     {
       label: "Dashboard",
-      icon: <LayoutDashboard size={20} />,
+      icon: <LayoutDashboard size={18} />,
       subItems: [
-        {
-          label: "Overview",
-          path: "/admin/dashboard",
-          icon: <LayoutDashboard size={18} />,
-        },
+        { label: "Overview", path: "/admin/dashboard", icon: <LayoutDashboard size={16} /> },
       ],
     },
     {
       label: "Features",
-      icon: <Layers size={20} />,
+      icon: <Layers size={18} />,
       subItems: [
-        {
-          label: "Spaces List",
-          path: "/admin/spaces",
-          icon: <Layers size={18} />,
-        },
-        {
-          label: "Topics List",
-          path: "/admin/topics",
-          icon: <BookOpen size={18} />,
-        },
-        {
-          label: "Posts List",
-          path: "/admin/posts",
-          icon: <MessageSquare size={18} />,
-        },
-        {
-          label: "Users List",
-          path: "/admin/users",
-          icon: <Users size={18} />,
-        },
+        { label: "Spaces List", path: "/admin/spaces", icon: <Layers size={16} /> },
+        { label: "Topics List", path: "/admin/topics", icon: <BookOpen size={16} /> },
+        { label: "Posts List", path: "/admin/posts", icon: <MessageSquare size={16} /> },
+        { label: "Users List", path: "/admin/users", icon: <Users size={16} /> },
       ],
     },
     {
       label: "Management",
-      icon: <Settings size={20} />,
+      icon: <Settings size={18} />,
       subItems: [
-        {
-          label: "Create Space",
-          path: "/admin/create-space",
-          icon: <FolderPlus size={18} />,
-        },
-        {
-          label: "Admit Users",
-          path: "/admin/admit-users",
-          icon: <UserPlus size={18} />,
-        },
-        {
-          label: "Pending Requests",
-          path: "/admin/pending-requests",
-          icon: <Bell size={18} />,
-        },
+        { label: "Create Space", path: "/admin/create-space", icon: <FolderPlus size={16} /> },
+        { label: "Admit Users", path: "/admin/admit-users", icon: <UserPlus size={16} /> },
+        { label: "Pending Requests", path: "/admin/pending-requests", icon: <Bell size={16} /> },
       ],
     },
   ];
@@ -107,139 +75,135 @@ export default function AdminSidebar() {
     try {
       await dispatch(logoutUser()).unwrap();
       navigate("/admin/login");
-    } catch (error) {
+    } catch {
       navigate("/admin/login");
     }
     setIsUserMenuOpen(false);
   };
 
-  const toggleUserMenu = () => {
-    setIsUserMenuOpen(!isUserMenuOpen);
-  };
-
   const toggleMenu = (label: string) => {
     setExpandedMenus((prev) =>
-      prev.includes(label)
-        ? prev.filter((item) => item !== label)
-        : [...prev, label]
+      prev.includes(label) ? prev.filter((item) => item !== label) : [...prev, label]
     );
   };
 
   const isActive = (path: string) => location.pathname === path;
 
   return (
-    <div className="w-64 bg-white border-r border-gray-200 flex flex-col h-screen">
-      {/* Logo Section */}
-      <div className="px-5 py-6 border-b border-gray-200">
+    <div className="w-64 flex flex-col h-screen shrink-0"
+      style={{ background: "var(--sidebar)", borderRight: "1px solid var(--sidebar-border)" }}>
+
+      {/* Logo */}
+      <div className="px-5 py-6" style={{ borderBottom: "1px solid var(--sidebar-border)" }}>
         <button
           onClick={() => navigate("/admin/dashboard")}
           className="flex items-center gap-2.5 hover:opacity-80 transition-opacity cursor-pointer"
         >
-          <div className="w-7 h-7 bg-gradient-to-br from-blue-500 to-blue-700 rounded-lg flex items-center justify-center">
-            <FaShieldAlt className="text-white text-sm" />
+          <div className="w-8 h-8 rounded-xl flex items-center justify-center shadow-sm"
+            style={{ background: "linear-gradient(135deg, #8B5CF6 0%, #A855F7 100%)" }}>
+            <ShieldCheck size={16} className="text-white" />
           </div>
           <div>
-            <span className="font-semibold text-gray-900 block">Admin Portal</span>
-            <span className="text-xs text-gray-500">TorchBearer</span>
+            <span className="font-semibold text-foreground block text-sm tracking-tight">Admin Portal</span>
+            <span className="text-[11px] text-muted-foreground">TorchBearer</span>
           </div>
         </button>
       </div>
 
       {/* Navigation */}
-      <nav className="flex-1 px-3 py-4 overflow-y-auto">
+      <nav className="flex-1 px-3 py-4 overflow-y-auto space-y-1">
         {menuItems.map((item) => (
-          <div key={item.label} className="mb-2">
-            {/* Main Menu Item */}
+          <div key={item.label} className="mb-1">
             <button
               onClick={() => {
-                if (item.subItems) {
-                  toggleMenu(item.label);
-                } else if (item.path) {
-                  navigate(item.path);
-                }
+                if (item.subItems) toggleMenu(item.label);
+                else if (item.path) navigate(item.path);
               }}
-              className="w-full flex items-center justify-between px-3 py-2 text-gray-700 hover:bg-gray-100 rounded-md cursor-pointer transition-colors"
+              className="w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-sm font-medium text-foreground/70 hover:text-foreground transition-all"
+              onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = "var(--sidebar-accent)"; }}
+              onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = "transparent"; }}
             >
               <div className="flex items-center gap-3">
                 {item.icon}
-                <span className="text-sm font-medium">{item.label}</span>
+                <span>{item.label}</span>
               </div>
               {item.subItems && (
-                expandedMenus.includes(item.label) ? (
-                  <ChevronDown size={16} className="text-gray-500" />
-                ) : (
-                  <ChevronRight size={16} className="text-gray-500" />
-                )
+                expandedMenus.includes(item.label)
+                  ? <ChevronDown size={14} className="text-muted-foreground" />
+                  : <ChevronRight size={14} className="text-muted-foreground" />
               )}
             </button>
 
-            {/* Sub Menu Items */}
             {item.subItems && expandedMenus.includes(item.label) && (
-              <div className="ml-4 mt-1 space-y-1">
-                {item.subItems.map((subItem) => (
-                  <button
-                    key={subItem.path}
-                    onClick={() => navigate(subItem.path)}
-                    className={`w-full flex items-center gap-3 px-3 py-2 rounded-md cursor-pointer transition-colors ${isActive(subItem.path)
-                      ? "bg-blue-600 text-white"
-                      : "text-gray-600 hover:bg-gray-100 hover:text-gray-900"
+              <div className="ml-3 mt-1 space-y-0.5 pl-3" style={{ borderLeft: "2px solid var(--border)" }}>
+                {item.subItems.map((subItem) => {
+                  const active = isActive(subItem.path);
+                  return (
+                    <button
+                      key={subItem.path}
+                      onClick={() => navigate(subItem.path)}
+                      className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-all ${
+                        active ? "text-white font-medium shadow-sm" : "text-foreground/60 hover:text-foreground"
                       }`}
-                  >
-                    {subItem.icon}
-                    <span className="text-sm">{subItem.label}</span>
-                  </button>
-                ))}
+                      style={active ? { background: "var(--primary)" } : { background: "transparent" }}
+                      onMouseEnter={(e) => {
+                        if (!active) (e.currentTarget as HTMLElement).style.background = "var(--sidebar-accent)";
+                      }}
+                      onMouseLeave={(e) => {
+                        if (!active) (e.currentTarget as HTMLElement).style.background = "transparent";
+                      }}
+                    >
+                      {subItem.icon}
+                      <span>{subItem.label}</span>
+                    </button>
+                  );
+                })}
               </div>
             )}
           </div>
         ))}
       </nav>
 
-      {/* User Profile Section */}
-      <div className="border-t border-gray-200">
-        {/* Collapsible Menu */}
+      {/* User Profile */}
+      <div style={{ borderTop: "1px solid var(--sidebar-border)" }}>
         {isUserMenuOpen && (
-          <div className="px-3 py-3 space-y-1 border-b border-gray-200 bg-gray-50">
+          <div className="px-3 py-3 space-y-1" style={{ borderBottom: "1px solid var(--sidebar-border)" }}>
             <button
-              onClick={() => {
-                navigate("/profile");
-                setIsUserMenuOpen(false);
-              }}
-              className="w-full flex items-center gap-3 px-3 py-2 text-gray-700 hover:bg-white rounded-md cursor-pointer transition-colors"
+              onClick={() => { navigate("/profile"); setIsUserMenuOpen(false); }}
+              className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-foreground/70 hover:text-foreground transition-all"
+              onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = "var(--sidebar-accent)"; }}
+              onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = "transparent"; }}
             >
-              <User size={18} />
-              <span className="text-sm font-medium">Profile</span>
+              <User size={17} />
+              <span>Profile</span>
             </button>
-
             <button
               onClick={handleLogout}
-              className="w-full flex items-center gap-3 px-3 py-2 text-red-600 hover:bg-white rounded-md cursor-pointer transition-colors"
+              className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-red-500 hover:text-red-600 transition-all"
+              onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = "rgba(239,68,68,0.08)"; }}
+              onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = "transparent"; }}
             >
-              <LogOut size={18} />
-              <span className="text-sm font-medium">Log out</span>
+              <LogOut size={17} />
+              <span>Log out</span>
             </button>
           </div>
         )}
 
-        {/* User Info - Clickable */}
         {user && (
           <button
-            onClick={toggleUserMenu}
-            className="w-full px-4 py-3.5 flex items-center gap-3 hover:bg-gray-50 transition-colors cursor-pointer"
+            onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
+            className="w-full px-4 py-3.5 flex items-center gap-3 transition-colors cursor-pointer"
+            onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = "var(--sidebar-accent)"; }}
+            onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = "transparent"; }}
           >
             <Avatar name={user.name} avatarUrl={user.avatar} size="md" />
             <div className="flex-1 min-w-0 text-left">
-              <p className="text-sm font-medium text-gray-900 truncate">
-                {user.name}
-              </p>
-              <p className="text-xs text-blue-600 capitalize font-medium">
-                {user.role}
-              </p>
+              <p className="text-sm font-medium text-foreground truncate">{user.name}</p>
+              <p className="text-xs font-medium capitalize" style={{ color: "var(--primary)" }}>{user.role}</p>
             </div>
             <ChevronRight
-              size={16}
-              className={`text-gray-400 transition-transform ${isUserMenuOpen ? "rotate-90" : ""
-                }`}
+              size={15}
+              className={`text-muted-foreground transition-transform ${isUserMenuOpen ? "rotate-90" : ""}`}
             />
           </button>
         )}

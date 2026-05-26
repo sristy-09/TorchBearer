@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>TorchBearer — System Architecture</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Segoe UI', sans-serif; background: #0f1117; color: #e2e8f0; overflow: hidden; }
+
+  #toolbar {
+    position: fixed; top: 0; left: 0; right: 0; height: 48px;
+    background: #1a1d27; border-bottom: 1px solid #2d3148;
+    display: flex; align-items: center; gap: 8px; padding: 0 16px; z-index: 100;
+  }
+  #toolbar h1 { font-size: 14px; font-weight: 600; color: #a78bfa; margin-right: 12px; }
+  .tb-btn {
+    padding: 5px 12px; border-radius: 6px; border: 1px solid #3d4166;
+    background: #252840; color: #cbd5e1; font-size: 12px; cursor: pointer;
+    transition: all .15s;
+  }
+  .tb-btn:hover { background: #3d4166; color: #fff; }
+  .tb-btn.active { background: #6d28d9; border-color: #7c3aed; color: #fff; }
+  .sep { width: 1px; height: 24px; background: #2d3148; margin: 0 4px; }
+  #zoom-label { font-size: 12px; color: #64748b; min-width: 44px; text-align: center; }
+
+  #canvas-wrap {
+    position: fixed; top: 48px; left: 0; right: 0; bottom: 0;
+    overflow: hidden; cursor: grab;
+  }
+  #canvas-wrap.grabbing { cursor: grabbing; }
+  #canvas-wrap.connecting { cursor: crosshair; }
+
+  #canvas {
+    position: absolute; top: 0; left: 0;
+    transform-origin: 0 0;
+  }
+
+  svg#arrows {
+    position: absolute; top: 0; left: 0;
+    pointer-events: none; overflow: visible;
+  }
+
+  .node {
+    position: absolute; border-radius: 12px;
+    border: 2px solid transparent;
+    user-select: none; cursor: move;
+    transition: box-shadow .2s, border-color .2s;
+    min-width: 160px;
+  }
+  .node:hover { box-shadow: 0 0 0 3px rgba(139,92,246,.4); }
+  .node.selected { border-color: #7c3aed !important; box-shadow: 0 0 0 3px rgba(139,92,246,.5); }
+
+  .node-header {
+    display: flex; align-items: center; gap: 8px;
+    padding: 10px 14px 8px; border-radius: 10px 10px 0 0;
+    font-size: 13px; font-weight: 700; letter-spacing: .3px;
+  }
+  .node-header .icon { font-size: 18px; }
+  .node-body { padding: 8px 14px 12px; font-size: 11px; line-height: 1.7; }
+  .node-body .tag {
+    display: inline-block; padding: 1px 7px; border-radius: 20px;
+    font-size: 10px; font-weight: 600; margin: 2px 2px 0 0;
+  }
+  .node-body .row { display: flex; align-items: flex-start; gap: 6px; margin-bottom: 2px; }
+  .node-body .row .dot { margin-top: 5px; width: 5px; height: 5px; border-radius: 50%; flex-shrink: 0; }
+
+  /* colour themes */
+  .theme-client  { background: #1e1b4b; border-color: #4338ca; }
+  .theme-client .node-header  { background: #312e81; color: #c7d2fe; }
+  .theme-client .dot  { background: #818cf8; }
+  .theme-client .tag  { background: #312e81; color: #a5b4fc; }
+
+  .theme-server  { background: #14291f; border-color: #16a34a; }
+  .theme-server .node-header  { background: #14532d; color: #bbf7d0; }
+  .theme-server .dot  { background: #4ade80; }
+  .theme-server .tag  { background: #14532d; color: #86efac; }
+
+  .theme-ai      { background: #1c1917; border-color: #d97706; }
+  .theme-ai .node-header      { background: #451a03; color: #fde68a; }
+  .theme-ai .dot      { background: #fbbf24; }
+  .theme-ai .tag      { background: #451a03; color: #fcd34d; }
+
+  .theme-db      { background: #1e1a2e; border-color: #7c3aed; }
+  .theme-db .node-header      { background: #2e1065; color: #e9d5ff; }
+  .theme-db .dot      { background: #c084fc; }
+  .theme-db .tag      { background: #2e1065; color: #d8b4fe; }
+
+  .theme-ext     { background: #1a1f2e; border-color: #0ea5e9; }
+  .theme-ext .node-header     { background: #0c2a3e; color: #bae6fd; }
+  .theme-ext .dot     { background: #38bdf8; }
+  .theme-ext .tag     { background: #0c2a3e; color: #7dd3fc; }
+
+  .theme-socket  { background: #1f1a14; border-color: #f59e0b; }
+  .theme-socket .node-header  { background: #3b2000; color: #fef3c7; }
+  .theme-socket .dot  { background: #fbbf24; }
+  .theme-socket .tag  { background: #3b2000; color: #fde68a; }
+
+  /* label on arrows */
+  .arrow-label {
+    position: absolute; font-size: 10px; font-weight: 600;
+    background: #1a1d27; border: 1px solid #3d4166;
+    padding: 2px 7px; border-radius: 10px; color: #94a3b8;
+    pointer-events: none; white-space: nowrap;
+  }
+
+  /* properties panel */
+  #props {
+    position: fixed; right: 0; top: 48px; bottom: 0; width: 260px;
+    background: #1a1d27; border-left: 1px solid #2d3148;
+    padding: 16px; overflow-y: auto; z-index: 90;
+    transform: translateX(100%); transition: transform .2s;
+  }
+  #props.open { transform: translateX(0); }
+  #props h2 { font-size: 13px; font-weight: 700; color: #a78bfa; margin-bottom: 12px; }
+  #props label { font-size: 11px; color: #64748b; display: block; margin-bottom: 4px; margin-top: 10px; }
+  #props input, #props textarea, #props select {
+    width: 100%; background: #252840; border: 1px solid #3d4166;
+    color: #e2e8f0; border-radius: 6px; padding: 6px 8px; font-size: 12px;
+  }
+  #props textarea { resize: vertical; min-height: 70px; }
+  #props .close-btn {
+    float: right; background: none; border: none; color: #64748b;
+    font-size: 18px; cursor: pointer; line-height: 1;
+  }
+
+  #minimap {
+    position: fixed; bottom: 16px; right: 16px;
+    width: 160px; height: 100px; background: #1a1d27;
+    border: 1px solid #2d3148; border-radius: 8px; overflow: hidden;
+    z-index: 90;
+  }
+  #minimap canvas { width: 100%; height: 100%; }
+
+  #help {
+    position: fixed; bottom: 16px; left: 16px;
+    font-size: 10px; color: #475569; line-height: 1.8;
+  }
+</style>
+</head>
+<body>
+
+<div id="toolbar">
+  <h1>🔦 TorchBearer Architecture</h1>
+  <div class="sep"></div>
+  <button class="tb-btn" id="btn-add">＋ Add Node</button>
+  <button class="tb-btn" id="btn-connect" title="Click two nodes to connect">⟶ Connect</button>
+  <button class="tb-btn" id="btn-delete">🗑 Delete</button>
+  <div class="sep"></div>
+  <button class="tb-btn" id="btn-zoom-in">＋ Zoom</button>
+  <span id="zoom-label">100%</span>
+  <button class="tb-btn" id="btn-zoom-out">− Zoom</button>
+  <button class="tb-btn" id="btn-fit">⊡ Fit</button>
+  <div class="sep"></div>
+  <button class="tb-btn" id="btn-export">💾 Export PNG</button>
+  <button class="tb-btn" id="btn-save">📋 Copy JSON</button>
+  <button class="tb-btn" id="btn-load">📂 Load JSON</button>
+  <input type="file" id="file-input" accept=".json" style="display:none" />
+</div>
+
+<div id="canvas-wrap">
+  <div id="canvas">
+    <svg id="arrows"></svg>
+  </div>
+</div>
+
+<div id="props">
+  <button class="close-btn" id="props-close">×</button>
+  <h2>Node Properties</h2>
+  <label>Title</label>
+  <input type="text" id="prop-title" />
+  <label>Theme</label>
+  <select id="prop-theme">
+    <option value="theme-client">Client (Indigo)</option>
+    <option value="theme-server">Server (Green)</option>
+    <option value="theme-ai">AI Service (Amber)</option>
+    <option value="theme-db">Database (Purple)</option>
+    <option value="theme-ext">External (Sky)</option>
+    <option value="theme-socket">Socket/RT (Orange)</option>
+  </select>
+  <label>Icon (emoji)</label>
+  <input type="text" id="prop-icon" maxlength="4" />
+  <label>Body HTML (tags / bullet rows)</label>
+  <textarea id="prop-body"></textarea>
+  <label>Width (px)</label>
+  <input type="number" id="prop-width" min="120" max="600" step="10" />
+  <br/><br/>
+  <button class="tb-btn" id="prop-apply" style="width:100%">Apply Changes</button>
+</div>
+
+<div id="minimap"><canvas id="mm-canvas"></canvas></div>
+<div id="help">
+  Drag canvas to pan &nbsp;|&nbsp; Scroll to zoom &nbsp;|&nbsp; Click node to select &nbsp;|&nbsp; Double-click to edit
+</div>
+
+<script>
+
+// ─── State ───────────────────────────────────────────────────
+let nodes = [];
+let edges = [];
+let nextId = 1;
+let scale = 1, panX = 0, panY = 0;
+let dragging = null, dragOffX = 0, dragOffY = 0;
+let panning = false, panStartX = 0, panStartY = 0, panStartPanX = 0, panStartPanY = 0;
+let selectedNode = null;
+let connectMode = false, connectFirst = null;
+
+const wrap = document.getElementById('canvas-wrap');
+const canvas = document.getElementById('canvas');
+const svg = document.getElementById('arrows');
+const propsPanel = document.getElementById('props');
+
+// ─── Initial diagram data ─────────────────────────────────────
+const INITIAL = {
+  nodes: [
+    {
+      id: 1, x: 60, y: 80, w: 220, theme: 'theme-client',
+      icon: '🖥️', title: 'React Client',
+      body: `<div class="row"><span class="dot"></span><span>React 19 + Vite + TypeScript</span></div>
+<div class="row"><span class="dot"></span><span>Redux Toolkit (auth, posts, spaces)</span></div>
+<div class="row"><span class="dot"></span><span>React Router v7 (SPA routing)</span></div>
+<div class="row"><span class="dot"></span><span>Tailwind CSS v4 + shadcn/ui</span></div>
+<div class="row"><span class="dot"></span><span>Axios (HTTP) + Socket.io-client</span></div>
+<div class="row"><span class="dot"></span><span>Zod (form validation)</span></div>
+<br/><span class="tag">Port 5173</span>`
+    },
+    {
+      id: 2, x: 360, y: 80, w: 240, theme: 'theme-server',
+      icon: '⚙️', title: 'Express API Server',
+      body: `<div class="row"><span class="dot"></span><span>Node.js ESM + Express 5</span></div>
+<div class="row"><span class="dot"></span><span>JWT auth (jsonwebtoken + bcryptjs)</span></div>
+<div class="row"><span class="dot"></span><span>Passport.js (Google OAuth 2.0)</span></div>
+<div class="row"><span class="dot"></span><span>Mongoose 9 (ODM)</span></div>
+<div class="row"><span class="dot"></span><span>Socket.io 4 (real-time)</span></div>
+<div class="row"><span class="dot"></span><span>Nodemailer (email)</span></div>
+<div class="row"><span class="dot"></span><span>Axios proxy → AI service</span></div>
+<br/>
+<span class="tag">/api/auth</span>
+<span class="tag">/api/spaces</span>
+<span class="tag">/api/topics</span>
+<span class="tag">/api/posts</span>
+<span class="tag">/api/comments</span>
+<span class="tag">/api/notifications</span>
+<span class="tag">/api/recommendations</span>
+<br/><span class="tag">Port 3000</span>`
+    },
+    {
+      id: 3, x: 680, y: 80, w: 230, theme: 'theme-ai',
+      icon: '🤖', title: 'AI Recommendation Service',
+      body: `<div class="row"><span class="dot"></span><span>FastAPI + Uvicorn (Python)</span></div>
+<div class="row"><span class="dot"></span><span>TF-IDF Vectorizer (scikit-learn)</span></div>
+<div class="row"><span class="dot"></span><span>Cosine Similarity + Hybrid Boost</span></div>
+<div class="row"><span class="dot"></span><span>PyMongo (direct DB read)</span></div>
+<div class="row"><span class="dot"></span><span>Pydantic v2 (request/response)</span></div>
+<br/>
+<span class="tag">POST /recommend</span>
+<span class="tag">GET /health</span>`
+    },
+    {
+      id: 4, x: 360, y: 420, w: 240, theme: 'theme-db',
+      icon: '🗄️', title: 'MongoDB',
+      body: `<div class="row"><span class="dot"></span><span><b>User</b> — name, email, googleId, role, skills[], interests[], avatar, resetToken</span></div>
+<div class="row"><span class="dot"></span><span><b>Space</b> — title, desc, tags[], members[], topics[]</span></div>
+<div class="row"><span class="dot"></span><span><b>Topic</b> — title, space→, posts[]</span></div>
+<div class="row"><span class="dot"></span><span><b>Post</b> — title, content, author→, topic→, space→, likes[]</span></div>
+<div class="row"><span class="dot"></span><span><b>Comment</b> — text, post→, user→, parentComment→</span></div>
+<div class="row"><span class="dot"></span><span><b>Notification</b> — type, from→, to→, space→, status</span></div>
+<div class="row"><span class="dot"></span><span><b>TokenBlacklist</b> — invalidated JWTs</span></div>
+<br/><span class="tag">Mongoose ODM</span><span class="tag">PyMongo</span>`
+    },
+    {
+      id: 5, x: 60, y: 420, w: 210, theme: 'theme-ext',
+      icon: '🔐', title: 'Google OAuth 2.0',
+      body: `<div class="row"><span class="dot"></span><span>passport-google-oauth20</span></div>
+<div class="row"><span class="dot"></span><span>Consent screen → callback</span></div>
+<div class="row"><span class="dot"></span><span>Links to existing accounts</span></div>
+<div class="row"><span class="dot"></span><span>New users → complete-profile</span></div>
+<br/><span class="tag">External</span>`
+    },
+    {
+      id: 6, x: 680, y: 420, w: 210, theme: 'theme-ext',
+      icon: '📧', title: 'Gmail / Nodemailer',
+      body: `<div class="row"><span class="dot"></span><span>Password reset emails</span></div>
+<div class="row"><span class="dot"></span><span>Crypto token → hashed in DB</span></div>
+<div class="row"><span class="dot"></span><span>EMAIL_USER / EMAIL_PASS env</span></div>
+<br/><span class="tag">SMTP</span><span class="tag">External</span>`
+    },
+    {
+      id: 7, x: 210, y: 260, w: 200, theme: 'theme-socket',
+      icon: '⚡', title: 'Socket.io (Real-time)',
+      body: `<div class="row"><span class="dot"></span><span>JWT auth middleware on connect</span></div>
+<div class="row"><span class="dot"></span><span>Personal room: user-{id}</span></div>
+<div class="row"><span class="dot"></span><span>Admin room: admin-room</span></div>
+<div class="row"><span class="dot"></span><span>Events: space join requests, approvals, rejections</span></div>
+<br/><span class="tag">WS</span><span class="tag">Bidirectional</span>`
+    }
+  ],
+  edges: [
+    { id: 'e1', from: 1, to: 2, label: 'REST (Axios + JWT)', color: '#818cf8' },
+    { id: 'e2', from: 1, to: 7, label: 'WebSocket', color: '#fbbf24' },
+    { id: 'e3', from: 7, to: 2, label: 'Socket.io', color: '#fbbf24' },
+    { id: 'e4', from: 2, to: 3, label: 'HTTP Proxy (Axios)', color: '#fcd34d' },
+    { id: 'e5', from: 2, to: 4, label: 'Mongoose ODM', color: '#c084fc' },
+    { id: 'e6', from: 3, to: 4, label: 'PyMongo (direct)', color: '#c084fc' },
+    { id: 'e7', from: 2, to: 5, label: 'OAuth redirect', color: '#38bdf8' },
+    { id: 'e8', from: 5, to: 2, label: 'Callback + profile', color: '#38bdf8' },
+    { id: 'e9', from: 2, to: 6, label: 'SMTP (reset email)', color: '#38bdf8' }
+  ]
+};
