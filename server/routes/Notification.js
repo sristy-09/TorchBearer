@@ -1,6 +1,8 @@
 import express from "express";
 import {
   requestToJoinSpace,
+  cancelJoinRequest,
+  getMyPendingSpaceRequests,
   approveJoinRequest,
   rejectJoinRequest,
   getUserNotifications,
@@ -17,6 +19,8 @@ router.use(protect);
 
 // User routes
 router.post("/request-join/:spaceId", requestToJoinSpace); // Request to join a space
+router.delete("/cancel-request/:spaceId", cancelJoinRequest); // Cancel a pending join request
+router.get("/my-pending-spaces", getMyPendingSpaceRequests); // Get spaceIds with pending requests
 router.get("/", getUserNotifications); // Get user's notifications
 router.patch("/:notificationId/read", markNotificationAsRead); // Mark single notification as read
 router.patch("/read-all", markAllNotificationsAsRead); // Mark all notifications as read

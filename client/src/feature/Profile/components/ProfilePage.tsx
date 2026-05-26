@@ -12,7 +12,6 @@ import {
   Pencil,
   GraduationCap,
   Building2,
-  Hash,
   Calendar,
   Lightbulb,
   Wrench,
@@ -148,9 +147,7 @@ export default function ProfilePage() {
                   {profileUser.batchYear && (
                     <DetailItem icon={<Calendar size={15} />} label="Batch Year" value={String(profileUser.batchYear)} />
                   )}
-                  {profileUser.registrationNumber && (
-                    <DetailItem icon={<Hash size={15} />} label="Registration No." value={String(profileUser.registrationNumber)} />
-                  )}
+                 
                   {profileUser.role && (
                     <DetailItem icon={<GraduationCap size={15} />} label="Role"
                       value={profileUser.role.charAt(0).toUpperCase() + profileUser.role.slice(1)} />

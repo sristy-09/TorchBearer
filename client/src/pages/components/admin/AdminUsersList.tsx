@@ -20,7 +20,6 @@ function AdminUsersList() {
   const [loading, setLoading] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [roleFilter, setRoleFilter] = useState<string>("");
-  const [departmentFilter, setDepartmentFilter] = useState<string>("");
 
   useEffect(() => {
     if (!isAuthenticated || currentUser?.role !== "admin") navigate("/admin/login");
@@ -28,12 +27,12 @@ function AdminUsersList() {
 
   useEffect(() => {
     if (isAuthenticated && currentUser?.role === "admin") loadUsers();
-  }, [isAuthenticated, currentUser, searchQuery, roleFilter, departmentFilter]);
+  }, [isAuthenticated, currentUser, searchQuery, roleFilter]);
 
   const loadUsers = async () => {
     setLoading(true);
     try {
-      const data = await fetchAllUsers({ keyword: searchQuery, role: roleFilter, department: departmentFilter });
+      const data = await fetchAllUsers({ keyword: searchQuery, role: roleFilter });
       setUsers(data);
     } catch (error) {
       console.error("Failed to fetch users:", error);
@@ -95,7 +94,7 @@ function AdminUsersList() {
               </div>
             ) : users.length === 0 ? (
               <div className="text-center py-14 text-muted-foreground text-sm">
-                {searchQuery || roleFilter || departmentFilter
+                {searchQuery || roleFilter
                   ? "No users found matching your filters."
                   : "No users available yet."}
               </div>

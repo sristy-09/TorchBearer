@@ -34,7 +34,7 @@ app.add_middleware(
 # Initialise the recommendation engine (connects to MongoDB)
 engine = RecommendationEngine(
     mongo_uri=os.getenv("MONGO_URI", ""),
-    db_name=os.getenv("MONGO_DB_NAME", "torchbearer"),
+    db_name=os.getenv("MONGO_DB_NAME", "test"),
 )
 
 

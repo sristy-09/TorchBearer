@@ -45,7 +45,7 @@ const notificationSchema = new mongoose.Schema(
     // Status for join requests
     status: {
       type: String,
-      enum: ["pending", "approved", "rejected"],
+      enum: ["pending", "approved", "rejected", "cancelled"],
       default: "pending",
     },
 

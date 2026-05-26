@@ -483,13 +483,14 @@ export const completeProfile = async (req, res) => {
       errors.push("Batch year must be between 2076 and 2084.");
     }
 
-    if (
-      !registrationNumber ||
-      isNaN(Number(registrationNumber)) ||
-      Number(registrationNumber) <= 0
-    ) {
-      errors.push("Please provide a valid registration number.");
-    }
+    const regPattern = /^\d-\d-\d{2}-\d{3}-\d{4}$/;
+
+if (!regPattern.test(registrationNumber)) {
+  return res.status(400).json({
+    message:
+      "Registration number should be like: 5-2-48-483-2018",
+  });
+}
 
     if (!department || typeof department !== "string" || !department.trim()) {
       errors.push("Department is required.");
@@ -524,7 +525,7 @@ export const completeProfile = async (req, res) => {
       {
         role,
         batchYear: Number(batchYear),
-        registrationNumber: Number(registrationNumber),
+        registrationNumber,
         department: department.trim(),
         skills: skills ?? [],
         interests: interests ?? [],
