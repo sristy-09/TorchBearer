@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router";
-import { useAppSelector, useAppDispatch } from "../../../store/hooks";
+import { useAppSelector } from "../../../store/hooks";
 import { getUserById } from "../api/userApi";
 import type { User } from "../../Auth/types/types";
 import type { Post } from "../../Post/types/post";
@@ -21,7 +21,6 @@ import {
   FileText,
   Loader2,
   Link as LinkIcon,
-  Menu,
 } from "lucide-react";
 import { FaFacebook, FaInstagram, FaLinkedin, FaGithub } from "react-icons/fa";
 
@@ -61,6 +60,18 @@ const extractUsername = (url: string, platform: string): string => {
   }
 };
 
+function DetailItem({ icon, label, value }: { icon: React.ReactNode; label: string; value: string }) {
+  return (
+    <div className="flex items-start gap-3">
+      <div className="mt-0.5 text-muted-foreground">{icon}</div>
+      <div>
+        <p className="text-[11px] text-muted-foreground font-medium uppercase tracking-wide">{label}</p>
+        <p className="text-sm text-foreground mt-0.5 font-medium">{value}</p>
+      </div>
+    </div>
+  );
+}
+
 export default function ProfilePage() {
   const { userId } = useParams<{ userId: string }>();
   const navigate = useNavigate();
@@ -70,7 +81,6 @@ export default function ProfilePage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [editOpen, setEditOpen] = useState(false);
-  const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
 
   // Posts state
   const [userPosts, setUserPosts] = useState<Post[]>([]);
@@ -126,38 +136,11 @@ export default function ProfilePage() {
   }, [profileUser?._id]);
 
   return (
-    <div className="flex h-screen bg-neutral-50">
-      <Sidebar
-        isMobileOpen={isMobileSidebarOpen}
-        onMobileClose={() => setIsMobileSidebarOpen(false)}
-      />
     <div className="flex h-screen" style={{ background: "var(--background)" }}>
       <Sidebar />
 
       <div className="flex-1 lg:ml-64 overflow-auto">
         {/* Header */}
-        <div className="bg-white border-b px-4 sm:px-6 lg:px-8 py-4 sm:py-6">
-          <div className="max-w-3xl mx-auto">
-            <div className="flex items-center gap-2 mb-4">
-              {/* Hamburger Menu for Mobile */}
-              <button
-                onClick={() => setIsMobileSidebarOpen(true)}
-                className="lg:hidden p-2 hover:bg-gray-100 rounded-md transition-colors flex-shrink-0"
-              >
-                <Menu size={24} className="text-gray-700" />
-              </button>
-
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => navigate(-1)}
-                className="flex items-center gap-2 -ml-2"
-              >
-                <ArrowLeft size={16} />
-                <span className="hidden sm:inline">Back</span>
-              </Button>
-            </div>
-            <h1 className="text-xl sm:text-2xl font-semibold text-gray-900">
         <div className="px-8 pt-7 pb-5" style={{ borderBottom: "1px solid var(--border)", background: "var(--card)" }}>
           <div className="max-w-3xl mx-auto">
             <Button
@@ -192,28 +175,6 @@ export default function ProfilePage() {
           {!loading && !error && profileUser && (
             <div className="space-y-5">
               {/* Profile Card */}
-              <div className="bg-white border border-gray-200 rounded-xl p-4 sm:p-6 lg:p-8">
-                <div className="flex flex-col sm:flex-row items-start justify-between gap-4">
-                  <div className="flex flex-col sm:flex-row items-center sm:items-start gap-4 sm:gap-5 w-full sm:w-auto">
-                    <Avatar
-                      name={profileUser.name}
-                      avatarUrl={profileUser.avatar}
-                      size="xl"
-                    />
-                    <div className="text-center sm:text-left">
-                      <h2 className="text-lg sm:text-xl font-semibold text-gray-900">
-                        {profileUser.name}
-                      </h2>
-                      <p className="text-gray-500 text-xs sm:text-sm mt-0.5 break-all">
-                        {profileUser.email}
-                      </p>
-                      <span
-                        className={`inline-block mt-2 px-2.5 py-0.5 rounded-full text-xs font-medium capitalize ${roleBadgeColors[profileUser.role] ??
-                          "bg-gray-100 text-gray-700"
-                          }`}
-                      >
-                        {profileUser.role}
-                      </span>
               <div className="rounded-2xl p-7 border"
                 style={{ background: "var(--card)", borderColor: "var(--border)" }}>
                 <div className="flex items-start justify-between gap-4">
@@ -239,7 +200,6 @@ export default function ProfilePage() {
                       variant="outline"
                       size="sm"
                       onClick={() => setEditOpen(true)}
-                      className="flex items-center gap-2 shrink-0 w-full sm:w-auto"
                       className="flex items-center gap-2 shrink-0 rounded-xl"
                       style={{ borderColor: "var(--border)", background: "var(--background)" }}
                     >
@@ -251,8 +211,6 @@ export default function ProfilePage() {
               </div>
 
               {/* Details Card */}
-              <div className="bg-white border border-gray-200 rounded-xl p-4 sm:p-6">
-                <h3 className="text-sm sm:text-base font-semibold text-gray-900 mb-4 sm:mb-5">
               <div className="rounded-2xl p-6 border"
                 style={{ background: "var(--card)", borderColor: "var(--border)" }}>
                 <h3 className="text-sm font-semibold text-foreground mb-5 uppercase tracking-wider opacity-60">
@@ -265,22 +223,18 @@ export default function ProfilePage() {
                   {profileUser.batchYear && (
                     <DetailItem icon={<Calendar size={15} />} label="Batch Year" value={String(profileUser.batchYear)} />
                   )}
-                 
                   {profileUser.role && (
                     <DetailItem icon={<GraduationCap size={15} />} label="Role"
                       value={profileUser.role.charAt(0).toUpperCase() + profileUser.role.slice(1)} />
                   )}
                 </div>
-                {!profileUser.department && !profileUser.batchYear && !profileUser.registrationNumber && (
+                {!profileUser.department && !profileUser.batchYear && !profileUser.role && (
                   <p className="text-sm text-muted-foreground italic">No additional details available.</p>
                 )}
               </div>
 
               {/* Skills */}
               {(profileUser.skills?.length ?? 0) > 0 && (
-                <div className="bg-white border border-gray-200 rounded-xl p-4 sm:p-6">
-                  <h3 className="text-sm sm:text-base font-semibold text-gray-900 mb-3 sm:mb-4 flex items-center gap-2">
-                    <Wrench size={16} />
                 <div className="rounded-2xl p-6 border"
                   style={{ background: "var(--card)", borderColor: "var(--border)" }}>
                   <h3 className="text-sm font-semibold text-foreground mb-4 flex items-center gap-2 uppercase tracking-wider opacity-60">
@@ -289,10 +243,6 @@ export default function ProfilePage() {
                   </h3>
                   <div className="flex flex-wrap gap-2">
                     {profileUser.skills!.map((skill) => (
-                      <span
-                        key={skill}
-                        className="px-2.5 sm:px-3 py-1 bg-blue-50 text-blue-700 rounded-full text-xs sm:text-sm font-medium"
-                      >
                       <span key={skill}
                         className="px-3 py-1 rounded-full text-sm font-medium"
                         style={{ background: "var(--secondary)", color: "var(--primary)" }}>
@@ -329,18 +279,20 @@ export default function ProfilePage() {
                   profileUser.socialLinks.instagram ||
                   profileUser.socialLinks.linkedin ||
                   profileUser.socialLinks.github) && (
-                  <div className="bg-white border border-gray-200 rounded-xl p-4 sm:p-6">
-                    <h3 className="text-sm sm:text-base font-semibold text-gray-900 mb-3 sm:mb-4 flex items-center gap-2">
-                      <LinkIcon size={16} />
+                  <div className="rounded-2xl p-6 border"
+                    style={{ background: "var(--card)", borderColor: "var(--border)" }}>
+                    <h3 className="text-sm font-semibold text-foreground mb-4 flex items-center gap-2 uppercase tracking-wider opacity-60">
+                      <LinkIcon size={14} />
                       Social Links
                     </h3>
-                    <div className="flex flex-col sm:flex-row sm:flex-wrap gap-2 sm:gap-3">
+                    <div className="flex flex-wrap gap-3">
                       {profileUser.socialLinks.facebook && (
                         <a
                           href={profileUser.socialLinks.facebook}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="flex items-center gap-2 px-3 sm:px-4 py-2 bg-blue-50 hover:bg-blue-100 text-blue-700 rounded-lg transition-colors font-medium text-xs sm:text-sm truncate"
+                          className="flex items-center gap-2 px-4 py-2 rounded-lg transition-colors font-medium text-sm"
+                          style={{ background: "rgba(59,130,246,0.1)", color: "#3B82F6" }}
                           title="Facebook"
                         >
                           <FaFacebook size={18} className="flex-shrink-0" />
@@ -352,7 +304,8 @@ export default function ProfilePage() {
                           href={profileUser.socialLinks.instagram}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="flex items-center gap-2 px-3 sm:px-4 py-2 bg-pink-50 hover:bg-pink-100 text-pink-700 rounded-lg transition-colors font-medium text-xs sm:text-sm truncate"
+                          className="flex items-center gap-2 px-4 py-2 rounded-lg transition-colors font-medium text-sm"
+                          style={{ background: "rgba(236,72,153,0.1)", color: "#EC4899" }}
                           title="Instagram"
                         >
                           <FaInstagram size={18} className="flex-shrink-0" />
@@ -364,7 +317,8 @@ export default function ProfilePage() {
                           href={profileUser.socialLinks.linkedin}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="flex items-center gap-2 px-3 sm:px-4 py-2 bg-blue-50 hover:bg-blue-100 text-blue-800 rounded-lg transition-colors font-medium text-xs sm:text-sm truncate"
+                          className="flex items-center gap-2 px-4 py-2 rounded-lg transition-colors font-medium text-sm"
+                          style={{ background: "rgba(37,99,235,0.1)", color: "#2563EB" }}
                           title="LinkedIn"
                         >
                           <FaLinkedin size={18} className="flex-shrink-0" />
@@ -376,7 +330,8 @@ export default function ProfilePage() {
                           href={profileUser.socialLinks.github}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="flex items-center gap-2 px-3 sm:px-4 py-2 bg-gray-50 hover:bg-gray-100 text-gray-800 rounded-lg transition-colors font-medium text-xs sm:text-sm truncate"
+                          className="flex items-center gap-2 px-4 py-2 rounded-lg transition-colors font-medium text-sm"
+                          style={{ background: "var(--secondary)", color: "var(--foreground)" }}
                           title="GitHub"
                         >
                           <FaGithub size={18} className="flex-shrink-0" />
@@ -387,30 +342,11 @@ export default function ProfilePage() {
                   </div>
                 )}
 
-              {/* Empty state for own profile with no skills/interests */}
-              {isOwnProfile &&
-                !profileUser.skills?.length &&
-                !profileUser.interests?.length && (
-                  <div className="bg-white border border-dashed border-gray-300 rounded-xl p-6 sm:p-8 text-center">
-                    <p className="text-gray-500 text-xs sm:text-sm">
-                      Add your skills and interests to help others find you.
-                    </p>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="mt-3 w-full sm:w-auto"
-                      onClick={() => setEditOpen(true)}
-                    >
-                      <Pencil size={14} className="mr-1.5" />
-                      Edit Profile
-                    </Button>
-                  </div>
-                )}
-
               {/* User Posts Section */}
-              <div className="bg-white border border-gray-200 rounded-xl p-4 sm:p-6">
-                <h3 className="text-sm sm:text-base font-semibold text-gray-900 mb-4 sm:mb-5 flex items-center gap-2">
-                  <FileText size={16} />
+              <div className="rounded-2xl p-6 border"
+                style={{ background: "var(--card)", borderColor: "var(--border)" }}>
+                <h3 className="text-sm font-semibold text-foreground mb-5 flex items-center gap-2 uppercase tracking-wider opacity-60">
+                  <FileText size={14} />
                   Posts ({userPosts.length})
                 </h3>
 
@@ -421,15 +357,16 @@ export default function ProfilePage() {
                 )}
 
                 {postsError && (
-                  <div className="bg-red-50 border border-red-200 rounded-lg p-4 text-red-700 text-sm">
+                  <div className="rounded-lg px-4 py-3 text-sm text-red-500"
+                    style={{ background: "rgba(239,68,68,0.08)", border: "1px solid rgba(239,68,68,0.2)" }}>
                     {postsError}
                   </div>
                 )}
 
                 {!postsLoading && !postsError && userPosts.length === 0 && (
                   <div className="text-center py-12">
-                    <FileText className="mx-auto h-12 w-12 text-gray-300 mb-3" />
-                    <p className="text-gray-500 text-sm">
+                    <FileText className="mx-auto h-12 w-12 text-muted-foreground opacity-30 mb-3" />
+                    <p className="text-muted-foreground text-sm">
                       {isOwnProfile
                         ? "You haven't created any posts yet."
                         : "This user hasn't created any posts yet."}
@@ -445,6 +382,7 @@ export default function ProfilePage() {
                   </div>
                 )}
               </div>
+
               {/* Empty state */}
               {isOwnProfile && !profileUser.skills?.length && !profileUser.interests?.length && (
                 <div className="rounded-2xl p-8 text-center border border-dashed"
@@ -472,18 +410,6 @@ export default function ProfilePage() {
       {isOwnProfile && (
         <EditProfileDialog open={editOpen} onOpenChange={setEditOpen} />
       )}
-    </div>
-  );
-}
-
-function DetailItem({ icon, label, value }: { icon: React.ReactNode; label: string; value: string }) {
-  return (
-    <div className="flex items-start gap-3">
-      <div className="mt-0.5 text-muted-foreground">{icon}</div>
-      <div>
-        <p className="text-[11px] text-muted-foreground font-medium uppercase tracking-wide">{label}</p>
-        <p className="text-sm text-foreground mt-0.5 font-medium">{value}</p>
-      </div>
     </div>
   );
 }

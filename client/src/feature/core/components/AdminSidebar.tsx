@@ -107,7 +107,7 @@ export default function AdminSidebar() {
   const isActive = (path: string) => location.pathname === path;
 
   return (
-    <div className="w-64 flex flex-col h-screen shrink-0"
+    <div className="fixed w-64 flex flex-col h-screen shrink-0"
       style={{ background: "var(--sidebar)", borderRight: "1px solid var(--sidebar-border)" }}>
 
       {/* Logo */}
@@ -159,9 +159,8 @@ export default function AdminSidebar() {
                     <button
                       key={subItem.path}
                       onClick={() => navigate(subItem.path)}
-                      className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-all ${
-                        active ? "text-white font-medium shadow-sm" : "text-foreground/60 hover:text-foreground"
-                      }`}
+                      className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-all ${active ? "text-white font-medium shadow-sm" : "text-foreground/60 hover:text-foreground"
+                        }`}
                       style={active ? { background: "var(--primary)" } : { background: "transparent" }}
                       onMouseEnter={(e) => {
                         if (!active) (e.currentTarget as HTMLElement).style.background = "var(--sidebar-accent)";
@@ -184,49 +183,50 @@ export default function AdminSidebar() {
       {/* User Profile Section */}
       <div className="border-t border-gray-200 flex-shrink-0">
         {/* Collapsible Menu */}
-      {/* User Profile */}
-      <div style={{ borderTop: "1px solid var(--sidebar-border)" }}>
-        {isUserMenuOpen && (
-          <div className="px-3 py-3 space-y-1" style={{ borderBottom: "1px solid var(--sidebar-border)" }}>
+        {/* User Profile */}
+        <div style={{ borderTop: "1px solid var(--sidebar-border)" }}>
+          {isUserMenuOpen && (
+            <div className="px-3 py-3 space-y-1" style={{ borderBottom: "1px solid var(--sidebar-border)" }}>
+              <button
+                onClick={() => { navigate("/profile"); setIsUserMenuOpen(false); }}
+                className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-foreground/70 hover:text-foreground transition-all"
+                onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = "var(--sidebar-accent)"; }}
+                onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = "transparent"; }}
+              >
+                <User size={17} />
+                <span>Profile</span>
+              </button>
+              <button
+                onClick={handleLogout}
+                className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-red-500 hover:text-red-600 transition-all"
+                onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = "rgba(239,68,68,0.08)"; }}
+                onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = "transparent"; }}
+              >
+                <LogOut size={17} />
+                <span>Log out</span>
+              </button>
+            </div>
+          )}
+
+          {user && (
             <button
-              onClick={() => { navigate("/profile"); setIsUserMenuOpen(false); }}
-              className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-foreground/70 hover:text-foreground transition-all"
+              onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
+              className="w-full px-4 py-3.5 flex items-center gap-3 transition-colors cursor-pointer"
               onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = "var(--sidebar-accent)"; }}
               onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = "transparent"; }}
             >
-              <User size={17} />
-              <span>Profile</span>
+              <Avatar name={user.name} avatarUrl={user.avatar} size="md" />
+              <div className="flex-1 min-w-0 text-left">
+                <p className="text-sm font-medium text-foreground truncate">{user.name}</p>
+                <p className="text-xs font-medium capitalize" style={{ color: "var(--primary)" }}>{user.role}</p>
+              </div>
+              <ChevronRight
+                size={15}
+                className={`text-muted-foreground transition-transform ${isUserMenuOpen ? "rotate-90" : ""}`}
+              />
             </button>
-            <button
-              onClick={handleLogout}
-              className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-red-500 hover:text-red-600 transition-all"
-              onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = "rgba(239,68,68,0.08)"; }}
-              onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = "transparent"; }}
-            >
-              <LogOut size={17} />
-              <span>Log out</span>
-            </button>
-          </div>
-        )}
-
-        {user && (
-          <button
-            onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
-            className="w-full px-4 py-3.5 flex items-center gap-3 transition-colors cursor-pointer"
-            onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = "var(--sidebar-accent)"; }}
-            onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = "transparent"; }}
-          >
-            <Avatar name={user.name} avatarUrl={user.avatar} size="md" />
-            <div className="flex-1 min-w-0 text-left">
-              <p className="text-sm font-medium text-foreground truncate">{user.name}</p>
-              <p className="text-xs font-medium capitalize" style={{ color: "var(--primary)" }}>{user.role}</p>
-            </div>
-            <ChevronRight
-              size={15}
-              className={`text-muted-foreground transition-transform ${isUserMenuOpen ? "rotate-90" : ""}`}
-            />
-          </button>
-        )}
+          )}
+        </div>
       </div>
     </div>
   );

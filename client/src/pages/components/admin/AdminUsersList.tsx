@@ -74,13 +74,7 @@ function AdminUsersList() {
     return years;
   };
 
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString("en-US", {
-      year: "numeric",
-      month: "short",
-      day: "numeric",
-    });
-  };
+
 
   const getRoleBadgeColor = (role: string) => {
     switch (role) {
@@ -176,106 +170,99 @@ function AdminUsersList() {
                 </p>
               </div>
             ) : (
-              <div className="overflow-x-auto">
-                <table className="w-full">
-                  <thead style={{ background: "var(--background)", borderBottom: "1px solid var(--border)" }}>
-                    <tr>
-                      {["User", "Email", "Role", "Department", "Batch Year", "Joined"].map((h) => (
-                        <th key={h} className="px-6 py-3.5 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                          {h}
-                        </th>
-                      ))}
-                    </tr>
-                  </thead>
-                  <tbody className="bg-white divide-y divide-gray-200">
-                    {users.map((user) => (
-                      <tr
-                        key={user._id}
-                        onClick={() => handleRowClick(user._id)}
-                        className="hover:bg-gray-50 transition-colors cursor-pointer"
-                      >
-                        <td className="px-6 py-4">
-                          <div className="flex items-center gap-3">
-                            <Avatar name={user.name} avatarUrl={user.avatar} size="md" />
-                            <div>
-                              <div className="text-sm font-medium text-gray-900">
-                                {user.name}
-                  <tbody>
-                    {users.map((user) => {
-                      const badge = roleBadgeStyle[user.role] || { bg: "var(--muted)", color: "var(--muted-foreground)" };
-                      return (
-                        <tr key={user._id} className="transition-colors"
-                          style={{ borderBottom: "1px solid var(--border)" }}
-                          onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = "var(--background)"; }}
-                          onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = "transparent"; }}>
-                          <td className="px-6 py-4">
-                            <div className="flex items-center gap-3">
-                              <Avatar name={user.name} avatarUrl={user.avatar} size="md" />
-                              <div>
-                                <div className="text-sm font-medium text-foreground">{user.name}</div>
-                                {user.registrationNumber && (
-                                  <div className="text-xs text-muted-foreground">Reg: {user.registrationNumber}</div>
-                                )}
+              <>
+                <div className="overflow-x-auto">
+                  <table className="w-full">
+                    <thead style={{ background: "var(--background)", borderBottom: "1px solid var(--border)" }}>
+                      <tr>
+                        {["User", "Email", "Role", "Department", "Batch Year", "Joined"].map((h) => (
+                          <th key={h} className="px-6 py-3.5 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                            {h}
+                          </th>
+                        ))}
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {users.map((user) => {
+                        const badge = roleBadgeStyle[user.role] || { bg: "var(--muted)", color: "var(--muted-foreground)" };
+                        return (
+                          <tr
+                            key={user._id}
+                            onClick={() => handleRowClick(user._id)}
+                            className="transition-colors cursor-pointer"
+                            style={{ borderBottom: "1px solid var(--border)" }}
+                            onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = "var(--background)"; }}
+                            onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = "transparent"; }}
+                          >
+                            <td className="px-6 py-4">
+                              <div className="flex items-center gap-3">
+                                <Avatar name={user.name} avatarUrl={user.avatar} size="md" />
+                                <div>
+                                  <div className="text-sm font-medium text-foreground">{user.name}</div>
+                                  {user.registrationNumber && (
+                                    <div className="text-xs text-muted-foreground">Reg: {user.registrationNumber}</div>
+                                  )}
+                                </div>
                               </div>
-                            </div>
-                          </td>
-                          <td className="px-6 py-4">
-                            <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
-                              <Mail size={13} />
-                              <span className="truncate max-w-xs">{user.email}</span>
-                            </div>
-                          </td>
-                          <td className="px-6 py-4">
-                            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium capitalize"
-                              style={{ background: badge.bg, color: badge.color }}>
-                              {user.role}
-                            </span>
-                          </td>
-                          <td className="px-6 py-4">
-                            {user.department ? (
-                              <div className="flex items-center gap-1.5 text-sm text-foreground">
-                                <Briefcase size={13} className="text-muted-foreground" />
-                                <span>{user.department}</span>
+                            </td>
+                            <td className="px-6 py-4">
+                              <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
+                                <Mail size={13} />
+                                <span className="truncate max-w-xs">{user.email}</span>
                               </div>
-                            ) : (
-                              <span className="text-xs text-muted-foreground italic">N/A</span>
-                            )}
-                          </td>
-                          <td className="px-6 py-4">
-                            {user.batchYear ? (
-                              <div className="flex items-center gap-1.5 text-sm text-foreground">
-                                <GraduationCap size={13} className="text-muted-foreground" />
-                                <span>{user.batchYear}</span>
+                            </td>
+                            <td className="px-6 py-4">
+                              <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium capitalize"
+                                style={{ background: badge.bg, color: badge.color }}>
+                                {user.role}
+                              </span>
+                            </td>
+                            <td className="px-6 py-4">
+                              {user.department ? (
+                                <div className="flex items-center gap-1.5 text-sm text-foreground">
+                                  <Briefcase size={13} className="text-muted-foreground" />
+                                  <span>{user.department}</span>
+                                </div>
+                              ) : (
+                                <span className="text-xs text-muted-foreground italic">N/A</span>
+                              )}
+                            </td>
+                            <td className="px-6 py-4">
+                              {user.batchYear ? (
+                                <div className="flex items-center gap-1.5 text-sm text-foreground">
+                                  <GraduationCap size={13} className="text-muted-foreground" />
+                                  <span>{user.batchYear}</span>
+                                </div>
+                              ) : (
+                                <span className="text-xs text-muted-foreground italic">N/A</span>
+                              )}
+                            </td>
+                            <td className="px-6 py-4">
+                              <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
+                                <Calendar size={13} />
+                                <span>{formatDate(user.createdAt)}</span>
                               </div>
-                            ) : (
-                              <span className="text-xs text-muted-foreground italic">N/A</span>
-                            )}
-                          </td>
-                          <td className="px-6 py-4">
-                            <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
-                              <Calendar size={13} />
-                              <span>{formatDate(user.createdAt)}</span>
-                            </div>
-                          </td>
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
-              </div>
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+
+                {/* Stats Footer */}
+                <div className="px-6 py-3 flex items-center justify-between text-xs text-muted-foreground"
+                  style={{ borderTop: "1px solid var(--border)", background: "var(--background)" }}>
+                  <span>Showing {users.length} user{users.length !== 1 ? "s" : ""}</span>
+                  <div className="flex gap-4">
+                    <span>Admins: {users.filter((u) => u.role === "admin").length}</span>
+                    <span>Alumni: {users.filter((u) => u.role === "alumni").length}</span>
+                    <span>Students: {users.filter((u) => u.role === "student").length}</span>
+                  </div>
+                </div>
+              </>
             )}
           </div>
-
-          {!loading && users.length > 0 && (
-            <div className="mt-3 flex items-center justify-between text-xs text-muted-foreground">
-              <span>Showing {users.length} user{users.length !== 1 ? "s" : ""}</span>
-              <div className="flex gap-4">
-                <span>Admins: {users.filter((u) => u.role === "admin").length}</span>
-                <span>Alumni: {users.filter((u) => u.role === "alumni").length}</span>
-                <span>Students: {users.filter((u) => u.role === "student").length}</span>
-              </div>
-            </div>
-          )}
         </div>
       </div>
     </div>

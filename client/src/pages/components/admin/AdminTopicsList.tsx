@@ -201,7 +201,7 @@ function AdminTopicsList() {
           <div className="mb-6 flex gap-4">
             {/* Search Input */}
             <div className="flex-1 relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4 />
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
               <input
                 type="text"
                 placeholder="Search topics by title..."
@@ -333,7 +333,6 @@ function AdminTopicsList() {
                   in {spaces.find(s => s._id === selectedSpace)?.title || "selected space"}
                 </span>
               )}
-            </div>
             </p>
           )}
         </div>
@@ -427,7 +426,7 @@ function AdminTopicsList() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-    </div>
+    </div >
   );
 }
 

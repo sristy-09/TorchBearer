@@ -30,7 +30,7 @@ import {
   replyToComment,
 } from "../api/commentApi";
 
-import { linkifyText, renderTextWithLinksAndMentions } from "../utils/linkify";
+import { linkifyText } from "../utils/linkify";
 
 interface Props {
   post: Post;
@@ -46,46 +46,11 @@ interface CommentItemProps {
   handleDeleteComment: (id: string) => void;
   handleEditComment: (id: string, text: string) => void;
   openEditDialog: (id: string, text: string) => void;
-
   toggleReplies: (id: string) => void;
   setActiveReplyId: React.Dispatch<React.SetStateAction<string | null>>;
   setReplyTexts: React.Dispatch<React.SetStateAction<{ [key: string]: string }>>;
   submitReply: (id: string) => void;
 }
-const CommentItem = React.memo(
-  ({
-    comment,
-    likedComments,
-    expandedReplies,
-    activeReplyId,
-    replyTexts,
-
-    handleLikeComment,
-    handleDeleteComment,
-    handleEditComment,
-    openEditDialog,
-    toggleReplies,
-
-    setActiveReplyId,
-    setReplyTexts,
-    submitReply,
-  }: CommentItemProps) => {
-    return (
-      <div className="mt-3">
-        {/* COMMENT CARD */}
-
-        <div className="bg-gray-50 border border-gray-100 rounded-lg p-4">
-          {/* USER */}
-
-          <h4 className="font-semibold text-sm text-gray-900">{comment.user?.name}</h4>
-
-          {/* TEXT */}
-
-          <p className="text-gray-700 text-sm mt-1.5 wrap-break-words leading-relaxed">
-            {renderTextWithLinksAndMentions(comment.text)}
-          </p>
-
-          {/* LIKE */}
 
 const renderTextWithMentions = (text: string) => {
   if (!text) return null;
@@ -111,6 +76,7 @@ const CommentItem = React.memo(({
   handleLikeComment,
   handleDeleteComment,
   handleEditComment,
+  openEditDialog,
   toggleReplies,
   setActiveReplyId,
   setReplyTexts,
@@ -126,9 +92,8 @@ const CommentItem = React.memo(({
 
         <button
           onClick={() => handleLikeComment(comment._id)}
-          className={`flex items-center gap-1.5 text-xs mt-3 transition font-medium ${
-            likedComments.includes(comment._id) ? "text-red-500" : "text-muted-foreground hover:text-red-500"
-          }`}
+          className={`flex items-center gap-1.5 text-xs mt-3 transition font-medium ${likedComments.includes(comment._id) ? "text-red-500" : "text-muted-foreground hover:text-red-500"
+            }`}
         >
           <Heart size={12} className={likedComments.includes(comment._id) ? "fill-red-500" : ""} />
           {likedComments.includes(comment._id) ? "Liked" : "Like"}
@@ -139,28 +104,12 @@ const CommentItem = React.memo(({
             Delete
           </button>
           <button
-            onClick={() => handleEditComment(comment._id, prompt("Edit comment", comment.text) || "")}
+            onClick={() => openEditDialog(comment._id, comment.text)}
             className="hover:text-foreground font-medium transition-colors"
             style={{ color: "var(--muted-foreground)" }}
           >
             Edit
           </button>
-
-          {/* ACTIONS */}
-
-          <div className="flex items-center gap-4 text-xs text-gray-500 mt-3 flex-wrap">
-            <button
-              onClick={() => handleDeleteComment(comment._id)}
-              className="hover:text-red-600 font-medium"
-            >
-              Delete
-            </button>
-
-            <button
-              onClick={() => openEditDialog(comment._id, comment.text)}
-              className="hover:text-blue-600 font-medium"
-            >
-              Edit
           <button
             onClick={() => {
               setActiveReplyId(activeReplyId === comment._id ? null : comment._id);
@@ -207,58 +156,6 @@ const CommentItem = React.memo(({
               Reply
             </button>
           </div>
-
-          {/* REPLY INPUT */}
-
-          {activeReplyId === comment._id && (
-            <div className="flex gap-2 mt-3">
-              <input
-                value={replyTexts[comment._id] || ""}
-                onChange={(e) =>
-                  setReplyTexts((prev) => ({
-                    ...prev,
-                    [comment._id]: e.target.value,
-                  }))
-                }
-                placeholder={`Reply to ${comment.user?.name}`}
-                className="flex-1 border border-gray-300 px-3 py-2 rounded-md text-sm outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              />
-
-              <button
-                onClick={() => submitReply(comment._id)}
-                className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors"
-              >
-                Reply
-              </button>
-            </div>
-          )}
-        </div>
-
-        {/* nested replies */}
-
-        {expandedReplies.includes(comment._id) &&
-          comment.replies?.length > 0 && (
-            <div className="ml-6 border-l-2 border-gray-200 pl-4 mt-3 space-y-3">
-              {comment.replies.map((reply: any) => (
-                <CommentItem
-                  key={reply._id}
-                  comment={reply}
-                  likedComments={likedComments}
-                  expandedReplies={expandedReplies}
-                  activeReplyId={activeReplyId}
-                  replyTexts={replyTexts}
-                  handleLikeComment={handleLikeComment}
-                  handleDeleteComment={handleDeleteComment}
-                  handleEditComment={handleEditComment}
-                  openEditDialog={openEditDialog}
-                  toggleReplies={toggleReplies}
-                  setActiveReplyId={setActiveReplyId}
-                  setReplyTexts={setReplyTexts}
-                  submitReply={submitReply}
-                />
-              ))}
-            </div>
-          )}
         )}
       </div>
 
@@ -275,6 +172,7 @@ const CommentItem = React.memo(({
               handleLikeComment={handleLikeComment}
               handleDeleteComment={handleDeleteComment}
               handleEditComment={handleEditComment}
+              openEditDialog={openEditDialog}
               toggleReplies={toggleReplies}
               setActiveReplyId={setActiveReplyId}
               setReplyTexts={setReplyTexts}
@@ -511,7 +409,7 @@ export default function PostCard({ post }: Props) {
 
       if (isMember) {
         // User is a member, navigate to the post
-        navigate(`/space/${post.space._id}/topic/${post.topic._id}/posts`);
+        navigate(`/space/${post.space?._id}/topic/${post.topic?._id}/posts`);
       } else {
         // User is not a member, show dialog
         setSpaceAccessDialogOpen(true);
@@ -536,23 +434,16 @@ export default function PostCard({ post }: Props) {
       <div
         id={`post-${post._id}`}
         onClick={handlePostClick}
-        className="bg-white border border-gray-200 rounded-lg p-6 hover:border-gray-300 transition cursor-pointer hover:shadow-md"
+        className="rounded-2xl p-6 border transition-all cursor-pointer"
+        style={{ background: "var(--card)", borderColor: "var(--border)" }}
       >
-        {/* HEADER */}
-
+        {/* Header */}
         <div className="flex items-start gap-3 mb-4">
           <button
             onClick={(e) => {
               e.stopPropagation();
               navigate(`/profile/${post.author._id}`);
             }}
-            className="shrink-0 rounded-full focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
-      <div className="rounded-2xl p-6 border transition-all"
-        style={{ background: "var(--card)", borderColor: "var(--border)" }}>
-        {/* Header */}
-        <div className="flex items-start gap-3 mb-4">
-          <button
-            onClick={() => navigate(`/profile/${post.author._id}`)}
             className="shrink-0 rounded-full focus:outline-none"
             aria-label={`View ${post.author.name}'s profile`}
           >
@@ -581,10 +472,8 @@ export default function PostCard({ post }: Props) {
               <button
                 onClick={(e) => {
                   e.stopPropagation();
-                  handleEdit();
+                  setEditDialogOpen(true);
                 }}
-                className="p-2 bg-blue-50 hover:bg-blue-100 text-blue-600 rounded-md transition-colors"
-                onClick={() => setEditDialogOpen(true)}
                 className="p-1.5 rounded-lg transition-colors"
                 style={{ background: "var(--secondary)", color: "var(--primary)" }}
                 title="Edit post"
@@ -594,10 +483,8 @@ export default function PostCard({ post }: Props) {
               <button
                 onClick={(e) => {
                   e.stopPropagation();
-                  handleDeleteClick();
+                  setDeleteDialogOpen(true);
                 }}
-                className="p-2 bg-red-50 hover:bg-red-100 text-red-600 rounded-md transition-colors"
-                onClick={() => setDeleteDialogOpen(true)}
                 className="p-1.5 rounded-lg transition-colors"
                 style={{ background: "rgba(239,68,68,0.1)", color: "#EF4444" }}
                 title="Delete post"
@@ -608,9 +495,8 @@ export default function PostCard({ post }: Props) {
           )}
         </div>
 
-        {/* CONTENT */}
-
-        <div className="text-gray-700 leading-relaxed mb-4 whitespace-pre-wrap">
+        {/* Content */}
+        <div className="text-foreground/80 leading-relaxed text-sm mb-4 whitespace-pre-wrap">
           {linkifyText(post.content)}
         </div>
 
@@ -716,15 +602,16 @@ export default function PostCard({ post }: Props) {
               return (
                 <div
                   key={index}
-                  className="flex items-center justify-between p-3 bg-gray-50 rounded-lg border border-gray-200"
+                  className="flex items-center justify-between p-3 rounded-lg border"
+                  style={{ background: "var(--secondary)", borderColor: "var(--border)" }}
                 >
                   <div className="flex items-center gap-3 flex-1 min-w-0">
                     {getAttachmentIcon(attachment.mimetype)}
                     <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium text-gray-900 truncate">
+                      <p className="text-sm font-medium text-foreground truncate">
                         {attachment.originalName}
                       </p>
-                      <p className="text-xs text-gray-500">
+                      <p className="text-xs text-muted-foreground">
                         {formatFileSize(attachment.size)}
                       </p>
                     </div>
@@ -734,8 +621,10 @@ export default function PostCard({ post }: Props) {
                     download={attachment.originalName}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="ml-3 p-2 bg-blue-50 hover:bg-blue-100 text-blue-600 rounded-md transition-colors"
+                    className="ml-3 p-2 rounded-md transition-colors"
+                    style={{ background: "var(--primary)", color: "white" }}
                     title="Download file"
+                    onClick={(e) => e.stopPropagation()}
                   >
                     <Download size={16} />
                   </a>
@@ -744,8 +633,6 @@ export default function PostCard({ post }: Props) {
             })}
           </div>
         )}
-        {/* Content */}
-        <div className="text-foreground/80 leading-relaxed text-sm mb-4">{post.content}</div>
 
         {/* Actions */}
         <div className="flex items-center gap-2 pt-4" style={{ borderTop: "1px solid var(--border)" }}>
@@ -783,10 +670,7 @@ export default function PostCard({ post }: Props) {
 
         {/* Comments */}
         {showComments && (
-          <div className="mt-5 border-t border-gray-100 pt-5" onClick={(e) => e.stopPropagation()}>
-            {/* ADD COMMENT */}
-
-          <div className="mt-5 pt-5" style={{ borderTop: "1px solid var(--border)" }}>
+          <div className="mt-5 pt-5" style={{ borderTop: "1px solid var(--border)" }} onClick={(e) => e.stopPropagation()}>
             <div className="flex gap-2 mb-5">
               <input
                 value={text}
