@@ -1,8 +1,8 @@
-import { Home, User, LogOut, ChevronRight, Bell, Hash, Sun, Moon } from "lucide-react";
+import { Home, User, LogOut, ChevronRight, Bell, Hash, Sun, Moon, X } from "lucide-react";
 import { useAppDispatch, useAppSelector } from "../../../store/hooks";
 import { logoutUser } from "../../../store/Slice/authSlice";
 import { useNavigate, useLocation } from "react-router";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { Avatar } from "./ui/avatar";
 import { useNotifications } from "../../Notifications/hooks/useNotifications";
 import { markAllAsRead } from "../../../store/Slice/notificationSlice";
@@ -26,22 +26,26 @@ export default function Sidebar({ isMobileOpen: _isMobileOpen = false, onMobileC
   const [isNotificationOpen, setIsNotificationOpen] = useState(false);
   const { theme, setTheme } = useTheme();
 
+  // Use the prop directly instead of syncing to state
+  const isMobileOpen = _isMobileOpen;
+
   // Fetch spaces on mount to populate sidebar
   useEffect(() => {
     dispatch(fetchSpaces({}));
   }, [dispatch]);
 
   // Get user's joined spaces (members is an array of user IDs)
-  const joinedSpaces = spaces.filter(
-    (space) => space.members?.includes(user?._id || "")
-  );
+  // Memoized to prevent unnecessary re-renders
+  const joinedSpaces = useMemo(() => {
+    return spaces.filter((space) => space.members?.includes(user?._id || ""));
+  }, [spaces, user?._id]);
 
   // Close mobile menu when route changes
   useEffect(() => {
     if (onMobileClose) {
       onMobileClose();
     }
-  }, [location.pathname, onMobileClose]);
+  }, [location.pathname]); // Remove onMobileClose from dependencies
 
   // Mark all notifications as read when dropdown opens
   useEffect(() => {
@@ -63,6 +67,12 @@ export default function Sidebar({ isMobileOpen: _isMobileOpen = false, onMobileC
     }
   };
 
+  const closeMobileSidebar = () => {
+    if (onMobileClose) {
+      onMobileClose();
+    }
+  };
+
   const navItems = [
     { icon: Home, label: "Home", path: "/dashboard" },
   ];
@@ -71,8 +81,27 @@ export default function Sidebar({ isMobileOpen: _isMobileOpen = false, onMobileC
 
   return (
     <>
-      <div className="fixed w-64 flex flex-col h-screen shrink-0 z-30"
+      {/* Mobile Overlay */}
+      {isMobileOpen && (
+        <div
+          className="fixed inset-0 bg-black/50 z-40 lg:hidden"
+          onClick={closeMobileSidebar}
+        />
+      )}
+
+      {/* Sidebar */}
+      <div className={`fixed w-64 flex flex-col h-screen shrink-0 z-50 transition-transform duration-300 ${isMobileOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
+        }`}
         style={{ background: "var(--sidebar)", borderRight: "1px solid var(--sidebar-border)" }}>
+
+        {/* Close button for mobile */}
+        <button
+          onClick={closeMobileSidebar}
+          className="absolute top-4 right-4 p-2 rounded-lg lg:hidden hover:bg-sidebar-accent transition-colors"
+          aria-label="Close sidebar"
+        >
+          <X size={20} className="text-muted-foreground" />
+        </button>
 
         {/* Logo */}
         <div className="px-5 py-6" style={{ borderBottom: "1px solid var(--sidebar-border)" }}>

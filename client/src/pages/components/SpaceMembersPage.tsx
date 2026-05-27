@@ -4,7 +4,7 @@ import Sidebar from "../../feature/core/components/Sidebar";
 import { Button } from "../../feature/core/components/ui/button";
 import { Avatar } from "../../feature/core/components/ui/avatar";
 import { Input } from "../../feature/core/components/ui/input";
-import { ArrowLeft, Users, Loader2, Search } from "lucide-react";
+import { ArrowLeft, Users, Loader2, Search, Menu } from "lucide-react";
 import { apiClient } from "../../store/Slice/authSlice";
 import { useAppSelector } from "../../store/hooks";
 
@@ -32,6 +32,7 @@ export default function SpaceMembersPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
+  const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
 
   const { spaces } = useAppSelector((state) => state.spaces);
   const currentSpace = spaces.find((s) => s._id === spaceId);
@@ -72,12 +73,21 @@ export default function SpaceMembersPage() {
 
   return (
     <div className="flex h-screen" style={{ background: "var(--background)" }}>
-      <Sidebar />
+      <Sidebar isMobileOpen={isMobileSidebarOpen} onMobileClose={() => setIsMobileSidebarOpen(false)} />
 
       <div className="flex-1 lg:ml-64 overflow-auto">
         {/* Header */}
         <div className="px-8 pt-7 pb-5" style={{ borderBottom: "1px solid var(--border)", background: "var(--card)" }}>
           <div className="max-w-7xl mx-auto">
+            {/* Hamburger Menu for Mobile */}
+            <button
+              onClick={() => setIsMobileSidebarOpen(true)}
+              className="lg:hidden mb-4 p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+              aria-label="Open menu"
+            >
+              <Menu size={24} className="text-foreground" />
+            </button>
+
             <Button
               variant="ghost"
               size="sm"

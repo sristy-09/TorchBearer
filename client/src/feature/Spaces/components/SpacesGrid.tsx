@@ -11,10 +11,13 @@ export default function SpacesGrid() {
     (state) => state.spaces
   );
   const currentUser = useAppSelector((state) => state.auth.user);
+  const autoRecommendations = useAppSelector((state) => state.recommendations.autoRecommendations);
 
   // IDs of spaces already shown in the auto-recommendation section
-  const autoRecommendedIds = useAppSelector((state) =>
-    state.recommendations.autoRecommendations.map((r) => r.id)
+  // Memoized to prevent creating new array reference on every render
+  const autoRecommendedIds = useMemo(() =>
+    autoRecommendations.map((r) => r.id),
+    [autoRecommendations]
   );
 
   // Debounced re-fetch when search query changes

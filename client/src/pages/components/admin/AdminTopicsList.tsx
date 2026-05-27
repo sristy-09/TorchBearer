@@ -4,7 +4,7 @@ import { useAppSelector, useAppDispatch } from "../../../store/hooks";
 import { fetchAllTopics, deleteTopic, updateTopic } from "../../../store/Slice/topicsSlice";
 import { fetchSpaces } from "../../../store/Slice/spacesSlice";
 import AdminSidebar from "../../../feature/core/components/AdminSidebar";
-import { Trash2, MessageSquare, Calendar, Search, Loader2, Layers, Edit, Filter } from "lucide-react";
+import { Trash2, MessageSquare, Calendar, Search, Loader2, Layers, Edit, Filter, Menu } from "lucide-react";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -63,6 +63,7 @@ function AdminTopicsList() {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [topicToDelete, setTopicToDelete] = useState<string | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
 
   // Edit state
   const [editDialogOpen, setEditDialogOpen] = useState(false);
@@ -189,9 +190,18 @@ function AdminTopicsList() {
 
   return (
     <div className="flex min-h-screen" style={{ background: "var(--background)" }}>
-      <AdminSidebar />
-      <div className="flex-1 ml-64 p-8">
+      <AdminSidebar isMobileOpen={isMobileSidebarOpen} onMobileClose={() => setIsMobileSidebarOpen(false)} />
+      <div className="flex-1 lg:ml-64 p-8">
         <div className="max-w-7xl mx-auto">
+          {/* Hamburger Menu for Mobile */}
+          <button
+            onClick={() => setIsMobileSidebarOpen(true)}
+            className="lg:hidden mb-4 p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+            aria-label="Open menu"
+          >
+            <Menu size={24} className="text-foreground" />
+          </button>
+
           <div className="mb-8">
             <h1 className="text-2xl font-bold text-foreground tracking-tight">Topics List</h1>
             <p className="text-muted-foreground mt-1 text-sm">View and manage all topics across all spaces</p>

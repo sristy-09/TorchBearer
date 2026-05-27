@@ -1,11 +1,11 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router";
 import { useAppSelector, useAppDispatch } from "../../store/hooks";
 import AdminSidebar from "../../feature/core/components/AdminSidebar";
 import { useNotifications } from "../../feature/Notifications/hooks/useNotifications";
 import { fetchAdminStats } from "../../store/Slice/adminSlice";
 import { FaUsers, FaComments, FaLayerGroup } from "react-icons/fa";
-import { Bell } from "lucide-react";
+import { Bell, Menu } from "lucide-react";
 
 interface StatCardProps {
   icon: React.ReactNode;
@@ -80,6 +80,7 @@ function AdminDashboard() {
   const { user, isAuthenticated } = useAppSelector((state) => state.auth);
   const { pendingRequests } = useNotifications();
   const { stats, loading: statsLoading } = useAppSelector((state) => state.admin);
+  const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
 
   useEffect(() => {
     if (!isAuthenticated || user?.role !== "admin") navigate("/admin/login");
@@ -99,9 +100,18 @@ function AdminDashboard() {
 
   return (
     <div className="flex min-h-screen" style={{ background: "var(--background)" }}>
-      <AdminSidebar />
-      <div className="flex-1 ml-64 p-8">
+      <AdminSidebar isMobileOpen={isMobileSidebarOpen} onMobileClose={() => setIsMobileSidebarOpen(false)} />
+      <div className="flex-1 lg:ml-64 p-4 sm:p-6 lg:p-8">
         <div className="max-w-7xl mx-auto">
+          {/* Hamburger Menu for Mobile */}
+          <button
+            onClick={() => setIsMobileSidebarOpen(true)}
+            className="lg:hidden mb-4 p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+            aria-label="Open menu"
+          >
+            <Menu size={24} className="text-foreground" />
+          </button>
+
           {/* Header */}
           <div className="mb-8">
             <div className="flex items-center gap-2 mb-2">

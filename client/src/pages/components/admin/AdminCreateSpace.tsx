@@ -3,7 +3,7 @@ import { useNavigate } from "react-router";
 import { useAppSelector, useAppDispatch } from "../../../store/hooks";
 import { createSpace } from "../../../store/Slice/spacesSlice";
 import AdminSidebar from "../../../feature/core/components/AdminSidebar";
-import { Loader2, CheckCircle, AlertCircle, X, Tag } from "lucide-react";
+import { Loader2, CheckCircle, AlertCircle, X, Tag, Menu } from "lucide-react";
 import { Button } from "../../../feature/core/components/ui/button";
 import { Input } from "../../../feature/core/components/ui/input";
 import { Label } from "../../../feature/core/components/ui/label";
@@ -24,6 +24,7 @@ function AdminCreateSpace() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitStatus, setSubmitStatus] = useState<"idle" | "success" | "error">("idle");
   const [errorMessage, setErrorMessage] = useState("");
+  const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
 
   useEffect(() => {
     if (!isAuthenticated || user?.role !== "admin") {
@@ -166,14 +167,23 @@ function AdminCreateSpace() {
   }
 
   return (
-    <div className="flex min-h-screen bg-neutral-50">
-      <AdminSidebar />
-      <div className="flex-1 ml-64 p-8">
+    <div className="flex min-h-screen" style={{ background: "var(--background)" }}>
+      <AdminSidebar isMobileOpen={isMobileSidebarOpen} onMobileClose={() => setIsMobileSidebarOpen(false)} />
+      <div className="flex-1 lg:ml-64 p-8">
         <div className="max-w-3xl mx-auto">
+          {/* Hamburger Menu for Mobile */}
+          <button
+            onClick={() => setIsMobileSidebarOpen(true)}
+            className="lg:hidden mb-4 p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+            aria-label="Open menu"
+          >
+            <Menu size={24} className="text-foreground" />
+          </button>
+
           {/* Header */}
           <div className="mb-8">
-            <h1 className="text-3xl font-bold text-gray-900">Create Space</h1>
-            <p className="text-gray-600 mt-2">
+            <h1 className="text-3xl font-bold text-foreground">Create Space</h1>
+            <p className="text-muted-foreground mt-2">
               Create a new space for users to collaborate and share ideas
             </p>
           </div>

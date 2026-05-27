@@ -3,7 +3,7 @@ import { useNavigate } from "react-router";
 import { useAppSelector, useAppDispatch } from "../../../store/hooks";
 import { fetchSpaces } from "../../../store/Slice/spacesSlice";
 import AdminSidebar from "../../../feature/core/components/AdminSidebar";
-import { Search, Loader2, Users, Trash2, Layers, AlertCircle, CheckCircle } from "lucide-react";
+import { Search, Loader2, Users, Trash2, Layers, AlertCircle, CheckCircle, Menu } from "lucide-react";
 import { Avatar } from "../../../feature/core/components/ui/avatar";
 import { apiClient } from "../../../store/Slice/authSlice";
 import {
@@ -52,6 +52,7 @@ function AdminUserManagement() {
     type: "success" | "error" | null;
     message: string;
   }>({ type: null, message: "" });
+  const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
 
   useEffect(() => {
     if (!isAuthenticated || currentUser?.role !== "admin") {
@@ -166,14 +167,23 @@ function AdminUserManagement() {
   }
 
   return (
-    <div className="flex min-h-screen bg-neutral-50">
-      <AdminSidebar />
-      <div className="flex-1 ml-64 p-8">
+    <div className="flex min-h-screen" style={{ background: "var(--background)" }}>
+      <AdminSidebar isMobileOpen={isMobileSidebarOpen} onMobileClose={() => setIsMobileSidebarOpen(false)} />
+      <div className="flex-1 lg:ml-64 p-8">
         <div className="max-w-7xl mx-auto">
+          {/* Hamburger Menu for Mobile */}
+          <button
+            onClick={() => setIsMobileSidebarOpen(true)}
+            className="lg:hidden mb-4 p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+            aria-label="Open menu"
+          >
+            <Menu size={24} className="text-foreground" />
+          </button>
+
           {/* Header */}
           <div className="mb-8">
-            <h1 className="text-3xl font-bold text-gray-900">User Management</h1>
-            <p className="text-gray-600 mt-2">
+            <h1 className="text-3xl font-bold text-foreground">User Management</h1>
+            <p className="text-muted-foreground mt-2">
               Manage space members and remove users from spaces
             </p>
           </div>

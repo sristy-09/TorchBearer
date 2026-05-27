@@ -14,7 +14,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "../../feature/core/components/ui/select";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, Menu } from "lucide-react";
 
 export default function TopicPostsPage() {
   const { spaceId, topicId } = useParams<{ spaceId: string; topicId: string }>();
@@ -66,6 +66,15 @@ export default function TopicPostsPage() {
         {/* Header */}
         <div className="px-8 pt-7 pb-5" style={{ borderBottom: "1px solid var(--border)", background: "var(--card)" }}>
           <div className="max-w-4xl mx-auto">
+            {/* Hamburger Menu for Mobile */}
+            <button
+              onClick={() => setIsMobileSidebarOpen(true)}
+              className="lg:hidden mb-4 p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+              aria-label="Open menu"
+            >
+              <Menu size={24} className="text-foreground" />
+            </button>
+
             <Button
               variant="ghost"
               size="sm"

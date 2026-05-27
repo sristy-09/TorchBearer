@@ -4,7 +4,7 @@ import { useAppSelector, useAppDispatch } from "../../../store/hooks";
 import { fetchSpaces, deleteSpace, updateSpace } from "../../../store/Slice/spacesSlice";
 import type { Space } from "../../../feature/Spaces/types/space";
 import AdminSidebar from "../../../feature/core/components/AdminSidebar";
-import { Trash2, Users, Calendar, Search, Loader2, Edit, MessageSquare } from "lucide-react";
+import { Trash2, Users, Calendar, Search, Loader2, Edit, MessageSquare, Menu } from "lucide-react";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -38,6 +38,7 @@ function AdminSpacesList() {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [spaceToDelete, setSpaceToDelete] = useState<string | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
 
   // Edit state
   const [editDialogOpen, setEditDialogOpen] = useState(false);
@@ -147,9 +148,18 @@ function AdminSpacesList() {
 
   return (
     <div className="flex min-h-screen" style={{ background: "var(--background)" }}>
-      <AdminSidebar />
-      <div className="flex-1 ml-64 p-8">
+      <AdminSidebar isMobileOpen={isMobileSidebarOpen} onMobileClose={() => setIsMobileSidebarOpen(false)} />
+      <div className="flex-1 lg:ml-64 p-8">
         <div className="max-w-7xl mx-auto">
+          {/* Hamburger Menu for Mobile */}
+          <button
+            onClick={() => setIsMobileSidebarOpen(true)}
+            className="lg:hidden mb-4 p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+            aria-label="Open menu"
+          >
+            <Menu size={24} className="text-foreground" />
+          </button>
+
           <div className="mb-8">
             <h1 className="text-2xl font-bold text-foreground tracking-tight">Spaces List</h1>
             <p className="text-muted-foreground mt-1 text-sm">View and manage all spaces in the platform</p>

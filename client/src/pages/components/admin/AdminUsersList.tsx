@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router";
 import { useAppSelector } from "../../../store/hooks";
 import AdminSidebar from "../../../feature/core/components/AdminSidebar";
-import { Search, Loader2, Calendar, Mail, GraduationCap, Briefcase, Filter } from "lucide-react";
+import { Search, Loader2, Calendar, Mail, GraduationCap, Briefcase, Filter, Menu } from "lucide-react";
 import { fetchAllUsers, type User } from "../../../feature/Profile/api/adminUserApi";
 import { Avatar } from "../../../feature/core/components/ui/avatar";
 
@@ -22,6 +22,7 @@ function AdminUsersList() {
   const [roleFilter, setRoleFilter] = useState<string>("");
   const [departmentFilter, setDepartmentFilter] = useState<string>("");
   const [batchYearFilter, setBatchYearFilter] = useState<string>("");
+  const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
 
   useEffect(() => {
     if (!isAuthenticated || currentUser?.role !== "admin") navigate("/admin/login");
@@ -99,9 +100,18 @@ function AdminUsersList() {
 
   return (
     <div className="flex min-h-screen" style={{ background: "var(--background)" }}>
-      <AdminSidebar />
-      <div className="flex-1 ml-64 p-8">
+      <AdminSidebar isMobileOpen={isMobileSidebarOpen} onMobileClose={() => setIsMobileSidebarOpen(false)} />
+      <div className="flex-1 lg:ml-64 p-8">
         <div className="max-w-7xl mx-auto">
+          {/* Hamburger Menu for Mobile */}
+          <button
+            onClick={() => setIsMobileSidebarOpen(true)}
+            className="lg:hidden mb-4 p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+            aria-label="Open menu"
+          >
+            <Menu size={24} className="text-foreground" />
+          </button>
+
           <div className="mb-8">
             <h1 className="text-2xl font-bold text-foreground tracking-tight">Users List</h1>
             <p className="text-muted-foreground mt-1 text-sm">View and manage all registered users</p>
