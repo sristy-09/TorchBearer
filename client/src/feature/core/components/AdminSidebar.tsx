@@ -64,9 +64,26 @@ export default function AdminSidebar() {
       label: "Management",
       icon: <Settings size={18} />,
       subItems: [
-        { label: "Create Space", path: "/admin/create-space", icon: <FolderPlus size={16} /> },
-        { label: "Admit Users", path: "/admin/admit-users", icon: <UserPlus size={16} /> },
-        { label: "Pending Requests", path: "/admin/pending-requests", icon: <Bell size={16} /> },
+        {
+          label: "Create Space",
+          path: "/admin/create-space",
+          icon: <FolderPlus size={18} />,
+        },
+        {
+          label: "Admit Users",
+          path: "/admin/admit-users",
+          icon: <UserPlus size={18} />,
+        },
+        {
+          label: "User Management",
+          path: "/admin/user-management",
+          icon: <Users size={18} />,
+        },
+        {
+          label: "Pending Requests",
+          path: "/admin/pending-requests",
+          icon: <Bell size={18} />,
+        },
       ],
     },
   ];
@@ -164,6 +181,9 @@ export default function AdminSidebar() {
         ))}
       </nav>
 
+      {/* User Profile Section */}
+      <div className="border-t border-gray-200 flex-shrink-0">
+        {/* Collapsible Menu */}
       {/* User Profile */}
       <div style={{ borderTop: "1px solid var(--sidebar-border)" }}>
         {isUserMenuOpen && (

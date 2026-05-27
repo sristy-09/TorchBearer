@@ -1,26 +1,39 @@
 import { useEffect } from "react";
 import { useNavigate } from "react-router";
-import { useAppSelector } from "../../store/hooks";
+import { useAppSelector, useAppDispatch } from "../../store/hooks";
 import AdminSidebar from "../../feature/core/components/AdminSidebar";
 import { useNotifications } from "../../feature/Notifications/hooks/useNotifications";
+import { fetchAdminStats } from "../../store/Slice/adminSlice";
 import { FaUsers, FaComments, FaLayerGroup } from "react-icons/fa";
 import { Bell } from "lucide-react";
 
 function AdminDashboard() {
   const navigate = useNavigate();
+  const dispatch = useAppDispatch();
   const { user, isAuthenticated } = useAppSelector((state) => state.auth);
   const { pendingRequests } = useNotifications();
+  const { stats, loading: statsLoading } = useAppSelector((state) => state.admin);
 
   useEffect(() => {
     if (!isAuthenticated || user?.role !== "admin") navigate("/admin/login");
   }, [isAuthenticated, user, navigate]);
 
-  if (!isAuthenticated || user?.role !== "admin") return null;
+  useEffect(() => {
+    // Fetch admin stats when component mounts
+    if (isAuthenticated && user?.role === "admin") {
+      dispatch(fetchAdminStats());
+    }
+  }, [isAuthenticated, user, dispatch]);
+
+  // Don't render if not admin
+  if (!isAuthenticated || user?.role !== "admin") {
+    return null;
+  }
 
   return (
     <div className="flex min-h-screen" style={{ background: "var(--background)" }}>
       <AdminSidebar />
-      <div className="flex-1 p-8">
+      <div className="flex-1 ml-64 p-8">
         <div className="max-w-7xl mx-auto">
           {/* Header */}
           <div className="mb-8">
@@ -35,6 +48,25 @@ function AdminDashboard() {
           </div>
 
           {/* Stats Grid */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+            <StatCard
+              icon={<FaUsers className="w-6 h-6" />}
+              title="Total Users"
+              value={statsLoading ? "..." : stats?.totalUsers.toString() || "0"}
+              bgColor="bg-blue-500"
+            />
+            <StatCard
+              icon={<FaLayerGroup className="w-6 h-6" />}
+              title="Total Spaces"
+              value={statsLoading ? "..." : stats?.totalSpaces.toString() || "0"}
+              bgColor="bg-green-500"
+            />
+            <StatCard
+              icon={<FaComments className="w-6 h-6" />}
+              title="Total Topics"
+              value={statsLoading ? "..." : stats?.totalTopics.toString() || "0"}
+              bgColor="bg-purple-500"
+            />
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5 mb-8">
             <StatCard icon={<FaUsers className="w-5 h-5" />} title="Total Users" value="0"
               gradient="linear-gradient(135deg, #8B5CF6 0%, #A855F7 100%)" />

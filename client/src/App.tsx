@@ -15,6 +15,7 @@ import AdminPostsList from "./pages/components/admin/AdminPostsList";
 import AdminUsersList from "./pages/components/admin/AdminUsersList";
 import AdminCreateSpace from "./pages/components/admin/AdminCreateSpace";
 import AdminAdmitUsers from "./pages/components/admin/AdminAdmitUsers";
+import AdminUserManagement from "./pages/components/admin/AdminUserManagement";
 import AdminPendingRequests from "./pages/components/admin/AdminPendingRequests";
 import SpaceTopicsPage from "./pages/components/SpaceTopicsPage";
 import TopicPostsPage from "./pages/components/TopicPostsPage";
@@ -26,8 +27,8 @@ import { socketService } from "./services/socket";
 import { useNotificationPermission } from "./feature/Notifications/hooks/useNotifications";
 import ErrorBoundary from "./feature/core/components/ErrorBoundary";
 import RouteErrorBoundary from "./feature/core/components/RouteErrorBoundary";
-import ForgotPasswordPage from  "./feature/Auth/components/ForgotPasswordPage"
-import ResetPasswordPage from  "./feature/Auth/components/ResetPasswordPage"
+import ForgotPasswordPage from "./feature/Auth/components/ForgotPasswordPage"
+import ResetPasswordPage from "./feature/Auth/components/ResetPasswordPage"
 
 const App = () => {
   const dispatch = useAppDispatch();
@@ -230,6 +231,17 @@ const App = () => {
             errorElement={<RouteErrorBoundary />}
           />
           <Route
+            path="/admin/user-management"
+            element={
+              <ErrorBoundary level="page">
+                <AuthRoute mode="private">
+                  <AdminUserManagement />
+                </AuthRoute>
+              </ErrorBoundary>
+            }
+            errorElement={<RouteErrorBoundary />}
+          />
+          <Route
             path="/admin/pending-requests"
             element={
               <ErrorBoundary level="page">
@@ -283,8 +295,8 @@ const App = () => {
             errorElement={<RouteErrorBoundary />}
           />
 
-          <Route path = "/forgot-password" element ={<ForgotPasswordPage />}/>
-          < Route path="/reset-password/:token" element={<ResetPasswordPage />}/>
+          <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+          <Route path="/reset-password/:token" element={<ResetPasswordPage />} />
         </Routes>
       </Router>
     </ErrorBoundary>

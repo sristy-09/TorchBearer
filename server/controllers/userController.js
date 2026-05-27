@@ -175,7 +175,7 @@ export const getMe = async (req, res) => {
    PUT /api/auth/update-profile
    Requires: protect middleware
    Body: { name, department, batchYear, registrationNumber,
-           skills, interests, avatar }
+           skills, interests, avatar, socialLinks }
    ========================================= */
 export const updateProfile = async (req, res) => {
   try {
@@ -188,6 +188,7 @@ export const updateProfile = async (req, res) => {
       "skills",
       "interests",
       "avatar",
+      "socialLinks",
     ];
 
     const updates = {};
@@ -394,17 +395,18 @@ export const resetPassword = async (req, res) => {
    7. GET ALL USERS  (alumni-only or admin use)
    GET /api/auth/users
    Requires: protect middleware
-   Query params: ?role=alumni  ?department=CS  ?keyword=John
+   Query params: ?role=alumni  ?department=CS  ?keyword=John  ?batchYear=2024
    ========================================= */
 export const getAllUsers = async (req, res) => {
   try {
-    const { role, department, keyword } = req.query;
+    const { role, department, keyword, batchYear } = req.query;
 
     const filter = {};
 
     if (role) filter.role = role;
     if (department) filter.department = department;
     if (keyword) filter.name = { $regex: keyword, $options: "i" };
+    if (batchYear) filter.batchYear = Number(batchYear);
 
     const users = await User.find(filter).sort({ createdAt: -1 });
 

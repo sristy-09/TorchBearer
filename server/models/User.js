@@ -75,9 +75,29 @@ const userSchema = new mongoose.Schema(
       default: "",
     },
 
+    // Social media links
+    socialLinks: {
+      facebook: {
+        type: String,
+        default: "",
+      },
+      instagram: {
+        type: String,
+        default: "",
+      },
+      linkedin: {
+        type: String,
+        default: "",
+      },
+      github: {
+        type: String,
+        default: "",
+      },
+    },
+
     //forgot password fields
     resetPasswordToken: {
-      type:String,
+      type: String,
     },
     resetPasswordExpire: {
       type: Date,

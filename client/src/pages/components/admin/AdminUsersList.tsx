@@ -20,19 +20,28 @@ function AdminUsersList() {
   const [loading, setLoading] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [roleFilter, setRoleFilter] = useState<string>("");
+  const [departmentFilter, setDepartmentFilter] = useState<string>("");
+  const [batchYearFilter, setBatchYearFilter] = useState<string>("");
 
   useEffect(() => {
     if (!isAuthenticated || currentUser?.role !== "admin") navigate("/admin/login");
   }, [isAuthenticated, currentUser, navigate]);
 
   useEffect(() => {
-    if (isAuthenticated && currentUser?.role === "admin") loadUsers();
-  }, [isAuthenticated, currentUser, searchQuery, roleFilter]);
+    if (isAuthenticated && currentUser?.role === "admin") {
+      loadUsers();
+    }
+  }, [isAuthenticated, currentUser, searchQuery, roleFilter, departmentFilter, batchYearFilter]);
 
   const loadUsers = async () => {
     setLoading(true);
     try {
-      const data = await fetchAllUsers({ keyword: searchQuery, role: roleFilter });
+      const data = await fetchAllUsers({
+        keyword: searchQuery,
+        role: roleFilter,
+        department: departmentFilter,
+        batchYear: batchYearFilter,
+      });
       setUsers(data);
     } catch (error) {
       console.error("Failed to fetch users:", error);
@@ -44,12 +53,60 @@ function AdminUsersList() {
   const formatDate = (dateString: string) =>
     new Date(dateString).toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" });
 
-  if (!isAuthenticated || currentUser?.role !== "admin") return null;
+  const handleRoleFilter = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    setRoleFilter(e.target.value);
+  };
+
+  const handleDepartmentFilter = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setDepartmentFilter(e.target.value);
+  };
+
+  const handleBatchYearFilter = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    setBatchYearFilter(e.target.value);
+  };
+
+  // Generate batch year options (2076-2084 as per backend validation)
+  const generateBatchYears = () => {
+    const years = [];
+    for (let year = 2084; year >= 2076; year--) {
+      years.push(year);
+    }
+    return years;
+  };
+
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+    });
+  };
+
+  const getRoleBadgeColor = (role: string) => {
+    switch (role) {
+      case "admin":
+        return "bg-purple-100 text-purple-800";
+      case "alumni":
+        return "bg-blue-100 text-blue-800";
+      case "student":
+        return "bg-green-100 text-green-800";
+      default:
+        return "bg-gray-100 text-gray-800";
+    }
+  };
+
+  const handleRowClick = (userId: string) => {
+    navigate(`/profile/${userId}`);
+  };
+
+  if (!isAuthenticated || currentUser?.role !== "admin") {
+    return null;
+  }
 
   return (
     <div className="flex min-h-screen" style={{ background: "var(--background)" }}>
       <AdminSidebar />
-      <div className="flex-1 p-8">
+      <div className="flex-1 ml-64 p-8">
         <div className="max-w-7xl mx-auto">
           <div className="mb-8">
             <h1 className="text-2xl font-bold text-foreground tracking-tight">Users List</h1>
@@ -57,9 +114,10 @@ function AdminUsersList() {
           </div>
 
           {/* Filters */}
-          <div className="mb-5 grid grid-cols-1 md:grid-cols-3 gap-3">
-            <div className="relative md:col-span-2">
-              <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-muted-foreground w-4 h-4" />
+          <div className="mb-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            {/* Search Bar */}
+            <div className="relative md:col-span-2 lg:col-span-2">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
               <input
                 type="text"
                 placeholder="Search users by name..."
@@ -83,6 +141,23 @@ function AdminUsersList() {
                 <option value="student">Student</option>
               </select>
             </div>
+
+            {/* Batch Year Filter */}
+            <div className="relative">
+              <GraduationCap className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
+              <select
+                value={batchYearFilter}
+                onChange={handleBatchYearFilter}
+                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 appearance-none bg-white"
+              >
+                <option value="">All Batch Years</option>
+                {generateBatchYears().map((year) => (
+                  <option key={year} value={year}>
+                    {year}
+                  </option>
+                ))}
+              </select>
+            </div>
           </div>
 
           {/* Table */}
@@ -93,10 +168,12 @@ function AdminUsersList() {
                 <Loader2 className="animate-spin w-7 h-7" style={{ color: "var(--primary)" }} />
               </div>
             ) : users.length === 0 ? (
-              <div className="text-center py-14 text-muted-foreground text-sm">
-                {searchQuery || roleFilter
-                  ? "No users found matching your filters."
-                  : "No users available yet."}
+              <div className="text-center py-12">
+                <p className="text-muted-foreground text-sm">
+                  {searchQuery || roleFilter || departmentFilter || batchYearFilter
+                    ? "No users found matching your filters."
+                    : "No users available yet."}
+                </p>
               </div>
             ) : (
               <div className="overflow-x-auto">
@@ -110,6 +187,19 @@ function AdminUsersList() {
                       ))}
                     </tr>
                   </thead>
+                  <tbody className="bg-white divide-y divide-gray-200">
+                    {users.map((user) => (
+                      <tr
+                        key={user._id}
+                        onClick={() => handleRowClick(user._id)}
+                        className="hover:bg-gray-50 transition-colors cursor-pointer"
+                      >
+                        <td className="px-6 py-4">
+                          <div className="flex items-center gap-3">
+                            <Avatar name={user.name} avatarUrl={user.avatar} size="md" />
+                            <div>
+                              <div className="text-sm font-medium text-gray-900">
+                                {user.name}
                   <tbody>
                     {users.map((user) => {
                       const badge = roleBadgeStyle[user.role] || { bg: "var(--muted)", color: "var(--muted-foreground)" };

@@ -14,6 +14,12 @@ export const updateUserProfile = async (data: {
   skills?: string[];
   interests?: string[];
   avatar?: string;
+  socialLinks?: {
+    facebook?: string;
+    instagram?: string;
+    linkedin?: string;
+    github?: string;
+  };
 }): Promise<User> => {
   const res = await apiClient.put("/api/auth/update-profile", data);
   return res.data.data.user;

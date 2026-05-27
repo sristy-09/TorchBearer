@@ -3,12 +3,14 @@ import { useAppDispatch, useAppSelector } from "../../../store/hooks";
 import { likePost, deletePost } from "../../../store/Slice/postsSlice";
 import type { Post } from "../types/post";
 import { useNavigate } from "react-router";
+import { apiClient } from "../../../store/Slice/authSlice";
 
-import { Heart, MessageCircle, Calendar, Pencil, Trash2 } from "lucide-react";
+import { Heart, MessageCircle, Calendar, Pencil, Trash2, Download, FileIcon, ImageIcon, VideoIcon, FileTextIcon, ChevronLeft, ChevronRight, Lock } from "lucide-react";
 
 import { Button } from "../../core/components/ui/button";
 import { Avatar } from "../../core/components/ui/avatar";
 import EditPostDialog from "./EditPostDialog";
+import EditCommentDialog from "./EditCommentDialog";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -28,6 +30,8 @@ import {
   replyToComment,
 } from "../api/commentApi";
 
+import { linkifyText, renderTextWithLinksAndMentions } from "../utils/linkify";
+
 interface Props {
   post: Post;
 }
@@ -41,11 +45,47 @@ interface CommentItemProps {
   handleLikeComment: (id: string) => void;
   handleDeleteComment: (id: string) => void;
   handleEditComment: (id: string, text: string) => void;
+  openEditDialog: (id: string, text: string) => void;
+
   toggleReplies: (id: string) => void;
   setActiveReplyId: React.Dispatch<React.SetStateAction<string | null>>;
   setReplyTexts: React.Dispatch<React.SetStateAction<{ [key: string]: string }>>;
   submitReply: (id: string) => void;
 }
+const CommentItem = React.memo(
+  ({
+    comment,
+    likedComments,
+    expandedReplies,
+    activeReplyId,
+    replyTexts,
+
+    handleLikeComment,
+    handleDeleteComment,
+    handleEditComment,
+    openEditDialog,
+    toggleReplies,
+
+    setActiveReplyId,
+    setReplyTexts,
+    submitReply,
+  }: CommentItemProps) => {
+    return (
+      <div className="mt-3">
+        {/* COMMENT CARD */}
+
+        <div className="bg-gray-50 border border-gray-100 rounded-lg p-4">
+          {/* USER */}
+
+          <h4 className="font-semibold text-sm text-gray-900">{comment.user?.name}</h4>
+
+          {/* TEXT */}
+
+          <p className="text-gray-700 text-sm mt-1.5 wrap-break-words leading-relaxed">
+            {renderTextWithLinksAndMentions(comment.text)}
+          </p>
+
+          {/* LIKE */}
 
 const renderTextWithMentions = (text: string) => {
   if (!text) return null;
@@ -105,6 +145,22 @@ const CommentItem = React.memo(({
           >
             Edit
           </button>
+
+          {/* ACTIONS */}
+
+          <div className="flex items-center gap-4 text-xs text-gray-500 mt-3 flex-wrap">
+            <button
+              onClick={() => handleDeleteComment(comment._id)}
+              className="hover:text-red-600 font-medium"
+            >
+              Delete
+            </button>
+
+            <button
+              onClick={() => openEditDialog(comment._id, comment.text)}
+              className="hover:text-blue-600 font-medium"
+            >
+              Edit
           <button
             onClick={() => {
               setActiveReplyId(activeReplyId === comment._id ? null : comment._id);
@@ -151,6 +207,58 @@ const CommentItem = React.memo(({
               Reply
             </button>
           </div>
+
+          {/* REPLY INPUT */}
+
+          {activeReplyId === comment._id && (
+            <div className="flex gap-2 mt-3">
+              <input
+                value={replyTexts[comment._id] || ""}
+                onChange={(e) =>
+                  setReplyTexts((prev) => ({
+                    ...prev,
+                    [comment._id]: e.target.value,
+                  }))
+                }
+                placeholder={`Reply to ${comment.user?.name}`}
+                className="flex-1 border border-gray-300 px-3 py-2 rounded-md text-sm outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              />
+
+              <button
+                onClick={() => submitReply(comment._id)}
+                className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors"
+              >
+                Reply
+              </button>
+            </div>
+          )}
+        </div>
+
+        {/* nested replies */}
+
+        {expandedReplies.includes(comment._id) &&
+          comment.replies?.length > 0 && (
+            <div className="ml-6 border-l-2 border-gray-200 pl-4 mt-3 space-y-3">
+              {comment.replies.map((reply: any) => (
+                <CommentItem
+                  key={reply._id}
+                  comment={reply}
+                  likedComments={likedComments}
+                  expandedReplies={expandedReplies}
+                  activeReplyId={activeReplyId}
+                  replyTexts={replyTexts}
+                  handleLikeComment={handleLikeComment}
+                  handleDeleteComment={handleDeleteComment}
+                  handleEditComment={handleEditComment}
+                  openEditDialog={openEditDialog}
+                  toggleReplies={toggleReplies}
+                  setActiveReplyId={setActiveReplyId}
+                  setReplyTexts={setReplyTexts}
+                  submitReply={submitReply}
+                />
+              ))}
+            </div>
+          )}
         )}
       </div>
 
@@ -188,6 +296,13 @@ export default function PostCard({ post }: Props) {
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [spaceAccessDialogOpen, setSpaceAccessDialogOpen] = useState(false);
+
+  // Edit comment dialog state
+  const [editCommentDialogOpen, setEditCommentDialogOpen] = useState(false);
+  const [editingCommentId, setEditingCommentId] = useState<string | null>(null);
+  const [editingCommentText, setEditingCommentText] = useState("");
+
   const [text, setText] = useState("");
   const [replyTexts, setReplyTexts] = useState<{ [key: string]: string }>({});
   const [comments, setComments] = useState<any[]>([]);
@@ -195,6 +310,9 @@ export default function PostCard({ post }: Props) {
   const [activeReplyId, setActiveReplyId] = useState<string | null>(null);
   const [expandedReplies, setExpandedReplies] = useState<string[]>([]);
   const [likedComments, setLikedComments] = useState<string[]>([]);
+
+  // Image/Video slider state
+  const [currentSlide, setCurrentSlide] = useState(0);
 
   useEffect(() => {
     const fetchComments = async () => {
@@ -283,6 +401,18 @@ export default function PostCard({ post }: Props) {
     }
   };
 
+  const openEditDialog = (id: string, text: string) => {
+    setEditingCommentId(id);
+    setEditingCommentText(text);
+    setEditCommentDialogOpen(true);
+  };
+
+  const handleSaveEditedComment = (newText: string) => {
+    if (editingCommentId) {
+      handleEditComment(editingCommentId, newText);
+    }
+  };
+
   const submitReply = async (parentId: string) => {
     const replyText = replyTexts[parentId];
     if (!replyText?.trim()) return;
@@ -315,8 +445,108 @@ export default function PostCard({ post }: Props) {
   const isAdmin = currentUser?.role === "admin";
   const canModify = isOwner || isAdmin;
 
+  const getAttachmentIcon = (mimetype: string) => {
+    if (mimetype.startsWith("image/")) return <ImageIcon className="h-5 w-5" />;
+    if (mimetype.startsWith("video/")) return <VideoIcon className="h-5 w-5" />;
+    if (mimetype === "application/pdf") return <FileTextIcon className="h-5 w-5" />;
+    return <FileIcon className="h-5 w-5" />;
+  };
+
+  const formatFileSize = (bytes: number) => {
+    if (bytes === 0) return "0 Bytes";
+    const k = 1024;
+    const sizes = ["Bytes", "KB", "MB", "GB"];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return Math.round(bytes / Math.pow(k, i) * 100) / 100 + " " + sizes[i];
+  };
+
+  const getBackendUrl = () => {
+    return import.meta.env.VITE_API_URL || "http://localhost:3000";
+  };
+
+  // Filter media attachments (images and videos) for slider
+  const mediaAttachments = post.attachments?.filter(
+    (att) => att.mimetype.startsWith("image/") || att.mimetype.startsWith("video/")
+  ) || [];
+
+  // Filter non-media attachments (PDFs, etc.)
+  const documentAttachments = post.attachments?.filter(
+    (att) => !att.mimetype.startsWith("image/") && !att.mimetype.startsWith("video/")
+  ) || [];
+
+  const nextSlide = () => {
+    setCurrentSlide((prev) => (prev + 1) % mediaAttachments.length);
+  };
+
+  const prevSlide = () => {
+    setCurrentSlide((prev) => (prev - 1 + mediaAttachments.length) % mediaAttachments.length);
+  };
+
+  const goToSlide = (index: number) => {
+    setCurrentSlide(index);
+  };
+
+  const handlePostClick = () => {
+    if (post.topic && post.space) {
+      // Check if user is a member of the space
+      // Admin can access all spaces
+      if (currentUser?.role === 'admin') {
+        navigate(`/space/${post.space._id}/topic/${post.topic._id}/posts`);
+      } else {
+        // For non-admin users, check membership
+        // We'll need to fetch space details to check membership
+        checkSpaceAccessAndNavigate();
+      }
+    }
+  };
+
+  const checkSpaceAccessAndNavigate = async () => {
+    try {
+      // Fetch space details to check membership
+      const response = await apiClient.get(`/api/spaces/${post.space?._id}`);
+      const spaceData = response.data.data;
+
+      // Check if current user is a member
+      const isMember = spaceData.members?.includes(currentUser?._id);
+
+      if (isMember) {
+        // User is a member, navigate to the post
+        navigate(`/space/${post.space._id}/topic/${post.topic._id}/posts`);
+      } else {
+        // User is not a member, show dialog
+        setSpaceAccessDialogOpen(true);
+      }
+    } catch (error) {
+      console.error('Failed to check space access:', error);
+      // On error, show the dialog to be safe
+      setSpaceAccessDialogOpen(true);
+    }
+  };
+
+  const handleRequestJoin = () => {
+    // Navigate to the space page where user can request to join
+    if (post.space) {
+      navigate(`/dashboard`);
+      setSpaceAccessDialogOpen(false);
+    }
+  };
+
   return (
     <>
+      <div
+        id={`post-${post._id}`}
+        onClick={handlePostClick}
+        className="bg-white border border-gray-200 rounded-lg p-6 hover:border-gray-300 transition cursor-pointer hover:shadow-md"
+      >
+        {/* HEADER */}
+
+        <div className="flex items-start gap-3 mb-4">
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              navigate(`/profile/${post.author._id}`);
+            }}
+            className="shrink-0 rounded-full focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
       <div className="rounded-2xl p-6 border transition-all"
         style={{ background: "var(--card)", borderColor: "var(--border)" }}>
         {/* Header */}
@@ -349,6 +579,11 @@ export default function PostCard({ post }: Props) {
           {canModify && (
             <div className="flex gap-1.5">
               <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleEdit();
+                }}
+                className="p-2 bg-blue-50 hover:bg-blue-100 text-blue-600 rounded-md transition-colors"
                 onClick={() => setEditDialogOpen(true)}
                 className="p-1.5 rounded-lg transition-colors"
                 style={{ background: "var(--secondary)", color: "var(--primary)" }}
@@ -357,6 +592,11 @@ export default function PostCard({ post }: Props) {
                 <Pencil size={14} />
               </button>
               <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleDeleteClick();
+                }}
+                className="p-2 bg-red-50 hover:bg-red-100 text-red-600 rounded-md transition-colors"
                 onClick={() => setDeleteDialogOpen(true)}
                 className="p-1.5 rounded-lg transition-colors"
                 style={{ background: "rgba(239,68,68,0.1)", color: "#EF4444" }}
@@ -368,13 +608,152 @@ export default function PostCard({ post }: Props) {
           )}
         </div>
 
+        {/* CONTENT */}
+
+        <div className="text-gray-700 leading-relaxed mb-4 whitespace-pre-wrap">
+          {linkifyText(post.content)}
+        </div>
+
+        {/* MEDIA ATTACHMENTS - Instagram Style Slider */}
+        {mediaAttachments.length > 0 && (
+          <div className="mb-4 relative bg-black rounded-lg overflow-hidden" style={{ height: '500px' }}>
+            {/* Main Media Display */}
+            <div className="relative w-full h-full">
+              {mediaAttachments.map((attachment, index) => {
+                const fullUrl = `${getBackendUrl()}${attachment.path}`;
+                const isImage = attachment.mimetype.startsWith("image/");
+                const isVideo = attachment.mimetype.startsWith("video/");
+
+                return (
+                  <div
+                    key={index}
+                    className={`absolute inset-0 transition-opacity duration-500 ${index === currentSlide ? 'opacity-100' : 'opacity-0 pointer-events-none'
+                      }`}
+                  >
+                    {isImage && (
+                      <img
+                        src={fullUrl}
+                        alt={attachment.originalName}
+                        className="w-full h-full object-contain"
+                      />
+                    )}
+
+                    {isVideo && (
+                      <video
+                        controls
+                        className="w-full h-full object-contain"
+                        key={index === currentSlide ? 'active' : 'inactive'}
+                      >
+                        <source src={fullUrl} type={attachment.mimetype} />
+                        Your browser does not support the video tag.
+                      </video>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* Navigation Arrows - Only show if more than 1 media */}
+            {mediaAttachments.length > 1 && (
+              <>
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    prevSlide();
+                  }}
+                  className="absolute left-2 top-1/2 -translate-y-1/2 bg-white/80 hover:bg-white text-gray-800 rounded-full p-2 shadow-lg transition-all z-10"
+                  aria-label="Previous image"
+                >
+                  <ChevronLeft size={24} />
+                </button>
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    nextSlide();
+                  }}
+                  className="absolute right-2 top-1/2 -translate-y-1/2 bg-white/80 hover:bg-white text-gray-800 rounded-full p-2 shadow-lg transition-all z-10"
+                  aria-label="Next image"
+                >
+                  <ChevronRight size={24} />
+                </button>
+              </>
+            )}
+
+            {/* Slide Indicators - Only show if more than 1 media */}
+            {mediaAttachments.length > 1 && (
+              <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2 z-10">
+                {mediaAttachments.map((_, index) => (
+                  <button
+                    key={index}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      goToSlide(index);
+                    }}
+                    className={`w-2 h-2 rounded-full transition-all ${index === currentSlide
+                      ? 'bg-white w-6'
+                      : 'bg-white/50 hover:bg-white/75'
+                      }`}
+                    aria-label={`Go to slide ${index + 1}`}
+                  />
+                ))}
+              </div>
+            )}
+
+            {/* Media Counter */}
+            {mediaAttachments.length > 1 && (
+              <div className="absolute top-4 right-4 bg-black/60 text-white px-3 py-1 rounded-full text-sm font-medium">
+                {currentSlide + 1} / {mediaAttachments.length}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* DOCUMENT ATTACHMENTS (PDFs, etc.) */}
+        {documentAttachments.length > 0 && (
+          <div className="mb-4 space-y-2">
+            {documentAttachments.map((attachment, index) => {
+              const fullUrl = `${getBackendUrl()}${attachment.path}`;
+              return (
+                <div
+                  key={index}
+                  className="flex items-center justify-between p-3 bg-gray-50 rounded-lg border border-gray-200"
+                >
+                  <div className="flex items-center gap-3 flex-1 min-w-0">
+                    {getAttachmentIcon(attachment.mimetype)}
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium text-gray-900 truncate">
+                        {attachment.originalName}
+                      </p>
+                      <p className="text-xs text-gray-500">
+                        {formatFileSize(attachment.size)}
+                      </p>
+                    </div>
+                  </div>
+                  <a
+                    href={fullUrl}
+                    download={attachment.originalName}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="ml-3 p-2 bg-blue-50 hover:bg-blue-100 text-blue-600 rounded-md transition-colors"
+                    title="Download file"
+                  >
+                    <Download size={16} />
+                  </a>
+                </div>
+              );
+            })}
+          </div>
+        )}
         {/* Content */}
         <div className="text-foreground/80 leading-relaxed text-sm mb-4">{post.content}</div>
 
         {/* Actions */}
         <div className="flex items-center gap-2 pt-4" style={{ borderTop: "1px solid var(--border)" }}>
           <Button
-            onClick={handleLike}
+            onClick={(e) => {
+              e.stopPropagation();
+              handleLike();
+            }}
             disabled={isLiking}
             variant="ghost"
             className="rounded-xl px-4 h-9 gap-2 text-sm font-medium transition-all"
@@ -389,7 +768,10 @@ export default function PostCard({ post }: Props) {
           </Button>
 
           <Button
-            onClick={() => setShowComments(!showComments)}
+            onClick={(e) => {
+              e.stopPropagation();
+              setShowComments(!showComments);
+            }}
             variant="ghost"
             className="rounded-xl px-4 h-9 gap-2 text-sm font-medium transition-all"
             style={{ border: "1px solid var(--border)", color: "var(--muted-foreground)" }}
@@ -401,6 +783,9 @@ export default function PostCard({ post }: Props) {
 
         {/* Comments */}
         {showComments && (
+          <div className="mt-5 border-t border-gray-100 pt-5" onClick={(e) => e.stopPropagation()}>
+            {/* ADD COMMENT */}
+
           <div className="mt-5 pt-5" style={{ borderTop: "1px solid var(--border)" }}>
             <div className="flex gap-2 mb-5">
               <input
@@ -435,6 +820,7 @@ export default function PostCard({ post }: Props) {
                   handleLikeComment={handleLikeComment}
                   handleDeleteComment={handleDeleteComment}
                   handleEditComment={handleEditComment}
+                  openEditDialog={openEditDialog}
                   toggleReplies={toggleReplies}
                   setActiveReplyId={setActiveReplyId}
                   setReplyTexts={setReplyTexts}
@@ -447,6 +833,13 @@ export default function PostCard({ post }: Props) {
       </div>
 
       <EditPostDialog open={editDialogOpen} onOpenChange={setEditDialogOpen} post={post} />
+
+      <EditCommentDialog
+        open={editCommentDialogOpen}
+        onOpenChange={setEditCommentDialogOpen}
+        commentText={editingCommentText}
+        onSave={handleSaveEditedComment}
+      />
 
       <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
         <AlertDialogContent>
@@ -461,6 +854,36 @@ export default function PostCard({ post }: Props) {
             <AlertDialogAction onClick={handleDeleteConfirm} disabled={isDeleting}
               className="bg-red-600 hover:bg-red-700">
               {isDeleting ? "Deleting..." : "Delete"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Space Access Dialog */}
+      <AlertDialog open={spaceAccessDialogOpen} onOpenChange={setSpaceAccessDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <div className="flex items-center gap-3 mb-2">
+              <div className="p-3 bg-blue-50 rounded-full">
+                <Lock className="h-6 w-6 text-blue-600" />
+              </div>
+              <div>
+                <AlertDialogTitle>Space Access Required</AlertDialogTitle>
+              </div>
+            </div>
+            <AlertDialogDescription className="text-base">
+              You are not a member of <span className="font-semibold text-gray-900">{post.space?.title}</span>.
+              <br /><br />
+              To view this post and participate in discussions, you need to request to join this space.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleRequestJoin}
+              className="bg-blue-600 hover:bg-blue-700"
+            >
+              Go to Spaces
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

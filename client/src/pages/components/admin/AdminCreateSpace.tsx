@@ -3,7 +3,7 @@ import { useNavigate } from "react-router";
 import { useAppSelector, useAppDispatch } from "../../../store/hooks";
 import { createSpace } from "../../../store/Slice/spacesSlice";
 import AdminSidebar from "../../../feature/core/components/AdminSidebar";
-import { Loader2, CheckCircle, AlertCircle } from "lucide-react";
+import { Loader2, CheckCircle, AlertCircle, X, Tag } from "lucide-react";
 import { Button } from "../../../feature/core/components/ui/button";
 import { Input } from "../../../feature/core/components/ui/input";
 import { Label } from "../../../feature/core/components/ui/label";
@@ -17,8 +17,10 @@ function AdminCreateSpace() {
   const [formData, setFormData] = useState({
     title: "",
     description: "",
+    tags: [] as string[],
   });
-  const [errors, setErrors] = useState<{ title?: string; description?: string }>({});
+  const [tagInput, setTagInput] = useState("");
+  const [errors, setErrors] = useState<{ title?: string; description?: string; tags?: string }>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitStatus, setSubmitStatus] = useState<"idle" | "success" | "error">("idle");
   const [errorMessage, setErrorMessage] = useState("");
@@ -47,7 +49,7 @@ function AdminCreateSpace() {
   };
 
   const validateForm = () => {
-    const newErrors: { title?: string; description?: string } = {};
+    const newErrors: { title?: string; description?: string; tags?: string } = {};
 
     if (!formData.title.trim()) {
       newErrors.title = "Title is required";
@@ -85,6 +87,7 @@ function AdminCreateSpace() {
         createSpace({
           title: formData.title.trim(),
           description: formData.description.trim(),
+          tags: formData.tags,
         })
       ).unwrap();
 
@@ -94,7 +97,9 @@ function AdminCreateSpace() {
       setFormData({
         title: "",
         description: "",
+        tags: [],
       });
+      setTagInput("");
 
       // Redirect to spaces list after 2 seconds
       setTimeout(() => {
@@ -112,6 +117,50 @@ function AdminCreateSpace() {
     navigate("/admin/spaces");
   };
 
+  const handleAddTag = () => {
+    const trimmedTag = tagInput.trim().toLowerCase();
+
+    if (!trimmedTag) {
+      return;
+    }
+
+    if (formData.tags.includes(trimmedTag)) {
+      setErrors((prev) => ({ ...prev, tags: "Tag already added" }));
+      return;
+    }
+
+    if (formData.tags.length >= 10) {
+      setErrors((prev) => ({ ...prev, tags: "Maximum 10 tags allowed" }));
+      return;
+    }
+
+    if (trimmedTag.length > 30) {
+      setErrors((prev) => ({ ...prev, tags: "Tag must not exceed 30 characters" }));
+      return;
+    }
+
+    setFormData((prev) => ({
+      ...prev,
+      tags: [...prev.tags, trimmedTag],
+    }));
+    setTagInput("");
+    setErrors((prev) => ({ ...prev, tags: undefined }));
+  };
+
+  const handleRemoveTag = (tagToRemove: string) => {
+    setFormData((prev) => ({
+      ...prev,
+      tags: prev.tags.filter((tag) => tag !== tagToRemove),
+    }));
+  };
+
+  const handleTagInputKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      handleAddTag();
+    }
+  };
+
   if (!isAuthenticated || user?.role !== "admin") {
     return null;
   }
@@ -119,7 +168,7 @@ function AdminCreateSpace() {
   return (
     <div className="flex min-h-screen bg-neutral-50">
       <AdminSidebar />
-      <div className="flex-1 p-8">
+      <div className="flex-1 ml-64 p-8">
         <div className="max-w-3xl mx-auto">
           {/* Header */}
           <div className="mb-8">
@@ -206,6 +255,70 @@ function AdminCreateSpace() {
                 </p>
               </div>
 
+              {/* Tags Field */}
+              <div className="space-y-2">
+                <Label htmlFor="tags">
+                  Tags <span className="text-gray-500 text-xs font-normal">(Optional)</span>
+                </Label>
+                <div className="flex gap-2">
+                  <div className="relative flex-1">
+                    <Tag className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
+                    <Input
+                      id="tags"
+                      type="text"
+                      placeholder="e.g., engineering, technology, networking"
+                      value={tagInput}
+                      onChange={(e) => {
+                        setTagInput(e.target.value);
+                        if (errors.tags) {
+                          setErrors((prev) => ({ ...prev, tags: undefined }));
+                        }
+                      }}
+                      onKeyDown={handleTagInputKeyDown}
+                      className="pl-10"
+                      disabled={isSubmitting || formData.tags.length >= 10}
+                    />
+                  </div>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={handleAddTag}
+                    disabled={isSubmitting || !tagInput.trim() || formData.tags.length >= 10}
+                  >
+                    Add
+                  </Button>
+                </div>
+                {errors.tags && (
+                  <p className="text-sm text-red-600">{errors.tags}</p>
+                )}
+                <p className="text-xs text-gray-500">
+                  Press Enter or click Add to add a tag. Maximum 10 tags.
+                </p>
+
+                {/* Tags Display */}
+                {formData.tags.length > 0 && (
+                  <div className="flex flex-wrap gap-2 mt-3">
+                    {formData.tags.map((tag) => (
+                      <span
+                        key={tag}
+                        className="inline-flex items-center gap-1 px-3 py-1 bg-blue-50 text-blue-700 rounded-full text-sm font-medium"
+                      >
+                        {tag}
+                        <button
+                          type="button"
+                          onClick={() => handleRemoveTag(tag)}
+                          disabled={isSubmitting}
+                          className="hover:bg-blue-100 rounded-full p-0.5 transition-colors"
+                          aria-label={`Remove ${tag} tag`}
+                        >
+                          <X size={14} />
+                        </button>
+                      </span>
+                    ))}
+                  </div>
+                )}
+              </div>
+
               {/* Form Actions */}
               <div className="flex items-center justify-end gap-3 pt-4 border-t">
                 <Button
@@ -242,6 +355,7 @@ function AdminCreateSpace() {
             <ul className="text-sm text-blue-800 space-y-1 list-disc list-inside">
               <li>Choose a clear, descriptive title that reflects the space's purpose</li>
               <li>Write a detailed description to help users understand what the space is about</li>
+              <li>Add relevant tags to help users discover your space (e.g., engineering, alumni, networking)</li>
               <li>Consider the target audience when naming and describing the space</li>
               <li>Keep the title concise but informative</li>
             </ul>

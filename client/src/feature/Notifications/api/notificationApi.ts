@@ -29,6 +29,7 @@ export interface NotificationData {
     role: string;
     department?: string;
     batchYear?: number;
+    registrationNumber?: number;
   };
   to: string;
   space: {

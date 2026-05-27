@@ -2,7 +2,12 @@ import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
 import { createServer } from "http";
+import path from "path";
+import { fileURLToPath } from "url";
 dotenv.config();
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 import { connectDB } from "./config/db.js";
 import passport from "./config/passport.js";
@@ -16,6 +21,7 @@ import commentRoutes from "./routes/commentRoutes.js";
 import userRoutes from "./routes/User.js";
 import notificationRoutes from "./routes/Notification.js";
 import recommendationRoutes from "./routes/recommendations.js";
+import adminRoutes from "./routes/Admin.js";
 
 const app = express();
 const server = createServer(app);
@@ -27,6 +33,9 @@ app.use(cors({
 }));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+
+// Serve uploaded files statically
+app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
 // No session needed — we use JWT
 app.use(passport.initialize());
@@ -46,6 +55,7 @@ app.use("/api/comments", commentRoutes);
 app.use("/api/auth", userRoutes);
 app.use("/api/notifications", notificationRoutes); // Notification routes
 app.use("/api/recommendations", recommendationRoutes); // AI recommendations
+app.use("/api/admin", adminRoutes); // Admin routes
 
 
 // Default route

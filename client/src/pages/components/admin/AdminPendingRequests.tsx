@@ -4,7 +4,7 @@ import { useAppSelector, useAppDispatch } from "../../../store/hooks";
 import { useNotifications } from "../../../feature/Notifications/hooks/useNotifications";
 import { approveRequest, rejectRequest } from "../../../store/Slice/notificationSlice";
 import AdminSidebar from "../../../feature/core/components/AdminSidebar";
-import { CheckCircle, XCircle, Clock, User, Mail, Calendar } from "lucide-react";
+import { CheckCircle, XCircle, Clock, User, Mail, Calendar, Hash } from "lucide-react";
 import { Button } from "../../../feature/core/components/ui/button";
 import {
   AlertDialog,
@@ -62,8 +62,9 @@ function AdminPendingRequests() {
   return (
     <div className="flex min-h-screen" style={{ background: "var(--background)" }}>
       <AdminSidebar />
-      <div className="flex-1 p-8">
-        <div className="max-w-5xl mx-auto">
+      <div className="flex-1 ml-64 p-8">
+        <div className="max-w-7xl mx-auto">
+          {/* Header */}
           <div className="mb-8">
             <h1 className="text-2xl font-bold text-foreground tracking-tight">Pending Join Requests</h1>
             <p className="text-muted-foreground mt-1 text-sm">
@@ -130,6 +131,14 @@ function AdminPendingRequests() {
                             <span className="capitalize">{request.from.role}</span>
                             {request.from.department && <span>· {request.from.department}</span>}
                           </div>
+
+                          {request.from.registrationNumber && (
+                            <div className="flex items-center gap-2 text-sm text-gray-600">
+                              <Hash className="w-4 h-4" />
+                              <span>Reg. No: {request.from.registrationNumber}</span>
+                            </div>
+                          )}
+
                           {request.from.batchYear && (
                             <div className="flex items-center gap-2 text-xs text-muted-foreground">
                               <Calendar className="w-3.5 h-3.5" />

@@ -1,9 +1,10 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import Sidebar from "../../feature/core/components/Sidebar";
 import { Input } from "../../feature/core/components/ui/input";
 import CreateSpaceDialog from "../../feature/Spaces/components/CreateSpaceDialog";
 import SpacesGrid from "../../feature/Spaces/components/SpacesGrid";
 import RecommendationsSection from "../../feature/Recommendations/components/RecommendationsSection";
+import { Menu } from "lucide-react";
 
 import { useAppDispatch, useAppSelector } from "../../store/hooks";
 import { fetchSpaces, setSearchQuery, setFilterType, setSortBy } from "../../store/Slice/spacesSlice";
@@ -21,6 +22,7 @@ export default function HomePage() {
   const dispatch = useAppDispatch();
   const { user } = useAppSelector((state) => state.auth);
   const { searchQuery, filterType, sortBy } = useAppSelector((state) => state.spaces);
+  const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
 
   useEffect(() => {
     dispatch(fetchSpaces({}));
@@ -28,6 +30,31 @@ export default function HomePage() {
   }, [dispatch]);
 
   return (
+    <div className="flex h-screen bg-neutral-50">
+      <Sidebar
+        isMobileOpen={isMobileSidebarOpen}
+        onMobileClose={() => setIsMobileSidebarOpen(false)}
+      />
+
+      <div className="flex-1 lg:ml-64 overflow-auto">
+        {/* Header */}
+        <div className="bg-white border-b px-4 sm:px-6 lg:px-8 py-4 sm:py-6">
+          <div className="max-w-7xl mx-auto">
+            <div className="flex items-center gap-4">
+              {/* Hamburger Menu for Mobile */}
+              <button
+                onClick={() => setIsMobileSidebarOpen(true)}
+                className="lg:hidden p-2 hover:bg-gray-100 rounded-md transition-colors"
+              >
+                <Menu size={24} className="text-gray-700" />
+              </button>
+
+              <div className="flex-1">
+                <h1 className="text-xl sm:text-2xl font-semibold text-gray-900">
+                  Welcome back{user?.name ? `, ${user.name}` : ""}
+                </h1>
+                <p className="text-sm sm:text-base text-gray-600 mt-1">
+                  Connect with alumni and students in your areas of interest
     <div className="flex h-screen" style={{ background: "var(--background)" }}>
       <Sidebar />
 
@@ -54,8 +81,9 @@ export default function HomePage() {
           </div>
         </div>
 
-        <div className="max-w-7xl mx-auto px-8 pb-10">
-          {/* AI Recommendations */}
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
+
+          {/* AI Recommendations (auto + manual search) */}
           <RecommendationsSection />
 
           {/* Other Spaces */}
@@ -69,9 +97,10 @@ export default function HomePage() {
             </div>
 
             {/* Search + Filters */}
-            <div className="flex flex-wrap gap-3 items-center mb-6">
+            <div className="flex flex-col sm:flex-row flex-wrap gap-3 items-stretch sm:items-center mb-6">
               <Input
                 placeholder="Search spaces..."
+                className="w-full sm:w-80"
                 className="w-72 rounded-xl"
                 style={{ background: "var(--card)", borderColor: "var(--border)" }}
                 value={searchQuery}
@@ -82,6 +111,7 @@ export default function HomePage() {
                 value={filterType}
                 onValueChange={(value: "all" | "my" | "joined") => dispatch(setFilterType(value))}
               >
+                <SelectTrigger className="w-full sm:w-36">
                 <SelectTrigger className="w-36 rounded-xl" style={{ background: "var(--card)", borderColor: "var(--border)" }}>
                   <SelectValue />
                 </SelectTrigger>
@@ -96,7 +126,8 @@ export default function HomePage() {
                 value={sortBy}
                 onValueChange={(value: "latest" | "name") => dispatch(setSortBy(value))}
               >
-                <SelectTrigger className="w-36 rounded-xl" style={{ background: "var(--card)", borderColor: "var(--border)" }}>
+             
+                <SelectTrigger className="w-36 rounded-xl sm:w-36" style={{ background: "var(--card)", borderColor: "var(--border)" }}>
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
