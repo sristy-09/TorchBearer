@@ -14,7 +14,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "../../feature/core/components/ui/select";
-import { ArrowLeft, Users, Menu } from "lucide-react";
+import { ArrowLeft, Users } from "lucide-react";
 
 export default function SpaceTopicsPage() {
   const { spaceId } = useParams<{ spaceId: string }>();
@@ -43,42 +43,32 @@ export default function SpaceTopicsPage() {
 
       <div className="flex-1 lg:ml-64 overflow-auto">
         {/* Header */}
-        <div className="bg-white border-b px-4 sm:px-6 lg:px-8 py-4 sm:py-6" style={{ borderBottom: "1px solid var(--border)", background: "var(--card)" }}>
+        <div className="px-8 pt-7 pb-5" style={{ borderBottom: "1px solid var(--border)", background: "var(--card)" }}>
           <div className="max-w-7xl mx-auto">
-            <div className="flex items-center gap-2 mb-4">
-              {/* Hamburger Menu for Mobile */}
-              <button
-                onClick={() => setIsMobileSidebarOpen(true)}
-                className="lg:hidden p-2 hover:bg-gray-100 rounded-md transition-colors flex-shrink-0"
-              >
-                <Menu size={24} className="text-gray-700" />
-              </button>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => navigate("/dashboard")}
+              className="flex items-center gap-2 mb-4 -ml-2 text-muted-foreground hover:text-foreground rounded-lg"
+            >
+              <ArrowLeft size={15} />
+              Back to Spaces
+            </Button>
 
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => navigate("/dashboard")}
-                className="flex items-center gap-2 -ml-2 text-muted-foreground hover:text-foreground rounded-lg"
-              >
-                <ArrowLeft size={15} />
-                <span className="hidden sm:inline">Back to Spaces</span>
-              </Button>
-            </div>
-
-            <div className="flex flex-col sm:flex-row items-start justify-between gap-4">
+            <div className="flex items-start justify-between gap-4">
               <div className="flex-1 min-w-0">
-                <h1 className="text-2xl sm:text-2xl font-bold text-gray-900 truncate text-foreground tracking-tight">
+                <h1 className="text-2xl font-bold text-foreground tracking-tight">
                   {currentSpace?.title || "Space Topics"}
                 </h1>
-                <p className="text-sm sm:text-base text-gray-600 mt-1 line-clamp-2">
-                  {currentSpace?.description || "Explore topics in this space"}
+                <p className="text-sm text-muted-foreground mt-1.5">
+                  {currentSpace?.description || "This space is for discussions"}
                 </p>
               </div>
 
               <Button
                 variant="outline"
                 onClick={() => navigate(`/space/${spaceId}/members`)}
-                className="flex items-center gap-2 rounded-xl w-full sm:w-auto"
+                className="flex items-center gap-2 rounded-xl"
                 style={{ borderColor: "var(--border)", background: "var(--background)" }}
               >
                 <Users size={16} />
@@ -88,32 +78,31 @@ export default function SpaceTopicsPage() {
           </div>
         </div>
 
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
-          <div>
-            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
-              <h2 className="text-lg sm:text-xl font-semibold text-foreground">
-                Topics
-              </h2>
-              <p className="text-xs text-muted-foreground mt-0.5">Browse and join discussions</p>
+        {/* Main Content */}
+        <div className="max-w-7xl mx-auto px-8 py-6">
+          <div className="mb-6">
+            <div className="flex items-center justify-between mb-5">
+              <div>
+                <h2 className="text-lg font-semibold text-foreground">Topics</h2>
+                <p className="text-xs text-muted-foreground mt-0.5">Browse and join discussions</p>
+              </div>
               {spaceId && <CreateTopicDialog spaceId={spaceId} />}
             </div>
 
             {/* Search + Filters */}
-            <div className="flex flex-col sm:flex-row flex-wrap gap-3 items-stretch sm:items-center mb-6">
+            <div className="flex flex-wrap gap-3 items-center">
               <Input
                 placeholder="Search topics..."
-                className="w-full sm:w-80"
+                className="w-72 rounded-xl"
+                style={{ background: "var(--card)", borderColor: "var(--border)" }}
                 value={searchQuery}
                 onChange={(e) => dispatch(setSearchQuery(e.target.value))}
               />
-
               <Select
                 value={sortBy}
-                onValueChange={(value: "latest" | "name") =>
-                  dispatch(setSortBy(value))
-                }
+                onValueChange={(value: "latest" | "name") => dispatch(setSortBy(value))}
               >
-                <SelectTrigger className="w-full sm:w-36">
+                <SelectTrigger className="w-36 rounded-xl" style={{ background: "var(--card)", borderColor: "var(--border)" }}>
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -122,32 +111,9 @@ export default function SpaceTopicsPage() {
                 </SelectContent>
               </Select>
             </div>
-            {spaceId && <CreateTopicDialog spaceId={spaceId} />}
           </div>
 
-          {/* Search + Filters */}
-          <div className="flex flex-wrap gap-3 items-center mb-6">
-            <Input
-              placeholder="Search topics..."
-              className="w-72 rounded-xl"
-              style={{ background: "var(--card)", borderColor: "var(--border)" }}
-              value={searchQuery}
-              onChange={(e) => dispatch(setSearchQuery(e.target.value))}
-            />
-            <Select
-              value={sortBy}
-              onValueChange={(value: "latest" | "name") => dispatch(setSortBy(value))}
-            >
-              <SelectTrigger className="w-36 rounded-xl" style={{ background: "var(--card)", borderColor: "var(--border)" }}>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="latest">Latest</SelectItem>
-                <SelectItem value="name">Name</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-
+          {/* Topics Grid */}
           <TopicsGrid />
         </div>
       </div>

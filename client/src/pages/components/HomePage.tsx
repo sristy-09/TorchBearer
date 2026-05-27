@@ -31,35 +31,32 @@ export default function HomePage() {
     <div className="flex h-screen" style={{ background: "var(--background)" }}>
       <Sidebar />
 
-      <div className="flex-1 overflow-auto">
-        {/* Welcome Hero */}
-        <div className="px-8 pt-8 pb-6">
+      <div className="flex-1 lg:ml-64 overflow-auto">
+        {/* Header */}
+        <div className="px-8 pt-7 pb-5" style={{ borderBottom: "1px solid var(--border)", background: "var(--card)" }}>
           <div className="max-w-7xl mx-auto">
-            <div className="flex items-start justify-between">
-              <div>
-                <div className="flex items-center gap-2 mb-2">
-                  <div className="w-1.5 h-6 rounded-full" style={{ background: "var(--primary)" }} />
-                  <span className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">
-                    Dashboard
-                  </span>
-                </div>
-                <h1 className="text-3xl font-bold text-foreground tracking-tight">
-                  Welcome back{user?.name ? `, ${user.name.split(" ")[0]}` : ""} 👋
-                </h1>
-                <p className="text-muted-foreground mt-1.5 text-sm">
-                  Discover spaces, connect with alumni and students in your areas of interest.
-                </p>
-              </div>
+            <div className="flex items-center gap-2 mb-2">
+              <div className="w-1.5 h-6 rounded-full" style={{ background: "var(--primary)" }} />
+              <span className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">
+                Dashboard
+              </span>
             </div>
+            <h1 className="text-2xl font-bold text-foreground tracking-tight">
+              Welcome back{user?.name ? `, ${user.name.split(" ")[0]}` : ""}
+            </h1>
+            <p className="text-muted-foreground mt-1.5 text-sm">
+              Discover spaces, connect with alumni and students in your areas of interest.
+            </p>
           </div>
         </div>
 
+        {/* Main Content */}
         <div className="max-w-7xl mx-auto px-8 py-6">
-          {/* AI Recommendations (auto + manual search) */}
+          {/* AI Recommendations */}
           <RecommendationsSection />
 
-          {/* Other Spaces */}
-          <div>
+          {/* Community Spaces Section */}
+          <div className="mt-8">
             <div className="flex items-center justify-between mb-5">
               <div>
                 <h2 className="text-lg font-semibold text-foreground">Community Spaces</h2>
@@ -106,6 +103,7 @@ export default function HomePage() {
               </Select>
             </div>
 
+            {/* Spaces Grid */}
             <SpacesGrid />
           </div>
         </div>

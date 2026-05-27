@@ -13,12 +13,15 @@ import {
   FolderPlus,
   Bell,
   ShieldCheck,
+  Sun,
+  Moon,
 } from "lucide-react";
 import { useAppDispatch, useAppSelector } from "../../../store/hooks";
 import { logoutUser } from "../../../store/Slice/authSlice";
 import { useNavigate, useLocation } from "react-router";
 import { useState } from "react";
 import { Avatar } from "./ui/avatar";
+import { useTheme } from "../context/themeProvider";
 
 interface SubMenuItem {
   label: string;
@@ -38,6 +41,7 @@ export default function AdminSidebar() {
   const navigate = useNavigate();
   const location = useLocation();
   const { user } = useAppSelector((state) => state.auth);
+  const { theme, setTheme } = useTheme();
 
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const [expandedMenus, setExpandedMenus] = useState<string[]>(["Dashboard", "Features", "Management"]);
@@ -127,6 +131,8 @@ export default function AdminSidebar() {
         </button>
       </div>
 
+
+
       {/* Navigation */}
       <nav className="flex-1 px-3 py-4 overflow-y-auto space-y-1">
         {menuItems.map((item) => (
@@ -178,6 +184,17 @@ export default function AdminSidebar() {
             )}
           </div>
         ))}
+
+        {/* Theme Toggle */}
+        <button
+          onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
+          className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-foreground/70 hover:text-foreground transition-all"
+          onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = "var(--sidebar-accent)"; }}
+          onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = "transparent"; }}
+        >
+          {theme === "dark" ? <Sun size={17} /> : <Moon size={17} />}
+          <span>{theme === "dark" ? "Light Mode" : "Dark Mode"}</span>
+        </button>
       </nav>
 
       {/* User Profile Section */}
@@ -196,6 +213,9 @@ export default function AdminSidebar() {
                 <User size={17} />
                 <span>Profile</span>
               </button>
+
+
+
               <button
                 onClick={handleLogout}
                 className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-red-500 hover:text-red-600 transition-all"

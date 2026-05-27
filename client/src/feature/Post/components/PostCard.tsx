@@ -339,7 +339,7 @@ export default function PostCard({ post }: Props) {
   };
 
   const isLikedByCurrentUser = currentUser?._id ? post.likes?.includes(currentUser._id) : false;
-  const isOwner = currentUser?._id === post.author._id;
+  const isOwner = currentUser?._id && post.author ? currentUser._id === post.author._id : false;
   const isAdmin = currentUser?.role === "admin";
   const canModify = isOwner || isAdmin;
 
@@ -442,22 +442,25 @@ export default function PostCard({ post }: Props) {
           <button
             onClick={(e) => {
               e.stopPropagation();
-              navigate(`/profile/${post.author._id}`);
+              if (post.author?._id) {
+                navigate(`/profile/${post.author._id}`);
+              }
             }}
             className="shrink-0 rounded-full focus:outline-none"
-            aria-label={`View ${post.author.name}'s profile`}
+            aria-label={`View ${post.author?.name || "user"}'s profile`}
+            disabled={!post.author}
           >
-            <Avatar name={post.author.name} avatarUrl={post.author.avatar} size="md" />
+            <Avatar name={post.author?.name || "Unknown User"} avatarUrl={post.author?.avatar} size="md" />
           </button>
 
           <div className="flex-1 min-w-0">
             <h3 className="text-base font-semibold text-foreground mb-1">{post.title}</h3>
             <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
-              <span className="font-medium text-foreground/80">{post.author.name}</span>
+              <span className="font-medium text-foreground/80">{post.author?.name || "Unknown User"}</span>
               <span>·</span>
               <span className="px-2 py-0.5 rounded-full font-medium capitalize"
                 style={{ background: "var(--secondary)", color: "var(--primary)" }}>
-                {post.author.role}
+                {post.author?.role || "user"}
               </span>
               <span>·</span>
               <span className="flex items-center gap-1">

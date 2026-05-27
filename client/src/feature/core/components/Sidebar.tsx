@@ -1,4 +1,4 @@
-import { Home, User, LogOut, ChevronRight, Bell, Hash } from "lucide-react";
+import { Home, User, LogOut, ChevronRight, Bell, Hash, Sun, Moon } from "lucide-react";
 import { useAppDispatch, useAppSelector } from "../../../store/hooks";
 import { logoutUser } from "../../../store/Slice/authSlice";
 import { useNavigate, useLocation } from "react-router";
@@ -8,6 +8,7 @@ import { useNotifications } from "../../Notifications/hooks/useNotifications";
 import { markAllAsRead } from "../../../store/Slice/notificationSlice";
 import { formatDistanceToNow } from "../lib/utils";
 import { fetchSpaces } from "../../../store/Slice/spacesSlice";
+import { useTheme } from "../context/themeProvider";
 
 interface SidebarProps {
   isMobileOpen?: boolean;
@@ -23,6 +24,7 @@ export default function Sidebar({ isMobileOpen: _isMobileOpen = false, onMobileC
   const { spaces } = useAppSelector((state) => state.spaces);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isNotificationOpen, setIsNotificationOpen] = useState(false);
+  const { theme, setTheme } = useTheme();
 
   // Fetch spaces on mount to populate sidebar
   useEffect(() => {
@@ -240,6 +242,17 @@ export default function Sidebar({ isMobileOpen: _isMobileOpen = false, onMobileC
           )}
         </div>
 
+        {/* Theme Toggle */}
+        <button
+          onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
+          className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-foreground/70 hover:text-foreground transition-all"
+          onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = "var(--sidebar-accent)"; }}
+          onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = "transparent"; }}
+        >
+          {theme === "dark" ? <Sun size={17} /> : <Moon size={17} />}
+          <span>{theme === "dark" ? "Light Mode" : "Dark Mode"}</span>
+        </button>
+
         {/* Spaces Section */}
         <div className="px-3 pt-5 pb-2 text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">
           Spaces
@@ -306,6 +319,8 @@ export default function Sidebar({ isMobileOpen: _isMobileOpen = false, onMobileC
               <User size={17} />
               <span>Profile</span>
             </button>
+
+
             <button
               onClick={handleLogout}
               className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-red-500 hover:text-red-600 transition-all"
