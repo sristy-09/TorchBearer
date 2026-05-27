@@ -47,8 +47,12 @@ const userSchema = new mongoose.Schema(
     },
 
     registrationNumber: {
-      type: Number,
-    },
+  type: String,
+  match: [
+    /^\d-\d-\d{2}-\d{3}-\d{4}$/,
+    "Please provide a valid registration number.",
+  ],
+},
 
     department: {
       type: String,
@@ -71,9 +75,29 @@ const userSchema = new mongoose.Schema(
       default: "",
     },
 
+    // Social media links
+    socialLinks: {
+      facebook: {
+        type: String,
+        default: "",
+      },
+      instagram: {
+        type: String,
+        default: "",
+      },
+      linkedin: {
+        type: String,
+        default: "",
+      },
+      github: {
+        type: String,
+        default: "",
+      },
+    },
+
     //forgot password fields
     resetPasswordToken: {
-      type:String,
+      type: String,
     },
     resetPasswordExpire: {
       type: Date,

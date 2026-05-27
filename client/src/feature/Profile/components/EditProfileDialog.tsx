@@ -12,6 +12,7 @@ import { Button } from "../../core/components/ui/button";
 import { Input } from "../../core/components/ui/input";
 import { Label } from "../../core/components/ui/label";
 import { Pencil, X, Plus } from "lucide-react";
+import { FaFacebook, FaInstagram, FaLinkedin, FaGithub } from "react-icons/fa";
 
 interface EditProfileDialogProps {
   open: boolean;
@@ -34,6 +35,13 @@ export default function EditProfileDialog({
   const [skills, setSkills] = useState<string[]>(user?.skills ?? []);
   const [interestInput, setInterestInput] = useState("");
   const [interests, setInterests] = useState<string[]>(user?.interests ?? []);
+
+  // Social media links
+  const [facebook, setFacebook] = useState(user?.socialLinks?.facebook ?? "");
+  const [instagram, setInstagram] = useState(user?.socialLinks?.instagram ?? "");
+  const [linkedin, setLinkedin] = useState(user?.socialLinks?.linkedin ?? "");
+  const [github, setGithub] = useState(user?.socialLinks?.github ?? "");
+
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -72,6 +80,12 @@ export default function EditProfileDialog({
         batchYear: batchYear ? Number(batchYear) : undefined,
         skills,
         interests,
+        socialLinks: {
+          facebook: facebook.trim(),
+          instagram: instagram.trim(),
+          linkedin: linkedin.trim(),
+          github: github.trim(),
+        },
       });
       dispatch(setUser(updated));
       onOpenChange(false);
@@ -227,6 +241,71 @@ export default function EditProfileDialog({
                 ))}
               </div>
             )}
+          </div>
+
+          {/* Social Media Links */}
+          <div className="space-y-3 pt-2 border-t border-gray-200">
+            <Label className="text-base font-semibold">Social Media Links</Label>
+
+            {/* Facebook */}
+            <div className="space-y-1.5">
+              <Label htmlFor="edit-facebook" className="flex items-center gap-2 text-sm">
+                <FaFacebook size={14} className="text-blue-600" />
+                Facebook
+              </Label>
+              <Input
+                id="edit-facebook"
+                value={facebook}
+                onChange={(e) => setFacebook(e.target.value)}
+                placeholder="https://facebook.com/yourprofile"
+                type="url"
+              />
+            </div>
+
+            {/* Instagram */}
+            <div className="space-y-1.5">
+              <Label htmlFor="edit-instagram" className="flex items-center gap-2 text-sm">
+                <FaInstagram size={14} className="text-pink-600" />
+                Instagram
+              </Label>
+              <Input
+                id="edit-instagram"
+                value={instagram}
+                onChange={(e) => setInstagram(e.target.value)}
+                placeholder="https://instagram.com/yourprofile"
+                type="url"
+              />
+            </div>
+
+            {/* LinkedIn */}
+            <div className="space-y-1.5">
+              <Label htmlFor="edit-linkedin" className="flex items-center gap-2 text-sm">
+                <FaLinkedin size={14} className="text-blue-700" />
+                LinkedIn
+              </Label>
+              <Input
+                id="edit-linkedin"
+                value={linkedin}
+                onChange={(e) => setLinkedin(e.target.value)}
+                placeholder="https://linkedin.com/in/yourprofile"
+                type="url"
+              />
+            </div>
+
+            {/* GitHub */}
+            <div className="space-y-1.5">
+              <Label htmlFor="edit-github" className="flex items-center gap-2 text-sm">
+                <FaGithub size={14} className="text-gray-800" />
+                GitHub
+              </Label>
+              <Input
+                id="edit-github"
+                value={github}
+                onChange={(e) => setGithub(e.target.value)}
+                placeholder="https://github.com/yourprofile"
+                type="url"
+              />
+            </div>
           </div>
 
           {error && <p className="text-sm text-red-600">{error}</p>}

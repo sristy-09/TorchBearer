@@ -1,8 +1,8 @@
 import { useState } from "react";
 import { useAppDispatch, useAppSelector } from "../../../store/hooks";
-import { requestJoinSpace } from "../../../store/Slice/notificationSlice";
+import { requestJoinSpace, cancelJoinSpace } from "../../../store/Slice/notificationSlice";
 import { Button } from "../../core/components/ui/button";
-import { UserPlus, Check, Clock, CheckCircle } from "lucide-react";
+import { UserPlus, Check, CheckCircle, X } from "lucide-react";
 
 interface RequestJoinButtonProps {
   spaceId: string;
@@ -12,19 +12,13 @@ interface RequestJoinButtonProps {
 export default function RequestJoinButton({ spaceId, isMember }: RequestJoinButtonProps) {
   const dispatch = useAppDispatch();
   const { user } = useAppSelector((state) => state.auth);
-  const { notifications } = useAppSelector((state) => state.notifications);
+  const pendingSpaceIds = useAppSelector((state) => state.notifications.pendingSpaceIds);
 
   const [loading, setLoading] = useState(false);
-  const [requestSent, setRequestSent] = useState(false);
   const [error, setError] = useState("");
 
-  const hasPendingRequest = notifications.some(
-    (n) =>
-      n.type === "space_join_request" &&
-      n.space._id === spaceId &&
-      n.status === "pending" &&
-      n.from._id === user?._id
-  );
+  // Persistent check — survives page reloads
+  const hasPendingRequest = pendingSpaceIds.includes(spaceId);
 
   const handleRequestJoin = async () => {
     if (!user) { setError("Please login to join spaces"); return; }
@@ -33,9 +27,20 @@ export default function RequestJoinButton({ spaceId, isMember }: RequestJoinButt
     setError("");
     try {
       await dispatch(requestJoinSpace(spaceId)).unwrap();
-      setRequestSent(true);
     } catch (err: any) {
       setError(err || "Failed to send request");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleCancelRequest = async () => {
+    setLoading(true);
+    setError("");
+    try {
+      await dispatch(cancelJoinSpace(spaceId)).unwrap();
+    } catch (err: any) {
+      setError(err || "Failed to cancel request");
     } finally {
       setLoading(false);
     }
@@ -51,23 +56,25 @@ export default function RequestJoinButton({ spaceId, isMember }: RequestJoinButt
     );
   }
 
-  if (requestSent) {
-    return (
-      <Button disabled className="rounded-xl text-xs h-8 px-3 font-medium"
-        style={{ background: "rgba(16,185,129,0.12)", color: "#10B981", border: "none" }}>
-        <CheckCircle className="w-3.5 h-3.5 mr-1.5" />
-        Request Sent
-      </Button>
-    );
-  }
-
   if (hasPendingRequest) {
     return (
-      <Button disabled className="rounded-xl text-xs h-8 px-3 font-medium"
-        style={{ background: "rgba(245,158,11,0.12)", color: "#D97706", border: "none" }}>
-        <Clock className="w-3.5 h-3.5 mr-1.5" />
-        Request Pending
-      </Button>
+      <div className="flex items-center gap-2">
+        <Button disabled className="rounded-xl text-xs h-8 px-3 font-medium"
+          style={{ background: "rgba(245,158,11,0.12)", color: "#D97706", border: "none" }}>
+          <CheckCircle className="w-3.5 h-3.5 mr-1.5" />
+          Request Sent
+        </Button>
+        <Button
+          onClick={handleCancelRequest}
+          disabled={loading}
+          className="rounded-xl text-xs h-8 px-3 font-medium"
+          style={{ background: "rgba(239,68,68,0.1)", color: "#EF4444", border: "none" }}
+        >
+          <X className="w-3.5 h-3.5 mr-1.5" />
+          {loading ? "Cancelling..." : "Cancel"}
+        </Button>
+        {error && <p className="text-xs text-red-500">{error}</p>}
+      </div>
     );
   }
 

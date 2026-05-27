@@ -29,6 +29,7 @@ export interface NotificationData {
     role: string;
     department?: string;
     batchYear?: number;
+    registrationNumber?: number;
   };
   to: string;
   space: {
@@ -74,6 +75,18 @@ export interface PendingRequestsResponse {
 // Request to join a space
 export const requestToJoinSpace = async (spaceId: string) => {
   const response = await api.post(`/request-join/${spaceId}`);
+  return response.data;
+};
+
+// Cancel a pending join request
+export const cancelJoinRequest = async (spaceId: string) => {
+  const response = await api.delete(`/cancel-request/${spaceId}`);
+  return response.data;
+};
+
+// Get spaceIds where the current user has a pending join request
+export const getMyPendingSpaceRequests = async () => {
+  const response = await api.get<{ success: boolean; data: { spaceIds: string[] } }>("/my-pending-spaces");
   return response.data;
 };
 

@@ -1,9 +1,10 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router";
 import { useAppSelector, useAppDispatch } from "../../../store/hooks";
-import { fetchSpaces, deleteSpace } from "../../../store/Slice/spacesSlice";
+import { fetchSpaces, deleteSpace, updateSpace } from "../../../store/Slice/spacesSlice";
+import type { Space } from "../../../feature/Spaces/types/space";
 import AdminSidebar from "../../../feature/core/components/AdminSidebar";
-import { Trash2, Users, Calendar, Search, Loader2 } from "lucide-react";
+import { Trash2, Users, Calendar, Search, Loader2, Edit, MessageSquare, Menu } from "lucide-react";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -14,6 +15,18 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "../../../feature/core/components/ui/alert-dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "../../../feature/core/components/ui/dialog";
+import { Button } from "../../../feature/core/components/ui/button";
+import { Input } from "../../../feature/core/components/ui/input";
+import { Textarea } from "../../../feature/core/components/ui/textarea";
+import { Label } from "../../../feature/core/components/ui/label";
 
 function AdminSpacesList() {
   const navigate = useNavigate();
@@ -25,6 +38,17 @@ function AdminSpacesList() {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [spaceToDelete, setSpaceToDelete] = useState<string | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
+
+  // Edit state
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [spaceToEdit, setSpaceToEdit] = useState<Space | null>(null);
+  const [editForm, setEditForm] = useState({
+    title: "",
+    description: "",
+    tags: "",
+  });
+  const [isUpdating, setIsUpdating] = useState(false);
 
   useEffect(() => {
     if (!isAuthenticated || user?.role !== "admin") navigate("/admin/login");
@@ -35,6 +59,16 @@ function AdminSpacesList() {
       dispatch(fetchSpaces({ keyword: searchQuery }));
     }
   }, [dispatch, isAuthenticated, user, searchQuery]);
+
+  const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setSearchQuery(e.target.value);
+  };
+
+  const handleDeleteClick = (spaceId: string, e: React.MouseEvent) => {
+    e.stopPropagation(); // Prevent row click
+    setSpaceToDelete(spaceId);
+    setDeleteDialogOpen(true);
+  };
 
   const handleDeleteConfirm = async () => {
     if (!spaceToDelete) return;
@@ -50,16 +84,85 @@ function AdminSpacesList() {
     }
   };
 
-  const formatDate = (dateString: string) =>
-    new Date(dateString).toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" });
+  const handleEditClick = (space: Space, e: React.MouseEvent) => {
+    e.stopPropagation(); // Prevent row click
+    setSpaceToEdit(space);
+    setEditForm({
+      title: space.title,
+      description: space.description,
+      tags: space.tags?.join(", ") || "",
+    });
+    setEditDialogOpen(true);
+  };
+
+  const handleEditFormChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+  ) => {
+    const { name, value } = e.target;
+    setEditForm((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const handleEditConfirm = async () => {
+    if (!spaceToEdit) return;
+
+    setIsUpdating(true);
+    try {
+      const tagsArray = editForm.tags
+        .split(",")
+        .map((tag) => tag.trim())
+        .filter((tag) => tag.length > 0);
+
+      await dispatch(
+        updateSpace({
+          id: spaceToEdit._id,
+          data: {
+            title: editForm.title,
+            description: editForm.description,
+            tags: tagsArray,
+          },
+        })
+      ).unwrap();
+
+      setEditDialogOpen(false);
+      setSpaceToEdit(null);
+    } catch (error) {
+      console.error("Failed to update space:", error);
+    } finally {
+      setIsUpdating(false);
+    }
+  };
+
+  const handleRowClick = (spaceId: string) => {
+    navigate(`/space/${spaceId}/topics`);
+  };
+
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+    });
+  };
 
   if (!isAuthenticated || user?.role !== "admin") return null;
 
   return (
     <div className="flex min-h-screen" style={{ background: "var(--background)" }}>
-      <AdminSidebar />
-      <div className="flex-1 p-8">
+      <AdminSidebar isMobileOpen={isMobileSidebarOpen} onMobileClose={() => setIsMobileSidebarOpen(false)} />
+      <div className="flex-1 lg:ml-64 p-8">
         <div className="max-w-7xl mx-auto">
+          {/* Hamburger Menu for Mobile */}
+          <button
+            onClick={() => setIsMobileSidebarOpen(true)}
+            className="lg:hidden mb-4 p-2 rounded-lg transition-colors"
+            style={{ background: "transparent" }}
+            onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = "var(--hover-bg)"; }}
+            onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = "transparent"; }}
+            aria-label="Open menu"
+          >
+            <Menu size={24} className="text-foreground" />
+          </button>
+
           <div className="mb-8">
             <h1 className="text-2xl font-bold text-foreground tracking-tight">Spaces List</h1>
             <p className="text-muted-foreground mt-1 text-sm">View and manage all spaces in the platform</p>
@@ -100,19 +203,36 @@ function AdminSpacesList() {
                 <table className="w-full">
                   <thead style={{ background: "var(--background)", borderBottom: "1px solid var(--border)" }}>
                     <tr>
-                      {["Space", "Created By", "Members", "Created", "Actions"].map((h, i) => (
-                        <th key={h} className={`px-6 py-3.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground ${i === 4 ? "text-right" : "text-left"}`}>
-                          {h}
-                        </th>
-                      ))}
+                      <th className="px-6 py-3 text-left text-xs font-medium  uppercase tracking-wider text-muted-foreground">
+                        Space
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider text-muted-foreground">
+                        Created By
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider text-muted-foreground">
+                        Topics
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider text-muted-foreground">
+                        Members
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider text-muted-foreground">
+                        Created
+                      </th>
+                      <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider text-muted-foreground">
+                        Actions
+                      </th>
                     </tr>
                   </thead>
                   <tbody>
                     {spaces.map((space) => (
-                      <tr key={space._id} className="transition-colors"
+                      <tr
+                        key={space._id}
+                        onClick={() => handleRowClick(space._id)}
+                        className="transition-colors cursor-pointer"
                         style={{ borderBottom: "1px solid var(--border)" }}
                         onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = "var(--background)"; }}
-                        onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = "transparent"; }}>
+                        onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = "transparent"; }}
+                      >
                         <td className="px-6 py-4">
                           <div className="text-sm font-medium text-foreground">{space.title}</div>
                           <div className="text-xs text-muted-foreground line-clamp-1 mt-0.5">{space.description}</div>
@@ -120,6 +240,12 @@ function AdminSpacesList() {
                         <td className="px-6 py-4">
                           <div className="text-sm text-foreground">{space.createdBy.name}</div>
                           <div className="text-xs text-muted-foreground capitalize">{space.createdBy.role}</div>
+                        </td>
+                        <td className="px-6 py-4">
+                          <div className="flex items-center gap-1 text-sm text-gray-600">
+                            <MessageSquare size={16} />
+                            <span>{space.topicsCount || 0}</span>
+                          </div>
                         </td>
                         <td className="px-6 py-4">
                           <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
@@ -134,14 +260,23 @@ function AdminSpacesList() {
                           </div>
                         </td>
                         <td className="px-6 py-4 text-right">
-                          <button
-                            onClick={() => { setSpaceToDelete(space._id); setDeleteDialogOpen(true); }}
-                            className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg transition-colors text-red-500 hover:text-red-600"
-                            style={{ background: "rgba(239,68,68,0.08)" }}
-                          >
-                            <Trash2 size={13} />
-                            Delete
-                          </button>
+                          <div className="flex items-center justify-end gap-2">
+                            <button
+                              onClick={(e) => handleEditClick(space, e)}
+                              className="inline-flex items-center gap-1 px-3 py-1 text-sm text-blue-600 hover:bg-blue-50 rounded-md transition-colors"
+                            >
+                              <Edit size={16} />
+                              Edit
+                            </button>
+                            <button
+                              onClick={(e) => handleDeleteClick(space._id, e)}
+                              className="inline-flex items-center gap-1 px-3 py-1 text-sm text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                              style={{ background: "rgba(239,68,68,0.08)" }}
+                            >
+                              <Trash2 size={13} />
+                              Delete
+                            </button>
+                          </div>
                         </td>
                       </tr>
                     ))}
@@ -176,6 +311,75 @@ function AdminSpacesList() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Edit Space Dialog */}
+      <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
+        <DialogContent className="sm:max-w-[525px]">
+          <DialogHeader>
+            <DialogTitle>Edit Space</DialogTitle>
+            <DialogDescription>
+              Update the space details below. Click save when you're done.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <div className="grid gap-2">
+              <Label htmlFor="title">Title</Label>
+              <Input
+                id="title"
+                name="title"
+                value={editForm.title}
+                onChange={handleEditFormChange}
+                placeholder="Enter space title"
+              />
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="description">Description</Label>
+              <Textarea
+                id="description"
+                name="description"
+                value={editForm.description}
+                onChange={handleEditFormChange}
+                placeholder="Enter space description"
+                rows={4}
+              />
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="tags">Tags (comma-separated)</Label>
+              <Input
+                id="tags"
+                name="tags"
+                value={editForm.tags}
+                onChange={handleEditFormChange}
+                placeholder="e.g., technology, programming, web"
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setEditDialogOpen(false)}
+              disabled={isUpdating}
+            >
+              Cancel
+            </Button>
+            <Button
+              type="button"
+              onClick={handleEditConfirm}
+              disabled={isUpdating || !editForm.title || !editForm.description}
+            >
+              {isUpdating ? (
+                <>
+                  <Loader2 className="animate-spin mr-2" size={16} />
+                  Saving...
+                </>
+              ) : (
+                "Save Changes"
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

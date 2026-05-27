@@ -118,7 +118,7 @@ export const completeUserProfile = createAsyncThunk(
     data: {
       role: string;
       batchYear?: number;
-      registrationNumber?: number;
+      registrationNumber?: string;
       department?: string;
       skills?: string[];
       interests?: string[];

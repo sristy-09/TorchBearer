@@ -57,7 +57,8 @@
   --sidebar: #ECE2D8;
 
   /* Text */
-  --foreground: #1E293B;       /* slate-800 */
+  --foreground: #1E293B;
+  /* slate-800 */
   --card-foreground: #1E293B;
   --popover-foreground: #1E293B;
   --sidebar-foreground: #1E293B;
@@ -72,7 +73,8 @@
 
   /* Muted */
   --muted: #EDE8E0;
-  --muted-foreground: #64748B;  /* slate-500 */
+  --muted-foreground: #64748B;
+  /* slate-500 */
 
   /* Accent */
   --accent: #E9D8FD;
@@ -80,6 +82,7 @@
 
   /* Destructive */
   --destructive: oklch(0.577 0.245 27.325);
+  --destructive-foreground: #ffffff;
 
   /* Borders & inputs */
   --border: #E8DDD2;
@@ -103,6 +106,26 @@
   --sidebar-accent-foreground: #6D28D9;
   --sidebar-border: #E8DDD2;
   --sidebar-ring: #8B5CF6;
+
+  /* Additional utility colors for light mode */
+  --hover-bg: rgba(139, 92, 246, 0.08);
+  --hover-border: #D4C5E8;
+  --success: #10B981;
+  --success-foreground: #ffffff;
+  --warning: #F59E0B;
+  --warning-foreground: #ffffff;
+  --info: #3B82F6;
+  --info-foreground: #ffffff;
+
+  /* Badge colors */
+  --badge-admin-bg: rgba(239, 68, 68, 0.1);
+  --badge-admin-text: #EF4444;
+  --badge-alumni-bg: rgba(59, 130, 246, 0.1);
+  --badge-alumni-text: #3B82F6;
+  --badge-student-bg: rgba(16, 185, 129, 0.1);
+  --badge-student-text: #10B981;
+  --badge-default-bg: rgba(100, 116, 139, 0.1);
+  --badge-default-text: #64748B;
 }
 
 /* ─── DARK MODE ──────────────────────────────────────────── */
@@ -137,6 +160,7 @@
 
   /* Destructive */
   --destructive: oklch(0.704 0.191 22.216);
+  --destructive-foreground: #ffffff;
 
   /* Borders & inputs */
   --border: rgba(255, 255, 255, 0.08);
@@ -157,6 +181,26 @@
   --sidebar-accent-foreground: #C4B5FD;
   --sidebar-border: rgba(255, 255, 255, 0.08);
   --sidebar-ring: #A78BFA;
+
+  /* Additional utility colors for dark mode */
+  --hover-bg: rgba(167, 139, 250, 0.15);
+  --hover-border: rgba(255, 255, 255, 0.15);
+  --success: #10B981;
+  --success-foreground: #18171F;
+  --warning: #F59E0B;
+  --warning-foreground: #18171F;
+  --info: #3B82F6;
+  --info-foreground: #ffffff;
+
+  /* Badge colors for dark mode */
+  --badge-admin-bg: rgba(239, 68, 68, 0.2);
+  --badge-admin-text: #FCA5A5;
+  --badge-alumni-bg: rgba(59, 130, 246, 0.2);
+  --badge-alumni-text: #93C5FD;
+  --badge-student-bg: rgba(16, 185, 129, 0.2);
+  --badge-student-text: #6EE7B7;
+  --badge-default-bg: rgba(148, 163, 184, 0.2);
+  --badge-default-text: #CBD5E1;
 }
 
 @layer base {

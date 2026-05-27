@@ -19,15 +19,25 @@ export function useCompleteProfile() {
   });
 
   const [skillInput, setSkillInput] = useState("");
+  const [otherSkill, setOtherSkill] = useState("")
   const [interestInput, setInterestInput] = useState("");
   const [otherInterest, setOtherInterest] = useState("");
   const [errors, setErrors] = useState<CompleteProfileErrors>({});
 
   const predefinedInterests = [
     "Cyber Security",
-    "Backend Developer",
-    "Frontend Developer",
-    "Flutter Developer",
+    "Backend Development",
+    "Frontend Development",
+    "Flutter Development",
+    "Designing",
+    "AI/ML",
+  ];
+
+   const predefinedSkills = [
+    "Cyber Security",
+    "Backend Development",
+    "Frontend Development",
+    "Flutter Development",
     "Designing",
     "AI/ML",
   ];
@@ -108,6 +118,41 @@ export function useCompleteProfile() {
     }
   };
 
+    // -skills checkbox handling ──────────────────────────
+  const handleSkillCheckbox = (skill: string) => {
+    const updated = form.skills.includes(skill)
+      ? form.skills.filter((s) => s !== skill)
+      : [...form.skills, skill];
+
+    setForm((prev) => ({ ...prev, skills: updated }));
+    const result = completeProfileSchema.shape.skills.safeParse(updated);
+    setErrors((prev) => ({
+      ...prev,
+      skills: result.success ? undefined : result.error.issues[0].message,
+    }));
+  };
+
+  const addOtherSkill = () => {
+    const val = otherSkill.trim();
+    if (val && !form.skills.includes(val)) {
+      const updated = [...form.skills, val];
+      setForm((prev) => ({ ...prev, skills: updated }));
+      const result = completeProfileSchema.shape.skills.safeParse(updated);
+      setErrors((prev) => ({
+        ...prev,
+        skills: result.success ? undefined : result.error.issues[0].message,
+      }));
+    }
+    setOtherSkill("");
+  };
+
+  const handleOtherSkillKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Enter" || e.key === ",") {
+      e.preventDefault();
+      addOtherSkill();
+    }
+  };
+
   // ── Interests tag input (legacy - kept for backward compatibility) ──────────────────────────────────
   const addInterest = (raw: string) => {
     const val = raw.trim().replace(/,$/, "");
@@ -180,8 +225,11 @@ export function useCompleteProfile() {
     loading,
     skillInput,
     interestInput,
+    otherSkill,
+    setOtherSkill,
     otherInterest,
     predefinedInterests,
+    predefinedSkills,
     setSkillInput,
     setInterestInput,
     setOtherInterest,
@@ -189,7 +237,9 @@ export function useCompleteProfile() {
     handleSkillKeyDown,
     handleInterestKeyDown,
     handleInterestCheckbox,
+    handleSkillCheckbox,
     handleOtherInterestKeyDown,
+    handleOtherSkillKeyDown,
     removeSkill,
     removeInterest,
     handleSubmit,

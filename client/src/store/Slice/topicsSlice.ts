@@ -1,6 +1,7 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import type { Topic } from "../../feature/Topic/types/topic";
 import { apiClient } from "./authSlice";
+import { deletePost, createPost } from "./postsSlice";
 
 interface TopicsState {
   topics: Topic[];
@@ -52,12 +53,15 @@ export const fetchTopicsBySpace = createAsyncThunk(
 
 export const fetchAllTopics = createAsyncThunk(
   "topics/fetchAllTopics",
-  async (params: { keyword?: string; page?: number; limit?: number } = {}, { rejectWithValue }) => {
+  async (params: { keyword?: string; space?: string; page?: number; limit?: number } = {}, { rejectWithValue }) => {
     try {
       const queryParams = new URLSearchParams();
 
       if (params.keyword) {
         queryParams.append("keyword", params.keyword);
+      }
+      if (params.space) {
+        queryParams.append("space", params.space);
       }
       if (params.page) {
         queryParams.append("page", params.page.toString());
@@ -192,6 +196,29 @@ const topicsSlice = createSlice({
 
       .addCase(deleteTopic.fulfilled, (state, action) => {
         state.topics = state.topics.filter((t) => t._id !== action.payload);
+      })
+
+      // Listen to post deletion to update topic post count
+      .addCase(deletePost.fulfilled, (state, action) => {
+        const { topicId } = action.payload;
+        if (topicId) {
+          const topic = state.topics.find((t) => t._id === topicId);
+          if (topic && topic.postsCount !== undefined && topic.postsCount > 0) {
+            topic.postsCount -= 1;
+          }
+        }
+      })
+
+      // Listen to post creation to update topic post count
+      .addCase(createPost.fulfilled, (state, action) => {
+        const newPost = action.payload;
+        if (newPost.topic) {
+          const topicId = typeof newPost.topic === 'string' ? newPost.topic : newPost.topic._id;
+          const topic = state.topics.find((t) => t._id === topicId);
+          if (topic && topic.postsCount !== undefined) {
+            topic.postsCount += 1;
+          }
+        }
       });
   },
 });

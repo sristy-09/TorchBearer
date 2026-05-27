@@ -53,12 +53,19 @@ export const getAllSpaces = async (req, res) => {
 
     const spaces = await api.query
       .populate("createdBy", "name role")
+      .populate("topics")
       .sort({ createdAt: -1 });
+
+    // Add topics count to each space
+    const spacesWithCount = spaces.map(space => ({
+      ...space.toObject(),
+      topicsCount: space.topics?.length || 0
+    }));
 
     res.status(200).json({
       success: true,
-      count: spaces.length,
-      data: spaces,
+      count: spacesWithCount.length,
+      data: spacesWithCount,
     });
   } catch (error) {
     res.status(500).json({

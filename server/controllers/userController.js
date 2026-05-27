@@ -175,7 +175,7 @@ export const getMe = async (req, res) => {
    PUT /api/auth/update-profile
    Requires: protect middleware
    Body: { name, department, batchYear, registrationNumber,
-           skills, interests, avatar }
+           skills, interests, avatar, socialLinks }
    ========================================= */
 export const updateProfile = async (req, res) => {
   try {
@@ -188,6 +188,7 @@ export const updateProfile = async (req, res) => {
       "skills",
       "interests",
       "avatar",
+      "socialLinks",
     ];
 
     const updates = {};
@@ -394,17 +395,18 @@ export const resetPassword = async (req, res) => {
    7. GET ALL USERS  (alumni-only or admin use)
    GET /api/auth/users
    Requires: protect middleware
-   Query params: ?role=alumni  ?department=CS  ?keyword=John
+   Query params: ?role=alumni  ?department=CS  ?keyword=John  ?batchYear=2024
    ========================================= */
 export const getAllUsers = async (req, res) => {
   try {
-    const { role, department, keyword } = req.query;
+    const { role, department, keyword, batchYear } = req.query;
 
     const filter = {};
 
     if (role) filter.role = role;
     if (department) filter.department = department;
     if (keyword) filter.name = { $regex: keyword, $options: "i" };
+    if (batchYear) filter.batchYear = Number(batchYear);
 
     const users = await User.find(filter).sort({ createdAt: -1 });
 
@@ -483,13 +485,14 @@ export const completeProfile = async (req, res) => {
       errors.push("Batch year must be between 2076 and 2084.");
     }
 
-    if (
-      !registrationNumber ||
-      isNaN(Number(registrationNumber)) ||
-      Number(registrationNumber) <= 0
-    ) {
-      errors.push("Please provide a valid registration number.");
-    }
+    const regPattern = /^\d-\d-\d{2}-\d{3}-\d{4}$/;
+
+if (!regPattern.test(registrationNumber)) {
+  return res.status(400).json({
+    message:
+      "Registration number should be like: 5-2-48-483-2018",
+  });
+}
 
     if (!department || typeof department !== "string" || !department.trim()) {
       errors.push("Department is required.");
@@ -524,7 +527,7 @@ export const completeProfile = async (req, res) => {
       {
         role,
         batchYear: Number(batchYear),
-        registrationNumber: Number(registrationNumber),
+        registrationNumber,
         department: department.trim(),
         skills: skills ?? [],
         interests: interests ?? [],

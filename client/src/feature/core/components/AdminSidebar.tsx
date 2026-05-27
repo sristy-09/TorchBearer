@@ -13,12 +13,16 @@ import {
   FolderPlus,
   Bell,
   ShieldCheck,
+  Sun,
+  Moon,
+  X,
 } from "lucide-react";
 import { useAppDispatch, useAppSelector } from "../../../store/hooks";
 import { logoutUser } from "../../../store/Slice/authSlice";
 import { useNavigate, useLocation } from "react-router";
 import { useState } from "react";
 import { Avatar } from "./ui/avatar";
+import { useTheme } from "../context/themeProvider";
 
 interface SubMenuItem {
   label: string;
@@ -33,14 +37,23 @@ interface MenuItem {
   subItems?: SubMenuItem[];
 }
 
-export default function AdminSidebar() {
+interface AdminSidebarProps {
+  isMobileOpen?: boolean;
+  onMobileClose?: () => void;
+}
+
+export default function AdminSidebar({ isMobileOpen: _isMobileOpen = false, onMobileClose }: AdminSidebarProps = {}) {
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
   const location = useLocation();
   const { user } = useAppSelector((state) => state.auth);
+  const { theme, setTheme } = useTheme();
 
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const [expandedMenus, setExpandedMenus] = useState<string[]>(["Dashboard", "Features", "Management"]);
+
+  // Use the prop directly instead of syncing to state
+  const isMobileOpen = _isMobileOpen;
 
   const menuItems: MenuItem[] = [
     {
@@ -64,9 +77,26 @@ export default function AdminSidebar() {
       label: "Management",
       icon: <Settings size={18} />,
       subItems: [
-        { label: "Create Space", path: "/admin/create-space", icon: <FolderPlus size={16} /> },
-        { label: "Admit Users", path: "/admin/admit-users", icon: <UserPlus size={16} /> },
-        { label: "Pending Requests", path: "/admin/pending-requests", icon: <Bell size={16} /> },
+        {
+          label: "Create Space",
+          path: "/admin/create-space",
+          icon: <FolderPlus size={18} />,
+        },
+        {
+          label: "Admit Users",
+          path: "/admin/admit-users",
+          icon: <UserPlus size={18} />,
+        },
+        {
+          label: "User Management",
+          path: "/admin/user-management",
+          icon: <Users size={18} />,
+        },
+        {
+          label: "Pending Requests",
+          path: "/admin/pending-requests",
+          icon: <Bell size={18} />,
+        },
       ],
     },
   ];
@@ -81,6 +111,12 @@ export default function AdminSidebar() {
     setIsUserMenuOpen(false);
   };
 
+  const closeMobileSidebar = () => {
+    if (onMobileClose) {
+      onMobileClose();
+    }
+  };
+
   const toggleMenu = (label: string) => {
     setExpandedMenus((prev) =>
       prev.includes(label) ? prev.filter((item) => item !== label) : [...prev, label]
@@ -90,124 +126,164 @@ export default function AdminSidebar() {
   const isActive = (path: string) => location.pathname === path;
 
   return (
-    <div className="w-64 flex flex-col h-screen shrink-0"
-      style={{ background: "var(--sidebar)", borderRight: "1px solid var(--sidebar-border)" }}>
+    <>
+      {/* Mobile Overlay */}
+      {isMobileOpen && (
+        <div
+          className="fixed inset-0 bg-black/50 z-40 lg:hidden"
+          onClick={closeMobileSidebar}
+        />
+      )}
 
-      {/* Logo */}
-      <div className="px-5 py-6" style={{ borderBottom: "1px solid var(--sidebar-border)" }}>
+      {/* Sidebar */}
+      <div className={`fixed w-64 flex flex-col h-screen shrink-0 z-50 transition-transform duration-300 ${isMobileOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
+        }`}
+        style={{ background: "var(--sidebar)", borderRight: "1px solid var(--sidebar-border)" }}>
+
+        {/* Close button for mobile */}
         <button
-          onClick={() => navigate("/admin/dashboard")}
-          className="flex items-center gap-2.5 hover:opacity-80 transition-opacity cursor-pointer"
+          onClick={closeMobileSidebar}
+          className="absolute top-4 right-4 p-2 rounded-lg lg:hidden hover:bg-sidebar-accent transition-colors z-10"
+          aria-label="Close sidebar"
         >
-          <div className="w-8 h-8 rounded-xl flex items-center justify-center shadow-sm"
-            style={{ background: "linear-gradient(135deg, #8B5CF6 0%, #A855F7 100%)" }}>
-            <ShieldCheck size={16} className="text-white" />
-          </div>
-          <div>
-            <span className="font-semibold text-foreground block text-sm tracking-tight">Admin Portal</span>
-            <span className="text-[11px] text-muted-foreground">TorchBearer</span>
-          </div>
+          <X size={20} className="text-muted-foreground" />
         </button>
-      </div>
 
-      {/* Navigation */}
-      <nav className="flex-1 px-3 py-4 overflow-y-auto space-y-1">
-        {menuItems.map((item) => (
-          <div key={item.label} className="mb-1">
-            <button
-              onClick={() => {
-                if (item.subItems) toggleMenu(item.label);
-                else if (item.path) navigate(item.path);
-              }}
-              className="w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-sm font-medium text-foreground/70 hover:text-foreground transition-all"
-              onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = "var(--sidebar-accent)"; }}
-              onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = "transparent"; }}
-            >
-              <div className="flex items-center gap-3">
-                {item.icon}
-                <span>{item.label}</span>
-              </div>
-              {item.subItems && (
-                expandedMenus.includes(item.label)
-                  ? <ChevronDown size={14} className="text-muted-foreground" />
-                  : <ChevronRight size={14} className="text-muted-foreground" />
-              )}
-            </button>
-
-            {item.subItems && expandedMenus.includes(item.label) && (
-              <div className="ml-3 mt-1 space-y-0.5 pl-3" style={{ borderLeft: "2px solid var(--border)" }}>
-                {item.subItems.map((subItem) => {
-                  const active = isActive(subItem.path);
-                  return (
-                    <button
-                      key={subItem.path}
-                      onClick={() => navigate(subItem.path)}
-                      className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-all ${
-                        active ? "text-white font-medium shadow-sm" : "text-foreground/60 hover:text-foreground"
-                      }`}
-                      style={active ? { background: "var(--primary)" } : { background: "transparent" }}
-                      onMouseEnter={(e) => {
-                        if (!active) (e.currentTarget as HTMLElement).style.background = "var(--sidebar-accent)";
-                      }}
-                      onMouseLeave={(e) => {
-                        if (!active) (e.currentTarget as HTMLElement).style.background = "transparent";
-                      }}
-                    >
-                      {subItem.icon}
-                      <span>{subItem.label}</span>
-                    </button>
-                  );
-                })}
-              </div>
-            )}
-          </div>
-        ))}
-      </nav>
-
-      {/* User Profile */}
-      <div style={{ borderTop: "1px solid var(--sidebar-border)" }}>
-        {isUserMenuOpen && (
-          <div className="px-3 py-3 space-y-1" style={{ borderBottom: "1px solid var(--sidebar-border)" }}>
-            <button
-              onClick={() => { navigate("/profile"); setIsUserMenuOpen(false); }}
-              className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-foreground/70 hover:text-foreground transition-all"
-              onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = "var(--sidebar-accent)"; }}
-              onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = "transparent"; }}
-            >
-              <User size={17} />
-              <span>Profile</span>
-            </button>
-            <button
-              onClick={handleLogout}
-              className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-red-500 hover:text-red-600 transition-all"
-              onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = "rgba(239,68,68,0.08)"; }}
-              onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = "transparent"; }}
-            >
-              <LogOut size={17} />
-              <span>Log out</span>
-            </button>
-          </div>
-        )}
-
-        {user && (
+        {/* Logo */}
+        <div className="px-5 py-6" style={{ borderBottom: "1px solid var(--sidebar-border)" }}>
           <button
-            onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
-            className="w-full px-4 py-3.5 flex items-center gap-3 transition-colors cursor-pointer"
+            onClick={() => navigate("/admin/dashboard")}
+            className="flex items-center gap-2.5 hover:opacity-80 transition-opacity cursor-pointer"
+          >
+            <div className="w-8 h-8 rounded-xl flex items-center justify-center shadow-sm"
+              style={{ background: "linear-gradient(135deg, #8B5CF6 0%, #A855F7 100%)" }}>
+              <ShieldCheck size={16} className="text-white" />
+            </div>
+            <div>
+              <span className="font-semibold text-foreground block text-sm tracking-tight">Admin Portal</span>
+              <span className="text-[11px] text-muted-foreground">TorchBearer</span>
+            </div>
+          </button>
+        </div>
+
+
+
+        {/* Navigation */}
+        <nav className="flex-1 px-3 py-4 overflow-y-auto space-y-1">
+          {menuItems.map((item) => (
+            <div key={item.label} className="mb-1">
+              <button
+                onClick={() => {
+                  if (item.subItems) toggleMenu(item.label);
+                  else if (item.path) navigate(item.path);
+                }}
+                className="w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-sm font-medium text-foreground/70 hover:text-foreground transition-all"
+                onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = "var(--sidebar-accent)"; }}
+                onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = "transparent"; }}
+              >
+                <div className="flex items-center gap-3">
+                  {item.icon}
+                  <span>{item.label}</span>
+                </div>
+                {item.subItems && (
+                  expandedMenus.includes(item.label)
+                    ? <ChevronDown size={14} className="text-muted-foreground" />
+                    : <ChevronRight size={14} className="text-muted-foreground" />
+                )}
+              </button>
+
+              {item.subItems && expandedMenus.includes(item.label) && (
+                <div className="ml-3 mt-1 space-y-0.5 pl-3" style={{ borderLeft: "2px solid var(--border)" }}>
+                  {item.subItems.map((subItem) => {
+                    const active = isActive(subItem.path);
+                    return (
+                      <button
+                        key={subItem.path}
+                        onClick={() => navigate(subItem.path)}
+                        className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-all ${active ? "text-white font-medium shadow-sm" : "text-foreground/60 hover:text-foreground"
+                          }`}
+                        style={active ? { background: "var(--primary)" } : { background: "transparent" }}
+                        onMouseEnter={(e) => {
+                          if (!active) (e.currentTarget as HTMLElement).style.background = "var(--sidebar-accent)";
+                        }}
+                        onMouseLeave={(e) => {
+                          if (!active) (e.currentTarget as HTMLElement).style.background = "transparent";
+                        }}
+                      >
+                        {subItem.icon}
+                        <span>{subItem.label}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          ))}
+
+          {/* Theme Toggle */}
+          <button
+            onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
+            className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-foreground/70 hover:text-foreground transition-all"
             onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = "var(--sidebar-accent)"; }}
             onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = "transparent"; }}
           >
-            <Avatar name={user.name} avatarUrl={user.avatar} size="md" />
-            <div className="flex-1 min-w-0 text-left">
-              <p className="text-sm font-medium text-foreground truncate">{user.name}</p>
-              <p className="text-xs font-medium capitalize" style={{ color: "var(--primary)" }}>{user.role}</p>
-            </div>
-            <ChevronRight
-              size={15}
-              className={`text-muted-foreground transition-transform ${isUserMenuOpen ? "rotate-90" : ""}`}
-            />
+            {theme === "dark" ? <Sun size={17} /> : <Moon size={17} />}
+            <span>{theme === "dark" ? "Light Mode" : "Dark Mode"}</span>
           </button>
-        )}
+        </nav>
+
+        {/* User Profile Section */}
+        <div className="border-t border-gray-200 flex-shrink-0">
+          {/* Collapsible Menu */}
+          {/* User Profile */}
+          <div style={{ borderTop: "1px solid var(--sidebar-border)" }}>
+            {isUserMenuOpen && (
+              <div className="px-3 py-3 space-y-1" style={{ borderBottom: "1px solid var(--sidebar-border)" }}>
+                <button
+                  onClick={() => { navigate("/profile"); setIsUserMenuOpen(false); }}
+                  className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-foreground/70 hover:text-foreground transition-all"
+                  onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = "var(--sidebar-accent)"; }}
+                  onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = "transparent"; }}
+                >
+                  <User size={17} />
+                  <span>Profile</span>
+                </button>
+
+
+
+                <button
+                  onClick={handleLogout}
+                  className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-red-500 hover:text-red-600 transition-all"
+                  onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = "rgba(239,68,68,0.08)"; }}
+                  onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = "transparent"; }}
+                >
+                  <LogOut size={17} />
+                  <span>Log out</span>
+                </button>
+              </div>
+            )}
+
+            {user && (
+              <button
+                onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
+                className="w-full px-4 py-3.5 flex items-center gap-3 transition-colors cursor-pointer"
+                onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = "var(--sidebar-accent)"; }}
+                onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = "transparent"; }}
+              >
+                <Avatar name={user.name} avatarUrl={user.avatar} size="md" />
+                <div className="flex-1 min-w-0 text-left">
+                  <p className="text-sm font-medium text-foreground truncate">{user.name}</p>
+                  <p className="text-xs font-medium capitalize" style={{ color: "var(--primary)" }}>{user.role}</p>
+                </div>
+                <ChevronRight
+                  size={15}
+                  className={`text-muted-foreground transition-transform ${isUserMenuOpen ? "rotate-90" : ""}`}
+                />
+              </button>
+            )}
+          </div>
+        </div>
       </div>
-    </div>
+    </>
   );
 }

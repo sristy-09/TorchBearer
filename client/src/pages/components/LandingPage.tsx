@@ -1,7 +1,16 @@
 import { ArrowRight, Moon, Sun, Flame } from "lucide-react";
 import { Button } from "@/feature/core/components/ui/button";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Link } from "react-router";
+import { useTheme } from "@/feature/core/context/themeProvider";
+
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/feature/core/components/ui/dropdown-menu";
+
 
 const NAV_LINKS = [
   { name: "About", href: "#about" },
@@ -10,23 +19,9 @@ const NAV_LINKS = [
 ];
 
 export default function LandingPage() {
-  const [dark, setDark] = useState(() => {
-    if (typeof window !== "undefined") {
-      return localStorage.getItem("theme") === "dark";
-    }
-    return false;
-  });
   const [openFAQ, setOpenFAQ] = useState<number | null>(null);
 
-  useEffect(() => {
-    if (dark) {
-      document.documentElement.classList.add("dark");
-      localStorage.setItem("theme", "dark");
-    } else {
-      document.documentElement.classList.remove("dark");
-      localStorage.setItem("theme", "light");
-    }
-  }, [dark]);
+  const { setTheme } = useTheme();
 
   return (
     <div className="min-h-screen flex flex-col" style={{ background: "var(--background)", color: "var(--foreground)" }}>
@@ -52,13 +47,26 @@ export default function LandingPage() {
         </nav>
 
         <div className="flex items-center gap-2">
-          <button
-            onClick={() => setDark(!dark)}
-            className="p-2 rounded-xl transition-colors cursor-pointer"
-            style={{ border: "1px solid var(--border)", background: "var(--card)" }}
-          >
-            {dark ? <Sun size={15} /> : <Moon size={15} />}
-          </button>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" size="icon">
+                <Sun className="h-[1.2rem] w-[1.2rem] scale-100 rotate-0 transition-all dark:scale-0 dark:-rotate-90" />
+                <Moon className="absolute h-[1.2rem] w-[1.2rem] scale-0 rotate-90 transition-all dark:scale-100 dark:rotate-0" />
+                <span className="sr-only">Toggle theme</span>
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem onClick={() => setTheme("light")}>
+                Light
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => setTheme("dark")}>
+                Dark
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => setTheme("system")}>
+                System
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
 
           <Link to="/login" className="cursor-pointer">
             <Button variant="ghost" size="sm" className="rounded-xl text-sm">Login</Button>
@@ -97,7 +105,8 @@ export default function LandingPage() {
 
         {/* Subheadline */}
         <p className="relative text-muted-foreground text-lg max-w-xl leading-relaxed">
-          A platform for meaningful connections between graduates and current students.
+          A platform for meaningful connections between graduates and current
+          students.
           <br />
           Network, find mentorship, and explore career opportunities.
         </p>
