@@ -20,6 +20,21 @@ const postSchema = new mongoose.Schema(
       type: String,
     },
 
+    // 📎 Attachments (files uploaded by user)
+    attachments: [
+      {
+        filename: String,
+        originalName: String,
+        path: String,
+        mimetype: String,
+        size: Number,
+        uploadedAt: {
+          type: Date,
+          default: Date.now,
+        },
+      },
+    ],
+
     // 🔗 Author (User reference)
     author: {
       type: mongoose.Schema.Types.ObjectId,

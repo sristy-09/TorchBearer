@@ -27,6 +27,12 @@ export interface User {
   registrationNumber?: number;
   skills?: string[];
   interests?: string[];
+  socialLinks?: {
+    facebook?: string;
+    instagram?: string;
+    linkedin?: string;
+    github?: string;
+  };
 }
 
 export interface AuthState {

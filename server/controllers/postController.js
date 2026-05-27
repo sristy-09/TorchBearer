@@ -5,6 +5,7 @@ import APIFunctionality from "../utils/apiFunctionality.js";
 /* =========================================
    1. CREATE Post  (must belong to a Topic → Space)
    Body: { title, content, description, image, userId, topicId }
+   Files: attachments (optional)
    ========================================= */
 export const createPost = async (req, res) => {
   try {
@@ -24,11 +25,26 @@ export const createPost = async (req, res) => {
         .json({ success: false, message: "Parent topic not found" });
     }
 
+    // Process uploaded files
+    const attachments = [];
+    if (req.files && req.files.length > 0) {
+      for (const file of req.files) {
+        attachments.push({
+          filename: file.filename,
+          originalName: file.originalname,
+          path: `/uploads/${file.filename}`,
+          mimetype: file.mimetype,
+          size: file.size,
+        });
+      }
+    }
+
     const newPost = await Post.create({
       title,
       content,
       description,
       image,
+      attachments,
       author: req.user._id,
       topic: topicId,
       space: topic.space, // denormalized from topic's parent space
@@ -40,7 +56,7 @@ export const createPost = async (req, res) => {
     });
 
     const populated = await newPost.populate([
-      { path: "author", select: "name role" },
+      { path: "author", select: "name role avatar" },
       { path: "topic", select: "title" },
       { path: "space", select: "title" },
     ]);
@@ -76,7 +92,7 @@ export const getPosts = async (req, res) => {
       .paginate();
 
     const posts = await api.query
-      .populate("author", "name role")
+      .populate("author", "name role avatar")
       .populate("topic", "title")
       .populate("space", "title")
       .sort({ createdAt: -1 });
@@ -101,7 +117,7 @@ export const getPosts = async (req, res) => {
 export const getPostById = async (req, res) => {
   try {
     const post = await Post.findById(req.params.id)
-      .populate("author", "name role")
+      .populate("author", "name role avatar")
       .populate("topic", "title")
       .populate("space", "title");
 
@@ -133,22 +149,75 @@ export const updatePost = async (req, res) => {
         .json({ success: false, message: "Post not found" });
     }
 
-    // Ownership check
-    if (post.author.toString() !== req.user._id.toString()) {
+    // Only author or admin can update
+    if (
+      post.author.toString() !== req.user._id.toString() &&
+      req.user.role !== "admin"
+    ) {
       return res
         .status(403)
         .json({ success: false, message: "Unauthorized to update this post" });
     }
 
     // Prevent overwriting relational fields via update
-    const { title, content, description, image } = req.body;
+    let { title, content, description, image, filesToRemove } = req.body;
+
+    // Parse filesToRemove if it's a JSON string (from FormData)
+    if (typeof filesToRemove === 'string') {
+      try {
+        filesToRemove = JSON.parse(filesToRemove);
+      } catch (err) {
+        console.error('Failed to parse filesToRemove:', err);
+        filesToRemove = [];
+      }
+    }
+
+    // Process new uploaded files
+    const newAttachments = [];
+    if (req.files && req.files.length > 0) {
+      for (const file of req.files) {
+        newAttachments.push({
+          filename: file.filename,
+          originalName: file.originalname,
+          path: `/uploads/${file.filename}`,
+          mimetype: file.mimetype,
+          size: file.size,
+        });
+      }
+    }
+
+    // Handle file removal
+    let existingAttachments = post.attachments || [];
+    if (filesToRemove && Array.isArray(filesToRemove) && filesToRemove.length > 0) {
+      // Filter out files marked for removal
+      existingAttachments = existingAttachments.filter(
+        (att) => !filesToRemove.includes(att.filename)
+      );
+
+      // Optional: Delete physical files from disk
+      const fs = await import('fs');
+      const path = await import('path');
+      for (const filename of filesToRemove) {
+        const filePath = path.join(process.cwd(), 'uploads', filename);
+        try {
+          if (fs.existsSync(filePath)) {
+            fs.unlinkSync(filePath);
+          }
+        } catch (err) {
+          console.error(`Failed to delete file ${filename}:`, err);
+        }
+      }
+    }
+
+    // Merge existing attachments (after removal) with new ones
+    const attachments = [...existingAttachments, ...newAttachments];
 
     const updatedPost = await Post.findByIdAndUpdate(
       req.params.id,
-      { title, content, description, image },
+      { title, content, description, image, attachments },
       { returnDocument: 'after', runValidators: true },
     )
-      .populate("author", "name role")
+      .populate("author", "name role avatar")
       .populate("topic", "title")
       .populate("space", "title");
 
@@ -171,7 +240,7 @@ export const updatePost = async (req, res) => {
    ========================================= */
 export const deletePost = async (req, res) => {
   try {
-    const post = await Post.findByIdAndDelete(req.params.id);
+    const post = await Post.findById(req.params.id);
 
     if (!post) {
       return res
@@ -179,14 +248,24 @@ export const deletePost = async (req, res) => {
         .json({ success: false, message: "Post not found" });
     }
 
-    // Ownership check
-    if (post.author.toString() !== req.user._id.toString()) {
+    // Only author or admin can delete
+    if (
+      post.author.toString() !== req.user._id.toString() &&
+      req.user.role !== "admin"
+    ) {
       return res.status(403).json({
         success: false,
         message: "Not authorized. You can only delete your own posts.",
       });
     }
 
+    // Import Comment model for cascade delete
+    const { Comment } = await import("../models/Comment.js");
+
+    // Delete all comments on this post
+    await Comment.deleteMany({ post: post._id });
+
+    // Delete the post
     await post.deleteOne();
 
     // Remove post reference from its parent Topic
@@ -198,6 +277,7 @@ export const deletePost = async (req, res) => {
       .status(200)
       .json({ success: true, message: "Post deleted successfully" });
   } catch (error) {
+    console.error("Error deleting post:", error);
     res.status(500).json({
       success: false,
       message: "Error deleting post",
@@ -222,26 +302,34 @@ export const likePost = async (req, res) => {
     }
 
     const userId = req.user._id.toString();
-    const alreadyLiked = post.likes.some((id) => id.toString() === userId);
+
+    const alreadyLiked = post.likes.some(
+      (id) => id.toString() === userId
+    );
 
     if (alreadyLiked) {
-      post.likes = post.likes.filter((id) => id.toString() !== userId);
+      post.likes = post.likes.filter(
+        (id) => id.toString() !== userId
+      );
     } else {
       post.likes.push(req.user._id);
     }
 
     await post.save();
 
+    const updatedPost = await Post.findById(post._id)
+      .populate("author", "name avatar role")
+      .populate("topic", "title")
+      .populate("space", "title");
+
     res.status(200).json({
       success: true,
-      liked: !alreadyLiked,
-      likesCount: post.likes.length,
+      data: updatedPost,
     });
   } catch (error) {
     res.status(500).json({
       success: false,
-      message: "Error updating like",
-      error: error.message,
+      message: error.message,
     });
   }
 };

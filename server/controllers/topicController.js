@@ -137,7 +137,11 @@ export const updateTopic = async (req, res) => {
       });
     }
 
-    if (topic.createdBy.toString() !== req.user._id.toString()) {
+    // Only creator or admin can update
+    if (
+      topic.createdBy.toString() !== req.user._id.toString() &&
+      req.user.role !== "admin"
+    ) {
       return res.status(403).json({
         success: false,
         message: "Unauthorized to update this topic",
@@ -182,13 +186,34 @@ export const deleteTopic = async (req, res) => {
       });
     }
 
-    if (topic.createdBy.toString() !== req.user._id.toString()) {
+    // Only creator or admin can delete
+    if (
+      topic.createdBy.toString() !== req.user._id.toString() &&
+      req.user.role !== "admin"
+    ) {
       return res.status(403).json({
         success: false,
         message: "Unauthorized to delete this topic",
       });
     }
 
+    // Import models for cascade delete
+    const { Post } = await import("../models/Post.js");
+    const { Comment } = await import("../models/Comment.js");
+
+    // Find all posts in this topic
+    const posts = await Post.find({ topic: topic._id });
+    const postIds = posts.map(p => p._id);
+
+    if (postIds.length > 0) {
+      // Delete all comments on these posts
+      await Comment.deleteMany({ post: { $in: postIds } });
+
+      // Delete all posts in this topic
+      await Post.deleteMany({ topic: topic._id });
+    }
+
+    // Delete the topic
     await topic.deleteOne();
 
     // Remove topic reference from its parent Space
@@ -201,6 +226,7 @@ export const deleteTopic = async (req, res) => {
       message: "Topic deleted successfully",
     });
   } catch (error) {
+    console.error("Error deleting topic:", error);
     return res.status(500).json({
       success: false,
       message: "Error deleting topic",

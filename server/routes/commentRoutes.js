@@ -3,6 +3,8 @@ import {
   addComment,
   getComments,
   deleteComment,
+  editComment,
+  replyToComment,
 } from "../controllers/commentControllers.js";
 import { protect } from "../middleware/authMiddleware.js";
 
@@ -14,5 +16,7 @@ router.use(protect);
 router.post("/create/:postId", addComment);
 router.get("/:postId", getComments);
 router.delete("/:id", deleteComment);
+router.put("/edit/:id", editComment);
+router.post("/reply/:commentId", replyToComment);
 
 export default router;

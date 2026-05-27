@@ -1,10 +1,17 @@
 import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
+import { createServer } from "http";
+import path from "path";
+import { fileURLToPath } from "url";
 dotenv.config();
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 import { connectDB } from "./config/db.js";
 import passport from "./config/passport.js";
+import { initializeSocket } from "./config/socket.js";
 
 // Routes
 import topicRoutes from "./routes/Topic.js";
@@ -12,8 +19,12 @@ import spaceRoutes from "./routes/Space.js";
 import postRoutes from "./routes/Post.js";
 import commentRoutes from "./routes/commentRoutes.js";
 import userRoutes from "./routes/User.js";
+import notificationRoutes from "./routes/Notification.js";
+import recommendationRoutes from "./routes/recommendations.js";
+import adminRoutes from "./routes/Admin.js";
 
 const app = express();
+const server = createServer(app);
 
 // Middleware
 app.use(cors({
@@ -23,10 +34,16 @@ app.use(cors({
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
+// Serve uploaded files statically
+app.use("/uploads", express.static(path.join(__dirname, "uploads")));
+
 // No session needed — we use JWT
 app.use(passport.initialize());
 
 connectDB();
+
+// Initialize Socket.io
+initializeSocket(server);
 
 const PORT = process.env.PORT || 3000;
 
@@ -36,6 +53,10 @@ app.use("/api/topics", topicRoutes); // Topic routes
 app.use("/api/posts", postRoutes);
 app.use("/api/comments", commentRoutes);
 app.use("/api/auth", userRoutes);
+app.use("/api/notifications", notificationRoutes); // Notification routes
+app.use("/api/recommendations", recommendationRoutes); // AI recommendations
+app.use("/api/admin", adminRoutes); // Admin routes
+
 
 // Default route
 app.get("/", (req, res) => {
@@ -47,6 +68,7 @@ app.use((err, req, res, next) => {
   res.status(500).send("Something broke!");
 });
 
-app.listen(PORT, () => {
+server.listen(PORT, () => {
   console.log(`Server is running on http://localhost:${PORT}`);
+  console.log(`Socket.io is ready for real-time notifications`);
 });

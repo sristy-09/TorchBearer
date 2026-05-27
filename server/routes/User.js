@@ -3,12 +3,15 @@ import jwt from "jsonwebtoken";
 import {
   register,
   login,
+  logout,
   getMe,
   updateProfile,
   changePassword,
   getAllUsers,
   getUserById,
   completeProfile,
+  forgotPassword,
+  resetPassword,
 } from "../controllers/userController.js";
 import { protect, restrictTo } from "../middleware/authMiddleware.js";
 import passport from "../config/passport.js";
@@ -20,9 +23,12 @@ router.post("/register", register);
 router.post("/login", login);
 
 /* ── Protected routes (valid JWT required) ─────────────────── */
+router.post("/logout", protect, logout);
 router.get("/me", protect, getMe);
 router.put("/update-profile", protect, updateProfile);
 router.put("/change-password", protect, changePassword);
+router.post("/forgot-password", forgotPassword);
+router.post("/reset-password/:token", resetPassword)
 router.put("/complete-profile", protect, completeProfile); // for Google users to finish profile
 
 /* ── User directory (any logged-in user can browse) ────────── */

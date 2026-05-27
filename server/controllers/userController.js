@@ -1,6 +1,9 @@
 import jwt from "jsonwebtoken";
 import { User } from "../models/User.js";
-
+import { TokenBlacklist } from "../models/TokenBlacklist.js";
+import crypto from "crypto"
+import bcrypt from "bcryptjs";
+import { sendEmail } from "../utils/sendEmail.js";
 /* ─── Helper: sign a JWT and send it back ───────────────────── */
 const signToken = (id) =>
   jwt.sign({ id }, process.env.JWT_SECRET, {
@@ -12,6 +15,14 @@ const sendTokenResponse = (user, statusCode, res) => {
 
   // Strip password from response even though select:false handles most cases
   user.password = undefined;
+
+  // Set secure cookie options for production
+  const cookieOptions = {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: "strict",
+    maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+  };
 
   res.status(statusCode).json({
     success: true,
@@ -98,7 +109,47 @@ export const login = async (req, res) => {
 };
 
 /* =========================================
-   3. GET ME  (current logged-in user)
+   3. LOGOUT
+   POST /api/auth/logout
+   Requires: protect middleware
+   ========================================= */
+export const logout = async (req, res) => {
+  try {
+    // Get token from request (set by protect middleware)
+    const token = req.headers.authorization?.split(" ")[1];
+
+    if (!token) {
+      return res.status(400).json({
+        success: false,
+        message: "No token provided.",
+      });
+    }
+
+    // Decode token to get expiration time
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const expiresAt = new Date(decoded.exp * 1000);
+
+    // Add token to blacklist
+    await TokenBlacklist.create({
+      token,
+      userId: req.user._id,
+      expiresAt,
+    });
+
+    res.status(200).json({
+      success: true,
+      message: "Logged out successfully.",
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
+/* =========================================
+   4. GET ME  (current logged-in user)
    GET /api/auth/me
    Requires: protect middleware
    ========================================= */
@@ -120,11 +171,11 @@ export const getMe = async (req, res) => {
 };
 
 /* =========================================
-   4. UPDATE PROFILE
+   5. UPDATE PROFILE
    PUT /api/auth/update-profile
    Requires: protect middleware
    Body: { name, department, batchYear, registrationNumber,
-           skills, interests, avatar }
+           skills, interests, avatar, socialLinks }
    ========================================= */
 export const updateProfile = async (req, res) => {
   try {
@@ -137,6 +188,7 @@ export const updateProfile = async (req, res) => {
       "skills",
       "interests",
       "avatar",
+      "socialLinks",
     ];
 
     const updates = {};
@@ -172,7 +224,7 @@ export const updateProfile = async (req, res) => {
 };
 
 /* =========================================
-   5. CHANGE PASSWORD
+   6. CHANGE PASSWORD
    PUT /api/auth/change-password
    Requires: protect middleware
    Body: { currentPassword, newPassword }
@@ -219,21 +271,142 @@ export const changePassword = async (req, res) => {
   }
 };
 
+export const forgotPassword = async (req, res) => {
+  const { email } = req.body;
+
+  if (!email) {
+    return res.status(400).json({
+      success: false,
+      message: "Email is required.",
+    });
+  }
+
+  const user = await User.findOne({ email });
+
+  // Always respond with 200 to avoid leaking whether an email exists
+  if (!user) {
+    return res.status(200).json({
+      success: true,
+      message: "If that email is registered, a reset link has been sent.",
+    });
+  }
+
+  const resetToken = crypto.randomBytes(32).toString("hex");
+
+  const hashedToken = crypto
+    .createHash("sha256")
+    .update(resetToken)
+    .digest("hex");
+
+  user.resetPasswordToken = hashedToken;
+  user.resetPasswordExpire = Date.now() + 15 * 60 * 1000; // 15 minutes
+
+  await user.save({ validateBeforeSave: false });
+
+  const resetUrl = `${process.env.CLIENT_URL}/reset-password/${resetToken}`;
+
+  const message = `
+    <h2>Password Reset Request</h2>
+    <p>You requested a password reset for your TorchBearer account.</p>
+    <p>Click the link below to reset your password. This link expires in <strong>15 minutes</strong>.</p>
+    <a href="${resetUrl}" style="display:inline-block;padding:10px 20px;background:#4f46e5;color:#fff;text-decoration:none;border-radius:6px;">Reset Password</a>
+    <p>If you did not request this, you can safely ignore this email.</p>
+  `;
+
+  try {
+    await sendEmail({
+      email: user.email,
+      subject: "TorchBearer — Password Reset",
+      message,
+    });
+
+    res.status(200).json({
+      success: true,
+      message: "If that email is registered, a reset link has been sent.",
+    });
+  } catch (emailError) {
+    // Roll back the token so the user can try again
+    user.resetPasswordToken = undefined;
+    user.resetPasswordExpire = undefined;
+    await user.save({ validateBeforeSave: false });
+
+    console.error("sendEmail failed:", emailError);
+    res.status(500).json({
+      success: false,
+      message: "Failed to send reset email. Please try again later.",
+    });
+  }
+};
+
+export const resetPassword = async (req, res) => {
+  try {
+    const { password } = req.body;
+
+    if (!password) {
+      return res.status(400).json({
+        success: false,
+        message: "Password is required.",
+      });
+    }
+
+    if (password.length < 6) {
+      return res.status(400).json({
+        success: false,
+        message: "Password must be at least 6 characters.",
+      });
+    }
+
+    const hashedToken = crypto
+      .createHash("sha256")
+      .update(req.params.token)
+      .digest("hex");
+
+    const user = await User.findOne({
+      resetPasswordToken: hashedToken,
+      resetPasswordExpire: { $gt: Date.now() },
+    });
+
+    if (!user) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid or expired reset link. Please request a new one.",
+      });
+    }
+
+    user.password = password; // pre-save hook will hash it
+    user.resetPasswordToken = undefined;
+    user.resetPasswordExpire = undefined;
+
+    await user.save();
+
+    res.status(200).json({
+      success: true,
+      message: "Password reset successful. You can now log in.",
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
 /* =========================================
-   6. GET ALL USERS  (alumni-only or admin use)
+   7. GET ALL USERS  (alumni-only or admin use)
    GET /api/auth/users
    Requires: protect middleware
-   Query params: ?role=alumni  ?department=CS  ?keyword=John
+   Query params: ?role=alumni  ?department=CS  ?keyword=John  ?batchYear=2024
    ========================================= */
 export const getAllUsers = async (req, res) => {
   try {
-    const { role, department, keyword } = req.query;
+    const { role, department, keyword, batchYear } = req.query;
 
     const filter = {};
 
     if (role) filter.role = role;
     if (department) filter.department = department;
     if (keyword) filter.name = { $regex: keyword, $options: "i" };
+    if (batchYear) filter.batchYear = Number(batchYear);
 
     const users = await User.find(filter).sort({ createdAt: -1 });
 
@@ -251,7 +424,7 @@ export const getAllUsers = async (req, res) => {
 };
 
 /* =========================================
-   7. GET SINGLE USER by ID
+   8. GET SINGLE USER by ID
    GET /api/auth/users/:id
    Requires: protect middleware
    ========================================= */
@@ -279,7 +452,7 @@ export const getUserById = async (req, res) => {
 };
 
 /* =========================================
-   8. COMPLETE PROFILE
+   9. COMPLETE PROFILE
    PUT /api/auth/complete-profile
    Requires: protect middleware
    Body: { role, batchYear, registrationNumber,
@@ -306,19 +479,20 @@ export const completeProfile = async (req, res) => {
     if (
       !batchYear ||
       isNaN(Number(batchYear)) ||
-      Number(batchYear) < 1900 ||
-      Number(batchYear) > new Date().getFullYear() + 5
+      Number(batchYear) < 2076 ||
+      Number(batchYear) > 2084
     ) {
-      errors.push("Please provide a valid batch year.");
+      errors.push("Batch year must be between 2076 and 2084.");
     }
 
-    if (
-      !registrationNumber ||
-      isNaN(Number(registrationNumber)) ||
-      Number(registrationNumber) <= 0
-    ) {
-      errors.push("Please provide a valid registration number.");
-    }
+    const regPattern = /^\d-\d-\d{2}-\d{3}-\d{4}$/;
+
+if (!regPattern.test(registrationNumber)) {
+  return res.status(400).json({
+    message:
+      "Registration number should be like: 5-2-48-483-2018",
+  });
+}
 
     if (!department || typeof department !== "string" || !department.trim()) {
       errors.push("Department is required.");
@@ -353,7 +527,7 @@ export const completeProfile = async (req, res) => {
       {
         role,
         batchYear: Number(batchYear),
-        registrationNumber: Number(registrationNumber),
+        registrationNumber,
         department: department.trim(),
         skills: skills ?? [],
         interests: interests ?? [],

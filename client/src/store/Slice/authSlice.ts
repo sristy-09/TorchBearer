@@ -9,10 +9,36 @@ import type {
 
 const API_URL = import.meta.env.VITE_API_URL;
 
-const token = localStorage.getItem("token");
-if (token) {
-  axios.defaults.headers.common["Authorization"] = `Bearer ${token}`;
-}
+// Create a dedicated axios instance for authenticated requests
+// This prevents global state pollution across users
+export const apiClient = axios.create({
+  baseURL: API_URL,
+});
+
+// Add request interceptor to attach token from localStorage on each request
+apiClient.interceptors.request.use(
+  (config) => {
+    const token = localStorage.getItem("token");
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+    return config;
+  },
+  (error) => Promise.reject(error)
+);
+
+// Add response interceptor to handle 401 errors (invalid/expired tokens)
+apiClient.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.response?.status === 401) {
+      // Token is invalid or expired - clear it
+      localStorage.removeItem("token");
+      window.location.href = "/login";
+    }
+    return Promise.reject(error);
+  }
+);
 
 // ── Async thunks ─────────────────────────────────────────────
 
@@ -20,7 +46,28 @@ export const loginUser = createAsyncThunk(
   "auth/login",
   async (data: LoginFormType, { rejectWithValue }) => {
     try {
-      const res = await axios.post(`${API_URL}/api/auth/login`, data);
+      const res = await apiClient.post("/api/auth/login", data);
+      return res.data; // { success, token, data: { user } }
+    } catch (err: unknown) {
+      if (axios.isAxiosError(err)) {
+        return rejectWithValue(err.response?.data?.message || "Login failed");
+      }
+      return rejectWithValue("Login failed");
+    }
+  },
+);
+
+export const loginAdmin = createAsyncThunk(
+  "auth/loginAdmin",
+  async (data: LoginFormType, { rejectWithValue }) => {
+    try {
+      const res = await apiClient.post("/api/auth/login", data);
+
+      // Verify the user is an admin
+      if (res.data.data.user.role !== "admin") {
+        return rejectWithValue("Access denied. Admin credentials required.");
+      }
+
       return res.data; // { success, token, data: { user } }
     } catch (err: unknown) {
       if (axios.isAxiosError(err)) {
@@ -35,7 +82,7 @@ export const registerUser = createAsyncThunk(
   "auth/register",
   async (data: SignUpFormType, { rejectWithValue }) => {
     try {
-      const res = await axios.post(`${API_URL}/api/auth/register`, data);
+      const res = await apiClient.post("/api/auth/register", data);
       return res.data;
     } catch (err: unknown) {
       if (axios.isAxiosError(err)) {
@@ -52,7 +99,7 @@ export const fetchCurrentUser = createAsyncThunk(
   "auth/fetchMe",
   async (_, { rejectWithValue }) => {
     try {
-      const res = await axios.get(`${API_URL}/api/auth/me`);
+      const res = await apiClient.get("/api/auth/me");
       return res.data; // { success, data: { user } }
     } catch (err: unknown) {
       if (axios.isAxiosError(err)) {
@@ -71,7 +118,7 @@ export const completeUserProfile = createAsyncThunk(
     data: {
       role: string;
       batchYear?: number;
-      registrationNumber?: number;
+      registrationNumber?: string;
       department?: string;
       skills?: string[];
       interests?: string[];
@@ -79,7 +126,7 @@ export const completeUserProfile = createAsyncThunk(
     { rejectWithValue },
   ) => {
     try {
-      const res = await axios.put(`${API_URL}/api/auth/complete-profile`, data);
+      const res = await apiClient.put("/api/auth/complete-profile", data);
       return res.data; // { success, data: { user } }
     } catch (err: unknown) {
       if (axios.isAxiosError(err)) {
@@ -92,6 +139,23 @@ export const completeUserProfile = createAsyncThunk(
   },
 );
 
+export const logoutUser = createAsyncThunk(
+  "auth/logout",
+  async (_, { rejectWithValue }) => {
+    try {
+      const res = await apiClient.post("/api/auth/logout");
+      return res.data; // { success, message }
+    } catch (err: unknown) {
+      if (axios.isAxiosError(err)) {
+        return rejectWithValue(
+          err.response?.data?.message || "Logout failed",
+        );
+      }
+      return rejectWithValue("Logout failed");
+    }
+  },
+);
+
 // ── Slice ─────────────────────────────────────────────────────
 
 // helper — check if user has completed profile
@@ -100,9 +164,9 @@ const isProfileComplete = (user: User | null) => !!user?.role;
 const initialState: AuthState = {
   user: null,
   token: localStorage.getItem("token"),
-  isAuthenticated: !!localStorage.getItem("token"),
+  isAuthenticated: false, // Don't trust token until verified
   isProfileComplete: false,
-  loading: false,
+  loading: !!localStorage.getItem("token"), // Start loading if token exists
   error: null,
 };
 
@@ -116,7 +180,7 @@ const authSlice = createSlice({
       state.token = token;
       state.isAuthenticated = true;
       localStorage.setItem("token", token);
-      axios.defaults.headers.common["Authorization"] = `Bearer ${token}`;
+      // No need to set axios headers - interceptor handles it
     },
     setUser(state, action) {
       state.user = action.payload as User;
@@ -125,9 +189,10 @@ const authSlice = createSlice({
       state.user = null;
       state.token = null;
       state.isAuthenticated = false;
+      state.isProfileComplete = false;
       state.error = null;
       localStorage.removeItem("token");
-      delete axios.defaults.headers.common["Authorization"];
+      // No need to delete axios headers - interceptor handles it
     },
     clearError(state) {
       state.error = null;
@@ -147,10 +212,28 @@ const authSlice = createSlice({
         state.isProfileComplete = isProfileComplete(action.payload.data.user);
         state.isAuthenticated = true;
         localStorage.setItem("token", action.payload.token);
-        axios.defaults.headers.common["Authorization"] =
-          `Bearer ${action.payload.token}`;
+        // No need to set axios headers - interceptor handles it
       })
       .addCase(loginUser.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload as string;
+      });
+
+    // admin login
+    builder
+      .addCase(loginAdmin.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(loginAdmin.fulfilled, (state, action) => {
+        state.loading = false;
+        state.token = action.payload.token;
+        state.user = action.payload.data.user;
+        state.isProfileComplete = isProfileComplete(action.payload.data.user);
+        state.isAuthenticated = true;
+        localStorage.setItem("token", action.payload.token);
+      })
+      .addCase(loginAdmin.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload as string;
       });
@@ -168,8 +251,7 @@ const authSlice = createSlice({
         state.isProfileComplete = isProfileComplete(action.payload.data.user);
         state.isAuthenticated = true;
         localStorage.setItem("token", action.payload.token);
-        axios.defaults.headers.common["Authorization"] =
-          `Bearer ${action.payload.token}`;
+        // No need to set axios headers - interceptor handles it
       })
       .addCase(registerUser.rejected, (state, action) => {
         state.loading = false;
@@ -208,6 +290,31 @@ const authSlice = createSlice({
       .addCase(completeUserProfile.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload as string;
+      });
+
+    // logout
+    builder
+      .addCase(logoutUser.pending, (state) => {
+        state.loading = true;
+      })
+      .addCase(logoutUser.fulfilled, (state) => {
+        state.loading = false;
+        state.user = null;
+        state.token = null;
+        state.isAuthenticated = false;
+        state.isProfileComplete = false;
+        state.error = null;
+        localStorage.removeItem("token");
+      })
+      .addCase(logoutUser.rejected, (state) => {
+        // Even if API call fails, clear local state
+        state.loading = false;
+        state.user = null;
+        state.token = null;
+        state.isAuthenticated = false;
+        state.isProfileComplete = false;
+        state.error = null;
+        localStorage.removeItem("token");
       });
   },
 });
