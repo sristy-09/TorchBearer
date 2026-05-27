@@ -196,10 +196,21 @@ export const updatePost = createAsyncThunk(
 
 export const deletePost = createAsyncThunk(
   "posts/deletePost",
-  async (id: string, { rejectWithValue }) => {
+  async ({ id, topicId }: { id: string; topicId?: string }, { rejectWithValue, getState }) => {
     try {
       await apiClient.delete(`/api/posts/${id}`);
-      return id;
+
+      // If topicId not provided, try to get it from the current state
+      let finalTopicId = topicId;
+      if (!finalTopicId) {
+        const state = getState() as any;
+        const post = state.posts.posts.find((p: any) => p._id === id);
+        if (post && post.topic) {
+          finalTopicId = typeof post.topic === 'string' ? post.topic : post.topic._id;
+        }
+      }
+
+      return { postId: id, topicId: finalTopicId };
     } catch (err: any) {
       return rejectWithValue(
         err.response?.data?.message || "Failed to delete post"
@@ -297,7 +308,7 @@ const postsSlice = createSlice({
       })
 
       .addCase(deletePost.fulfilled, (state, action) => {
-        state.posts = state.posts.filter((p) => p._id !== action.payload);
+        state.posts = state.posts.filter((p) => p._id !== action.payload.postId);
       });
   },
 });

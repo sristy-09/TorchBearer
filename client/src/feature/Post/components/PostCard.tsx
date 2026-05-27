@@ -211,6 +211,7 @@ export default function PostCard({ post }: Props) {
 
   // Image/Video slider state
   const [currentSlide, setCurrentSlide] = useState(0);
+  const [imageErrors, setImageErrors] = useState<Set<number>>(new Set());
 
   useEffect(() => {
     const fetchComments = async () => {
@@ -258,7 +259,8 @@ export default function PostCard({ post }: Props) {
   const handleDeleteConfirm = async () => {
     setIsDeleting(true);
     try {
-      await dispatch(deletePost(post._id)).unwrap();
+      const topicId = typeof post.topic === 'string' ? post.topic : post.topic?._id;
+      await dispatch(deletePost({ id: post._id, topicId })).unwrap();
       setDeleteDialogOpen(false);
     } catch (error) {
       console.error("Failed to delete post:", error);
@@ -360,6 +362,13 @@ export default function PostCard({ post }: Props) {
 
   const getBackendUrl = () => {
     return import.meta.env.VITE_API_URL || "http://localhost:3000";
+  };
+
+  const getFullUrl = (path: string) => {
+    const baseUrl = getBackendUrl();
+    // Ensure path starts with /
+    const normalizedPath = path.startsWith('/') ? path : `/${path}`;
+    return `${baseUrl}${normalizedPath}`;
   };
 
   // Filter media attachments (images and videos) for slider
@@ -509,7 +518,7 @@ export default function PostCard({ post }: Props) {
             {/* Main Media Display */}
             <div className="relative w-full h-full">
               {mediaAttachments.map((attachment, index) => {
-                const fullUrl = `${getBackendUrl()}${attachment.path}`;
+                const fullUrl = getFullUrl(attachment.path);
                 const isImage = attachment.mimetype.startsWith("image/");
                 const isVideo = attachment.mimetype.startsWith("video/");
 
@@ -520,11 +529,30 @@ export default function PostCard({ post }: Props) {
                       }`}
                   >
                     {isImage && (
-                      <img
-                        src={fullUrl}
-                        alt={attachment.originalName}
-                        className="w-full h-full object-contain"
-                      />
+                      <>
+                        {!imageErrors.has(index) ? (
+                          <img
+                            src={fullUrl}
+                            alt={attachment.originalName}
+                            className="w-full h-full object-contain"
+                            onError={() => {
+                              console.error('Failed to load image:', fullUrl);
+                              console.error('Attachment path:', attachment.path);
+                              setImageErrors(prev => new Set(prev).add(index));
+                            }}
+                            onLoad={() => {
+                              console.log('Image loaded successfully:', fullUrl);
+                            }}
+                          />
+                        ) : (
+                          <div className="w-full h-full flex flex-col items-center justify-center text-white">
+                            <ImageIcon size={64} className="mb-4 opacity-50" />
+                            <p className="text-lg font-medium">Failed to load image</p>
+                            <p className="text-sm opacity-70 mt-2">{attachment.originalName}</p>
+                            <p className="text-xs opacity-50 mt-1 font-mono">{fullUrl}</p>
+                          </div>
+                        )}
+                      </>
                     )}
 
                     {isVideo && (
@@ -601,7 +629,7 @@ export default function PostCard({ post }: Props) {
         {documentAttachments.length > 0 && (
           <div className="mb-4 space-y-2">
             {documentAttachments.map((attachment, index) => {
-              const fullUrl = `${getBackendUrl()}${attachment.path}`;
+              const fullUrl = getFullUrl(attachment.path);
               return (
                 <div
                   key={index}
