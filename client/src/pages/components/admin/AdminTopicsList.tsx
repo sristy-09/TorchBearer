@@ -196,7 +196,10 @@ function AdminTopicsList() {
           {/* Hamburger Menu for Mobile */}
           <button
             onClick={() => setIsMobileSidebarOpen(true)}
-            className="lg:hidden mb-4 p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+            className="lg:hidden mb-4 p-2 rounded-lg transition-colors"
+            style={{ background: "transparent" }}
+            onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = "var(--hover-bg)"; }}
+            onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = "transparent"; }}
             aria-label="Open menu"
           >
             <Menu size={24} className="text-foreground" />
