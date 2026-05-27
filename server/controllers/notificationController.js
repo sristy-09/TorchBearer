@@ -403,6 +403,90 @@ export const markAllNotificationsAsRead = async (req, res) => {
 };
 
 /* =========================================
+   GET USER'S PENDING SPACE REQUESTS
+   Returns list of spaceIds where user has a pending request
+   ========================================= */
+export const getMyPendingSpaceRequests = async (req, res) => {
+  try {
+    const userId = req.user._id;
+
+    const pendingRequests = await Notification.find({
+      type: "space_join_request",
+      from: userId,
+      status: "pending",
+    }).select("space");
+
+    const spaceIds = pendingRequests.map((n) => n.space.toString());
+
+    res.status(200).json({
+      success: true,
+      data: { spaceIds },
+    });
+  } catch (error) {
+    console.error("Error in getMyPendingSpaceRequests:", error);
+    res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
+/* =========================================
+   CANCEL JOIN REQUEST (User who sent it)
+   ========================================= */
+export const cancelJoinRequest = async (req, res) => {
+  try {
+    const { spaceId } = req.params;
+    const userId = req.user._id;
+
+    // Find the pending request sent by this user for this space
+    const existing = await Notification.findOne({
+      type: "space_join_request",
+      from: userId,
+      space: spaceId,
+      status: "pending",
+    });
+
+    if (!existing) {
+      return res.status(404).json({
+        success: false,
+        message: "No pending request found for this space",
+      });
+    }
+
+    // Cancel ALL notification copies (one per admin)
+    await Notification.updateMany(
+      {
+        type: "space_join_request",
+        from: userId,
+        space: spaceId,
+        status: "pending",
+      },
+      { $set: { status: "cancelled", isRead: true } }
+    );
+
+    // Notify admins in real-time so their dashboard updates
+    emitToAdmins("notification:request_processed", {
+      spaceId: spaceId.toString(),
+      fromUserId: userId.toString(),
+      status: "cancelled",
+      message: `${req.user.name} cancelled their join request`,
+    });
+
+    res.status(200).json({
+      success: true,
+      message: "Join request cancelled successfully",
+    });
+  } catch (error) {
+    console.error("Error in cancelJoinRequest:", error);
+    res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
+/* =========================================
    GET PENDING JOIN REQUESTS (Admin Only)
    ========================================= */
 export const getPendingJoinRequests = async (req, res) => {

@@ -6,6 +6,7 @@ import type { NotificationData } from "../../feature/Notifications/api/notificat
 interface NotificationState {
   notifications: NotificationData[];
   pendingRequests: NotificationData[];
+  pendingSpaceIds: string[]; // spaceIds where current user has a pending join request
   unreadCount: number;
   loading: boolean;
   error: string | null;
@@ -20,6 +21,7 @@ interface NotificationState {
 const initialState: NotificationState = {
   notifications: [],
   pendingRequests: [],
+  pendingSpaceIds: [],
   unreadCount: 0,
   loading: false,
   error: null,
@@ -53,10 +55,38 @@ export const requestJoinSpace = createAsyncThunk(
   async (spaceId: string, { rejectWithValue }) => {
     try {
       const response = await notificationApi.requestToJoinSpace(spaceId);
-      return response;
+      return { spaceId, response };
     } catch (error: any) {
       return rejectWithValue(
         error.response?.data?.message || "Failed to send join request"
+      );
+    }
+  }
+);
+
+export const cancelJoinSpace = createAsyncThunk(
+  "notifications/cancelJoinSpace",
+  async (spaceId: string, { rejectWithValue }) => {
+    try {
+      await notificationApi.cancelJoinRequest(spaceId);
+      return spaceId;
+    } catch (error: any) {
+      return rejectWithValue(
+        error.response?.data?.message || "Failed to cancel join request"
+      );
+    }
+  }
+);
+
+export const fetchMyPendingSpaceRequests = createAsyncThunk(
+  "notifications/fetchMyPendingSpaceRequests",
+  async (_, { rejectWithValue }) => {
+    try {
+      const response = await notificationApi.getMyPendingSpaceRequests();
+      return response.data.spaceIds;
+    } catch (error: any) {
+      return rejectWithValue(
+        error.response?.data?.message || "Failed to fetch pending space requests"
       );
     }
   }
@@ -158,6 +188,7 @@ const notificationSlice = createSlice({
     clearNotifications: (state) => {
       state.notifications = [];
       state.pendingRequests = [];
+      state.pendingSpaceIds = [];
       state.unreadCount = 0;
     },
   },
@@ -193,11 +224,29 @@ const notificationSlice = createSlice({
     });
 
     // Request join space
-    builder.addCase(requestJoinSpace.fulfilled, (state) => {
+    builder.addCase(requestJoinSpace.fulfilled, (state, action) => {
       state.error = null;
+      // Track this space as having a pending request
+      if (!state.pendingSpaceIds.includes(action.payload.spaceId)) {
+        state.pendingSpaceIds.push(action.payload.spaceId);
+      }
     });
     builder.addCase(requestJoinSpace.rejected, (state, action) => {
       state.error = action.payload as string;
+    });
+
+    // Cancel join space
+    builder.addCase(cancelJoinSpace.fulfilled, (state, action) => {
+      state.pendingSpaceIds = state.pendingSpaceIds.filter((id) => id !== action.payload);
+      state.error = null;
+    });
+    builder.addCase(cancelJoinSpace.rejected, (state, action) => {
+      state.error = action.payload as string;
+    });
+
+    // Fetch my pending space requests (for persistence across reloads)
+    builder.addCase(fetchMyPendingSpaceRequests.fulfilled, (state, action) => {
+      state.pendingSpaceIds = action.payload;
     });
 
     // Approve request

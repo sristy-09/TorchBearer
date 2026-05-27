@@ -27,19 +27,17 @@ export default function TopicsGrid() {
 
   if (sortedTopics.length === 0) {
     return (
-      <div className="text-center py-12">
-        <p className="text-gray-500 text-lg">
+      <div className="text-center py-14 text-muted-foreground">
+        <p className="text-base">
           {searchQuery ? "No topics found matching your search." : "No topics yet in this space."}
         </p>
-        <p className="text-gray-400 text-sm mt-2">
-          {!searchQuery && "Be the first to create one!"}
-        </p>
+        {!searchQuery && <p className="text-sm mt-1 opacity-70">Be the first to create one!</p>}
       </div>
     );
   }
 
   return (
-    <div className="grid md:grid-cols-3 gap-6">
+    <div className="grid md:grid-cols-3 gap-5">
       {sortedTopics.map((topic) => (
         <ErrorBoundary key={topic._id} level="component">
           <TopicCard topic={topic} />

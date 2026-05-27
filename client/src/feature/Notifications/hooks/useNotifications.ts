@@ -7,6 +7,7 @@ import {
   updateNotificationStatus,
   fetchNotifications,
   fetchPendingRequests,
+  fetchMyPendingSpaceRequests,
 } from "../../../store/Slice/notificationSlice";
 import type { NotificationData } from "../api/notificationApi";
 
@@ -25,14 +26,18 @@ export const useNotifications = () => {
     // Fetch initial notifications
     dispatch(fetchNotifications());
 
-    // If admin, fetch pending requests
     if (user.role === "admin") {
+      // Admin: fetch pending join requests for the dashboard
       dispatch(fetchPendingRequests());
+    } else {
+      // Regular user: fetch which spaces they have pending requests for
+      // This ensures the "Request Sent / Cancel" state persists across reloads
+      dispatch(fetchMyPendingSpaceRequests());
     }
 
     // Listen for new notifications
     const handleNewNotification = (data: { notification: NotificationData }) => {
-      console.log("📬 New notification received:", data);
+      console.log("New notification received:", data);
       dispatch(addNotification(data.notification));
 
       // If it's a join request and user is admin, add to pending requests
@@ -80,18 +85,24 @@ export const useNotifications = () => {
       }
     };
 
-    // Listen for request processed (admin only)
+    // Listen for request processed (admin only) — covers approve, reject, and cancel
     const handleRequestProcessed = (data: {
-      notificationId: string;
+      notificationId?: string;
       status: string;
     }) => {
       console.log("🔄 Request processed:", data);
-      dispatch(
-        updateNotificationStatus({
-          notificationId: data.notificationId,
-          status: data.status,
-        })
-      );
+      if (data.notificationId) {
+        dispatch(
+          updateNotificationStatus({
+            notificationId: data.notificationId,
+            status: data.status,
+          })
+        );
+      }
+      // If admin, re-fetch pending requests to reflect cancellations
+      if (user.role === "admin" && data.status === "cancelled") {
+        dispatch(fetchPendingRequests());
+      }
     };
 
     // Register event listeners

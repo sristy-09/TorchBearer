@@ -61,9 +61,7 @@ function AdminPostsList() {
   const [isDeleting, setIsDeleting] = useState(false);
 
   useEffect(() => {
-    if (!isAuthenticated || user?.role !== "admin") {
-      navigate("/admin/login");
-    }
+    if (!isAuthenticated || user?.role !== "admin") navigate("/admin/login");
   }, [isAuthenticated, user, navigate]);
 
   // Fetch spaces and topics for filter dropdowns
@@ -119,7 +117,6 @@ function AdminPostsList() {
 
   const handleDeleteConfirm = async () => {
     if (!postToDelete) return;
-
     setIsDeleting(true);
     try {
       await dispatch(deletePost(postToDelete)).unwrap();
@@ -147,34 +144,30 @@ function AdminPostsList() {
     });
   };
 
-  if (!isAuthenticated || user?.role !== "admin") {
-    return null;
-  }
+  if (!isAuthenticated || user?.role !== "admin") return null;
 
   return (
-    <div className="flex min-h-screen bg-neutral-50">
+    <div className="flex min-h-screen" style={{ background: "var(--background)" }}>
       <AdminSidebar />
       <div className="flex-1 ml-64 p-8">
         <div className="max-w-7xl mx-auto">
-          {/* Header */}
           <div className="mb-8">
-            <h1 className="text-3xl font-bold text-gray-900">Posts List</h1>
-            <p className="text-gray-600 mt-2">
-              View and manage all posts across all topics
-            </p>
+            <h1 className="text-2xl font-bold text-foreground tracking-tight">Posts List</h1>
+            <p className="text-muted-foreground mt-1 text-sm">View and manage all posts across all topics</p>
           </div>
 
           {/* Search and Filter Bar */}
           <div className="mb-6 flex gap-4">
             {/* Search Input */}
             <div className="flex-1 relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4 />
               <input
                 type="text"
                 placeholder="Search posts by title..."
                 value={searchQuery}
-                onChange={handleSearch}
-                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full pl-10 pr-4 py-2.5 rounded-xl text-sm outline-none"
+                style={{ background: "var(--card)", border: "1px solid var(--border)", color: "var(--foreground)" }}
               />
             </div>
 
@@ -223,15 +216,15 @@ function AdminPostsList() {
             </div>
           </div>
 
-          {/* Posts Table */}
-          <div className="bg-white rounded-lg shadow overflow-hidden">
+          <div className="rounded-2xl border overflow-hidden"
+            style={{ background: "var(--card)", borderColor: "var(--border)" }}>
             {loading ? (
-              <div className="flex items-center justify-center py-12">
-                <Loader2 className="animate-spin text-blue-600" size={32} />
+              <div className="flex items-center justify-center py-14">
+                <Loader2 className="animate-spin w-7 h-7" style={{ color: "var(--primary)" }} />
               </div>
             ) : posts.length === 0 ? (
               <div className="text-center py-12">
-                <p className="text-gray-500">
+                <p className="text-muted-foreground text-sm">
                   {searchQuery || selectedSpace !== "all" || selectedTopic !== "all"
                     ? "No posts found matching your filters."
                     : "No posts available yet."}
@@ -240,105 +233,76 @@ function AdminPostsList() {
             ) : (
               <div className="overflow-x-auto">
                 <table className="w-full">
-                  <thead className="bg-gray-50 border-b border-gray-200">
+                  <thead style={{ background: "var(--background)", borderBottom: "1px solid var(--border)" }}>
                     <tr>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Post
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Topic
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Space
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Author
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Likes
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Created
-                      </th>
-                      <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Actions
-                      </th>
+                      {["Post", "Topic", "Space", "Author", "Likes", "Created", "Actions"].map((h, i) => (
+                        <th key={h} className={`px-6 py-3.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground ${i === 6 ? "text-right" : "text-left"}`}>
+                          {h}
+                        </th>
+                      ))}
                     </tr>
                   </thead>
-                  <tbody className="bg-white divide-y divide-gray-200">
+                  <tbody>
                     {posts.map((post) => (
                       <tr
                         key={post._id}
                         onClick={() => handleRowClick(post)}
-                        className="hover:bg-gray-50 transition-colors cursor-pointer"
+                        className="transition-colors"
+                        style={{ borderBottom: "1px solid var(--border)" }}
+                        onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = "var(--background)"; }}
+                        onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = "transparent"; }}
                       >
                         <td className="px-6 py-4">
-                          <div>
-                            <div className="text-sm font-medium text-gray-900 line-clamp-1">
-                              {post.title}
-                            </div>
-                            {post.description && (
-                              <div className="text-sm text-gray-500 line-clamp-1">
-                                {post.description}
-                              </div>
-                            )}
-                          </div>
+                          <div className="text-sm font-medium text-foreground line-clamp-1">{post.title}</div>
                         </td>
                         <td className="px-6 py-4">
                           {post.topic ? (
-                            <div className="flex items-center gap-2 text-sm text-gray-900">
-                              <BookOpen size={16} className="text-gray-400" />
+                            <div className="flex items-center gap-1.5 text-sm text-foreground">
+                              <BookOpen size={13} className="text-muted-foreground" />
                               <span className="line-clamp-1">{post.topic.title}</span>
                             </div>
                           ) : (
-                            <div className="text-sm text-gray-400 italic">
-                              Topic deleted
-                            </div>
+                            <span className="text-xs text-muted-foreground italic">Topic deleted</span>
                           )}
                         </td>
                         <td className="px-6 py-4">
                           {post.space ? (
-                            <div className="flex items-center gap-2 text-sm text-gray-900">
-                              <Layers size={16} className="text-gray-400" />
+                            <div className="flex items-center gap-1.5 text-sm text-foreground">
+                              <Layers size={13} className="text-muted-foreground" />
                               <span className="line-clamp-1">{post.space.title}</span>
                             </div>
                           ) : (
-                            <div className="text-sm text-gray-400 italic">
-                              Space deleted
-                            </div>
+                            <span className="text-xs text-muted-foreground italic">Space deleted</span>
                           )}
                         </td>
                         <td className="px-6 py-4">
-                          <div className="flex items-center gap-2">
-                            <User size={16} className="text-gray-400" />
+                          <div className="flex items-center gap-1.5">
+                            <User size={13} className="text-muted-foreground" />
                             <div>
-                              <div className="text-sm text-gray-900">
-                                {post.author?.name || "Unknown"}
-                              </div>
-                              <div className="text-xs text-gray-500 capitalize">
-                                {post.author?.role || "N/A"}
-                              </div>
+                              <div className="text-sm text-foreground">{post.author?.name || "Unknown"}</div>
+                              <div className="text-xs text-muted-foreground capitalize">{post.author?.role || "N/A"}</div>
                             </div>
                           </div>
                         </td>
                         <td className="px-6 py-4">
-                          <div className="flex items-center gap-1 text-sm text-gray-600">
-                            <Heart size={16} className="text-red-400" />
+                          <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
+                            <Heart size={13} className="text-red-400" />
                             <span>{post.likes?.length || 0}</span>
                           </div>
                         </td>
                         <td className="px-6 py-4">
-                          <div className="flex items-center gap-1 text-sm text-gray-600">
-                            <Calendar size={16} />
+                          <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
+                            <Calendar size={13} />
                             <span>{formatDate(post.createdAt)}</span>
                           </div>
                         </td>
                         <td className="px-6 py-4 text-right">
                           <button
                             onClick={(e) => handleDeleteClick(post._id, e)}
-                            className="inline-flex items-center gap-1 px-3 py-1 text-sm text-red-600 hover:bg-red-50 rounded-md transition-colors"
+                            className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+                            style={{ background: "rgba(239,68,68,0.08)" }}
                           >
-                            <Trash2 size={16} />
+                            <Trash2 size={13} />
                             Delete
                           </button>
                         </td>
@@ -350,9 +314,8 @@ function AdminPostsList() {
             )}
           </div>
 
-          {/* Stats */}
           {!loading && posts.length > 0 && (
-            <div className="mt-4 text-sm text-gray-600">
+            <p className="mt-3 text-xs text-muted-foreground">
               Showing {posts.length} post{posts.length !== 1 ? "s" : ""}
               {(selectedSpace !== "all" || selectedTopic !== "all") && (
                 <span className="ml-2">
@@ -370,31 +333,19 @@ function AdminPostsList() {
         </div>
       </div>
 
-      {/* Delete Confirmation Dialog */}
       <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Delete Post</AlertDialogTitle>
             <AlertDialogDescription>
-              Are you sure you want to delete this post? This action cannot be undone.
-              All comments on this post will also be deleted.
+              Are you sure you want to delete this post? This action cannot be undone. All comments on this post will also be deleted.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel disabled={isDeleting}>Cancel</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={handleDeleteConfirm}
-              disabled={isDeleting}
-              className="bg-red-600 hover:bg-red-700"
-            >
-              {isDeleting ? (
-                <>
-                  <Loader2 className="animate-spin mr-2" size={16} />
-                  Deleting...
-                </>
-              ) : (
-                "Delete"
-              )}
+            <AlertDialogAction onClick={handleDeleteConfirm} disabled={isDeleting}
+              className="bg-red-600 hover:bg-red-700">
+              {isDeleting ? <><Loader2 className="animate-spin mr-2" size={14} />Deleting...</> : "Delete"}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

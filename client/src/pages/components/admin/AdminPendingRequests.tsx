@@ -2,10 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router";
 import { useAppSelector, useAppDispatch } from "../../../store/hooks";
 import { useNotifications } from "../../../feature/Notifications/hooks/useNotifications";
-import {
-  approveRequest,
-  rejectRequest,
-} from "../../../store/Slice/notificationSlice";
+import { approveRequest, rejectRequest } from "../../../store/Slice/notificationSlice";
 import AdminSidebar from "../../../feature/core/components/AdminSidebar";
 import { CheckCircle, XCircle, Clock, User, Mail, Calendar, Hash } from "lucide-react";
 import { Button } from "../../../feature/core/components/ui/button";
@@ -31,14 +28,10 @@ function AdminPendingRequests() {
   const [processing, setProcessing] = useState(false);
 
   useEffect(() => {
-    if (!isAuthenticated || user?.role !== "admin") {
-      navigate("/admin/login");
-    }
+    if (!isAuthenticated || user?.role !== "admin") navigate("/admin/login");
   }, [isAuthenticated, user, navigate]);
 
-  if (!isAuthenticated || user?.role !== "admin") {
-    return null;
-  }
+  if (!isAuthenticated || user?.role !== "admin") return null;
 
   const handleApprove = async (notificationId: string) => {
     setProcessing(true);
@@ -56,9 +49,7 @@ function AdminPendingRequests() {
   const handleReject = async (notificationId: string) => {
     setProcessing(true);
     try {
-      await dispatch(
-        rejectRequest({ notificationId, reason: "Request rejected by admin" })
-      ).unwrap();
+      await dispatch(rejectRequest({ notificationId, reason: "Request rejected by admin" })).unwrap();
       setSelectedRequest(null);
       setActionType(null);
     } catch (error) {
@@ -68,74 +59,60 @@ function AdminPendingRequests() {
     }
   };
 
-  const openConfirmDialog = (notificationId: string, type: "approve" | "reject") => {
-    setSelectedRequest(notificationId);
-    setActionType(type);
-  };
-
   return (
-    <div className="flex min-h-screen bg-neutral-50">
+    <div className="flex min-h-screen" style={{ background: "var(--background)" }}>
       <AdminSidebar />
       <div className="flex-1 ml-64 p-8">
         <div className="max-w-7xl mx-auto">
           {/* Header */}
           <div className="mb-8">
-            <h1 className="text-3xl font-bold text-gray-900">
-              Pending Join Requests
-            </h1>
-            <p className="text-gray-600 mt-2">
+            <h1 className="text-2xl font-bold text-foreground tracking-tight">Pending Join Requests</h1>
+            <p className="text-muted-foreground mt-1 text-sm">
               Review and approve space join requests from students and alumni
             </p>
           </div>
 
           {/* Stats */}
-          <div className="bg-white rounded-lg shadow p-6 mb-6">
-            <div className="flex items-center gap-4">
-              <Clock className="w-8 h-8 text-yellow-500" />
-              <div>
-                <p className="text-2xl font-bold text-gray-900">
-                  {pendingRequests.length}
-                </p>
-                <p className="text-sm text-gray-600">Pending Requests</p>
-              </div>
+          <div className="rounded-2xl p-5 border mb-6 flex items-center gap-4"
+            style={{ background: "var(--card)", borderColor: "var(--border)" }}>
+            <div className="w-11 h-11 rounded-xl flex items-center justify-center"
+              style={{ background: "rgba(245,158,11,0.12)" }}>
+              <Clock className="w-5 h-5 text-amber-500" />
+            </div>
+            <div>
+              <p className="text-2xl font-bold text-foreground">{pendingRequests.length}</p>
+              <p className="text-xs text-muted-foreground">Pending Requests</p>
             </div>
           </div>
 
-          {/* Requests List */}
+          {/* Requests */}
           {loading ? (
-            <div className="text-center py-12">
-              <p className="text-gray-500">Loading requests...</p>
-            </div>
+            <div className="text-center py-12 text-muted-foreground text-sm">Loading requests...</div>
           ) : pendingRequests.length === 0 ? (
-            <div className="bg-white rounded-lg shadow p-12 text-center">
-              <CheckCircle className="w-16 h-16 text-green-500 mx-auto mb-4" />
-              <h3 className="text-xl font-semibold text-gray-900 mb-2">
-                All caught up!
-              </h3>
-              <p className="text-gray-600">
-                No pending join requests at the moment
-              </p>
+            <div className="rounded-2xl p-12 text-center border"
+              style={{ background: "var(--card)", borderColor: "var(--border)" }}>
+              <div className="w-14 h-14 rounded-2xl flex items-center justify-center mx-auto mb-4"
+                style={{ background: "rgba(16,185,129,0.1)" }}>
+                <CheckCircle className="w-7 h-7 text-emerald-500" />
+              </div>
+              <h3 className="text-base font-semibold text-foreground mb-1">All caught up!</h3>
+              <p className="text-sm text-muted-foreground">No pending join requests at the moment</p>
             </div>
           ) : (
             <div className="space-y-4">
               {pendingRequests.map((request) => (
-                <div
-                  key={request._id}
-                  className="bg-white rounded-lg shadow hover:shadow-md transition-shadow p-6"
-                >
+                <div key={request._id} className="rounded-2xl border p-6 transition-all"
+                  style={{ background: "var(--card)", borderColor: "var(--border)" }}>
                   <div className="flex items-start justify-between">
-                    {/* User Info */}
                     <div className="flex items-start gap-4 flex-1">
                       {/* Avatar */}
-                      <div className="flex-shrink-0">
+                      <div className="shrink-0">
                         {request.from.avatar ? (
-                          <img
-                            src={request.from.avatar}
-                            alt={request.from.name}
-                            className="w-16 h-16 rounded-full"
-                          />
+                          <img src={request.from.avatar} alt={request.from.name}
+                            className="w-14 h-14 rounded-2xl object-cover" />
                         ) : (
-                          <div className="w-16 h-16 rounded-full bg-blue-500 flex items-center justify-center text-white text-2xl font-semibold">
+                          <div className="w-14 h-14 rounded-2xl flex items-center justify-center text-white text-xl font-bold"
+                            style={{ background: "linear-gradient(135deg, var(--primary) 0%, #A855F7 100%)" }}>
                             {request.from.name.charAt(0).toUpperCase()}
                           </div>
                         )}
@@ -143,22 +120,16 @@ function AdminPendingRequests() {
 
                       {/* Details */}
                       <div className="flex-1">
-                        <h3 className="text-lg font-semibold text-gray-900">
-                          {request.from.name}
-                        </h3>
-
+                        <h3 className="text-base font-semibold text-foreground">{request.from.name}</h3>
                         <div className="mt-2 space-y-1">
-                          <div className="flex items-center gap-2 text-sm text-gray-600">
-                            <Mail className="w-4 h-4" />
+                          <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                            <Mail className="w-3.5 h-3.5" />
                             <span>{request.from.email}</span>
                           </div>
-
-                          <div className="flex items-center gap-2 text-sm text-gray-600">
-                            <User className="w-4 h-4" />
+                          <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                            <User className="w-3.5 h-3.5" />
                             <span className="capitalize">{request.from.role}</span>
-                            {request.from.department && (
-                              <span>• {request.from.department}</span>
-                            )}
+                            {request.from.department && <span>· {request.from.department}</span>}
                           </div>
 
                           {request.from.registrationNumber && (
@@ -169,27 +140,24 @@ function AdminPendingRequests() {
                           )}
 
                           {request.from.batchYear && (
-                            <div className="flex items-center gap-2 text-sm text-gray-600">
-                              <Calendar className="w-4 h-4" />
+                            <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                              <Calendar className="w-3.5 h-3.5" />
                               <span>Batch {request.from.batchYear}</span>
                             </div>
                           )}
                         </div>
 
-                        {/* Space Info */}
-                        <div className="mt-4 p-3 bg-gray-50 rounded-lg">
-                          <p className="text-sm text-gray-600">
-                            Requested to join
-                          </p>
-                          <p className="font-semibold text-gray-900">
+                        {/* Space info */}
+                        <div className="mt-3 px-3 py-2 rounded-xl inline-block"
+                          style={{ background: "var(--secondary)" }}>
+                          <p className="text-xs text-muted-foreground">Requested to join</p>
+                          <p className="text-sm font-semibold" style={{ color: "var(--primary)" }}>
                             {request.space.title}
                           </p>
                         </div>
 
-                        {/* Timestamp */}
-                        <p className="text-xs text-gray-500 mt-3">
-                          Requested{" "}
-                          {new Date(request.createdAt).toLocaleString()}
+                        <p className="text-xs text-muted-foreground mt-3">
+                          Requested {new Date(request.createdAt).toLocaleString()}
                         </p>
                       </div>
                     </div>
@@ -197,21 +165,21 @@ function AdminPendingRequests() {
                     {/* Actions */}
                     <div className="flex gap-2 ml-4">
                       <Button
-                        onClick={() => openConfirmDialog(request._id, "approve")}
-                        className="bg-green-600 hover:bg-green-700 text-white"
+                        onClick={() => { setSelectedRequest(request._id); setActionType("approve"); }}
+                        className="rounded-xl text-white font-medium text-sm"
+                        style={{ background: "rgba(16,185,129,0.9)" }}
                         disabled={processing}
                       >
-                        <CheckCircle className="w-4 h-4 mr-2" />
+                        <CheckCircle className="w-4 h-4 mr-1.5" />
                         Approve
                       </Button>
-
                       <Button
-                        onClick={() => openConfirmDialog(request._id, "reject")}
+                        onClick={() => { setSelectedRequest(request._id); setActionType("reject"); }}
                         variant="outline"
-                        className="border-red-600 text-red-600 hover:bg-red-50"
+                        className="rounded-xl font-medium text-sm text-red-500 border-red-200 hover:bg-red-50"
                         disabled={processing}
                       >
-                        <XCircle className="w-4 h-4 mr-2" />
+                        <XCircle className="w-4 h-4 mr-1.5" />
                         Reject
                       </Button>
                     </div>
@@ -223,14 +191,7 @@ function AdminPendingRequests() {
         </div>
       </div>
 
-      {/* Confirmation Dialog */}
-      <AlertDialog
-        open={selectedRequest !== null}
-        onOpenChange={() => {
-          setSelectedRequest(null);
-          setActionType(null);
-        }}
-      >
+      <AlertDialog open={selectedRequest !== null} onOpenChange={() => { setSelectedRequest(null); setActionType(null); }}>
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>
@@ -247,19 +208,12 @@ function AdminPendingRequests() {
             <AlertDialogAction
               onClick={() => {
                 if (selectedRequest) {
-                  if (actionType === "approve") {
-                    handleApprove(selectedRequest);
-                  } else {
-                    handleReject(selectedRequest);
-                  }
+                  if (actionType === "approve") handleApprove(selectedRequest);
+                  else handleReject(selectedRequest);
                 }
               }}
               disabled={processing}
-              className={
-                actionType === "approve"
-                  ? "bg-green-600 hover:bg-green-700"
-                  : "bg-red-600 hover:bg-red-700"
-              }
+              className={actionType === "approve" ? "bg-emerald-600 hover:bg-emerald-700" : "bg-red-600 hover:bg-red-700"}
             >
               {processing ? "Processing..." : "Confirm"}
             </AlertDialogAction>

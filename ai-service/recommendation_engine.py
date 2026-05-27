@@ -2,9 +2,14 @@
 Recommendation Engine
 Uses TF-IDF vectorization and cosine similarity
 to match user skills/interests against space content.
+
+Performance: spaces and the TF-IDF matrix are cached in memory
+and only rebuilt when the space count changes or the cache is
+older than CACHE_TTL_SECONDS (default 60 s).
 """
 
-from typing import List, Tuple, Dict, Any
+import time
+from typing import List, Tuple, Dict, Any, Set, Optional
 
 import numpy as np
 from pymongo import MongoClient
@@ -13,12 +18,11 @@ from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
 
 
+CACHE_TTL_SECONDS = 60
+
+
 class RecommendationEngine:
     def __init__(self, mongo_uri: str, db_name: str = "torchbearer"):
-        """
-        Initialize MongoDB connection.
-        """
-
         if not mongo_uri:
             raise ValueError("MONGO_URI environment variable is not set.")
 
@@ -26,28 +30,68 @@ class RecommendationEngine:
         self.db = self.client[db_name]
         self.spaces_collection = self.db["spaces"]
 
-        # Verify MongoDB connection
+        # ── Cache ─────────────────────────────
+        self._cached_spaces: List[Dict[str, Any]] = []
+        self._cached_vectorizer: Optional[TfidfVectorizer] = None
+        self._cached_space_vectors = None
+        self._cache_timestamp: float = 0.0
+        self._cache_space_count: int = 0
+
         try:
             self.client.admin.command("ping")
             print("✅ MongoDB connected successfully")
-
         except ConnectionFailure as exc:
-            raise ConnectionError(
-                f"❌ Cannot connect to MongoDB: {exc}"
-            ) from exc
+            raise ConnectionError(f"❌ Cannot connect to MongoDB: {exc}") from exc
+
+        self._refresh_cache()
+
+    # ── Cache Management ─────────────────────────────
+
+    def _is_cache_stale(self) -> bool:
+        age = time.time() - self._cache_timestamp
+        if age > CACHE_TTL_SECONDS:
+            return True
+
+        current_count = self.spaces_collection.count_documents({})
+        if current_count != self._cache_space_count:
+            return True
+
+        return False
+
+    def _refresh_cache(self) -> None:
+        spaces = self._fetch_spaces()
+        corpus = [self._build_searchable_text(s) for s in spaces]
+
+        vectorizer = TfidfVectorizer(
+            stop_words="english",
+            ngram_range=(1, 2),
+            min_df=1,
+            sublinear_tf=True,
+        )
+
+        space_vectors = vectorizer.fit_transform(corpus) if corpus else None
+
+        self._cached_spaces = spaces
+        self._cached_vectorizer = vectorizer
+        self._cached_space_vectors = space_vectors
+        self._cache_timestamp = time.time()
+        self._cache_space_count = len(spaces)
+
+        print(f"🔄 Cache refreshed — {len(spaces)} spaces indexed")
+
+    def _get_cache(self):
+        if self._is_cache_stale():
+            self._refresh_cache()
+
+        return (
+            self._cached_spaces,
+            self._cached_vectorizer,
+            self._cached_space_vectors,
+        )
+
+    # ── MongoDB Fetch ─────────────────────────────
 
     def _fetch_spaces(self) -> List[Dict[str, Any]]:
-        """
-        Fetch all spaces from MongoDB.
-
-        Expected fields:
-        - _id
-        - title
-        - description
-        - tags
-        - createdBy
-        """
-
         pipeline = [
             {
                 "$lookup": {
@@ -63,200 +107,103 @@ class RecommendationEngine:
                     "title": 1,
                     "name": 1,
                     "description": 1,
-                    # Use $ifNull so spaces without tags field return []
                     "tags": {"$ifNull": ["$tags", []]},
-                    "creator": {
-                        "$arrayElemAt": ["$creator.name", 0]
-                    },
+                    "creator": {"$arrayElemAt": ["$creator.name", 0]},
                 }
             },
         ]
-
         return list(self.spaces_collection.aggregate(pipeline))
 
-    def _build_searchable_text(
-        self,
-        space: Dict[str, Any]
-    ) -> str:
-        """
-        Build searchable text from:
-        - title
-        - description
-        - tags
-        """
+    # ── Text Processing ─────────────────────────────
 
+    def _build_searchable_text(self, space: Dict[str, Any]) -> str:
         parts = []
 
-        # Title
-        title = (
-            space.get("title")
-            or space.get("name")
-            or ""
-        )
-
+        title = space.get("title") or space.get("name") or ""
         if title:
-            normalized_title = title.lower()
+            parts.extend([title.lower()] * 5)
 
-            # Weight title heavily
-            parts.extend([normalized_title] * 5)
-
-        # Description
         description = space.get("description", "")
-
         if description:
             parts.append(description.lower())
 
-        # Tags
         tags = space.get("tags", [])
+        if tags:
+            normalized_tags = []
+            for tag in tags:
+                tag_lower = tag.lower()
+                normalized_tags.append(tag_lower)
+                normalized_tags.append(tag_lower.replace(" ", ""))
+                normalized_tags.append(tag_lower.replace("/", " "))
 
-        normalized_tags = []
-
-        for tag in tags:
-            tag_lower = tag.lower()
-
-            normalized_tags.append(tag_lower)
-            normalized_tags.append(
-                tag_lower.replace(" ", "")
-            )
-            normalized_tags.append(
-                tag_lower.replace("/", " ")
-            )
-
-        if normalized_tags:
-            tag_text = " ".join(normalized_tags)
-
-            # Weight tags heavily
-            parts.extend([tag_text] * 8)
+            parts.extend([" ".join(normalized_tags)] * 8)
 
         return " ".join(parts)
+
+    # ── Public API ─────────────────────────────
 
     def recommend(
         self,
         query_terms: List[str],
         top_n: int = 5,
     ) -> Tuple[List[Dict[str, Any]], int]:
-        """
-        Recommendation workflow:
 
-        1. Fetch spaces
-        2. Build searchable corpus
-        3. Vectorize with TF-IDF
-        4. Compute cosine similarity
-        5. Return top matches
-        """
+        spaces, vectorizer, space_vectors = self._get_cache()
 
-        spaces = self._fetch_spaces()
-
-        if not spaces:
+        if not spaces or space_vectors is None:
             return [], 0
 
-        # Build corpus
-        corpus = [
-            self._build_searchable_text(space)
-            for space in spaces
-        ]
+        # Build query text (NO fuzzy logic anymore)
+        query_text = " ".join(term.lower() for term in query_terms)
 
-        # Process query terms
-        processed_terms = []
+        query_vector = vectorizer.transform([query_text])
 
-        for term in query_terms:
-            term_lower = term.lower()
-
-            processed_terms.append(term_lower)
-            processed_terms.append(
-                term_lower.replace(" ", "")
-            )
-            processed_terms.append(
-                term_lower.replace("/", " ")
-            )
-
-        query_text = " ".join(processed_terms)
-
-        # Add query to corpus
-        all_documents = corpus + [query_text]
-
-        # TF-IDF Vectorizer
-        vectorizer = TfidfVectorizer(
-            stop_words="english",
-            ngram_range=(1, 2),
-            min_df=1,
-            sublinear_tf=True,
-        )
-
-        # Transform documents
-        tfidf_matrix = vectorizer.fit_transform(
-            all_documents
-        )
-
-        # Separate vectors
-        space_vectors = tfidf_matrix[:-1]
-        query_vector = tfidf_matrix[-1]
-
-        # Similarity calculation
         similarity_scores = cosine_similarity(
             query_vector,
             space_vectors
         ).flatten()
 
-        # Normalize query terms for exact-match boosting
-        query_terms_lower = {t.lower() for t in query_terms}
-
-        # Hybrid scoring: TF-IDF cosine + exact keyword bonus
-        boosted_scores = []
-
-        for idx, space in enumerate(spaces):
-            tfidf_score = float(similarity_scores[idx])
-
-            # Exact tag match bonus
-            space_tags = {t.lower() for t in (space.get("tags") or [])}
-            space_title = (
-                space.get("title") or space.get("name") or ""
-            ).lower()
-
-            matched_tags = query_terms_lower & space_tags
-            title_match = any(t in space_title for t in query_terms_lower)
-
-            # Each matched tag adds 0.15, title match adds 0.1
-            tag_bonus = len(matched_tags) * 0.15
-            title_bonus = 0.1 if title_match else 0.0
-
-            # Combine: weight TF-IDF at 40%, keyword bonus at 60%
-            combined = (tfidf_score * 0.4) + tag_bonus + title_bonus
-
-            # Cap at 1.0
-            boosted_scores.append(min(combined, 1.0))
-
-        boosted_scores = np.array(boosted_scores)
-
-        # Rank results
-        ranked_indices = np.argsort(
-            boosted_scores
-        )[::-1]
+        ranked_indices = np.argsort(similarity_scores)[::-1]
 
         results = []
 
         for idx in ranked_indices[:top_n]:
-            score = float(boosted_scores[idx])
-
-            # Ignore very weak matches
-            if score <= 0.01:
-                break
-
+            score = float(similarity_scores[idx])
             space = spaces[idx]
 
-            results.append(
-                {
-                    "id": str(space["_id"]),
-                    "title": (
-                        space.get("title")
-                        or space.get("name")
-                        or "Untitled"
-                    ),
-                    "description": space.get("description") or "",
-                    "tags": space.get("tags") or [],
-                    "similarity_score": round(score, 4),
-                    "created_by": space.get("creator") or None,
-                }
-            )
+            title = (space.get("title") or space.get("name") or "").lower()
+            tags_lower = [t.lower() for t in (space.get("tags") or [])]
+            tags_nospace = [t.replace(" ", "") for t in tags_lower]
+            tags_words = set(word for tag in tags_lower for word in tag.split())
+            title_words = set(title.split())
+
+            boost = 0.0
+            for term in query_terms:
+                term = term.lower()
+
+                if term in tags_lower or term in tags_nospace:
+                    boost += 0.2
+                elif term in tags_words or term in title_words:
+                    boost += 0.2
+                elif term in title:
+                    boost += 0.2
+                elif any(term in tag for tag in tags_lower):
+                    boost += 0.2
+
+            boosted_score = min(score + boost, 1.0)
+
+            if boosted_score <= 0.01:
+                continue
+
+            results.append({
+                "id": str(space["_id"]),
+                "title": space.get("title") or space.get("name") or "Untitled",
+                "description": space.get("description") or "",
+                "tags": space.get("tags") or [],
+                "similarity_score": round(boosted_score, 4),
+                "created_by": space.get("creator") or None,
+            })
+
+        results.sort(key=lambda r: r["similarity_score"], reverse=True)
 
         return results, len(spaces)

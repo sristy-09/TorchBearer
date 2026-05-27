@@ -24,7 +24,6 @@ export default function HomePage() {
   const { searchQuery, filterType, sortBy } = useAppSelector((state) => state.spaces);
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
 
-  // On mount: fetch all spaces AND auto-recommendations in parallel
   useEffect(() => {
     dispatch(fetchSpaces({}));
     dispatch(fetchMyRecommendations());
@@ -56,6 +55,26 @@ export default function HomePage() {
                 </h1>
                 <p className="text-sm sm:text-base text-gray-600 mt-1">
                   Connect with alumni and students in your areas of interest
+    <div className="flex h-screen" style={{ background: "var(--background)" }}>
+      <Sidebar />
+
+      <div className="flex-1 overflow-auto">
+        {/* Welcome Hero */}
+        <div className="px-8 pt-8 pb-6">
+          <div className="max-w-7xl mx-auto">
+            <div className="flex items-start justify-between">
+              <div>
+                <div className="flex items-center gap-2 mb-2">
+                  <div className="w-1.5 h-6 rounded-full" style={{ background: "var(--primary)" }} />
+                  <span className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">
+                    Dashboard
+                  </span>
+                </div>
+                <h1 className="text-3xl font-bold text-foreground tracking-tight">
+                  Welcome back{user?.name ? `, ${user.name.split(" ")[0]}` : ""} 👋
+                </h1>
+                <p className="text-muted-foreground mt-1.5 text-sm">
+                  Discover spaces, connect with alumni and students in your areas of interest.
                 </p>
               </div>
             </div>
@@ -67,12 +86,13 @@ export default function HomePage() {
           {/* AI Recommendations (auto + manual search) */}
           <RecommendationsSection />
 
-          {/* All Spaces section */}
+          {/* Other Spaces */}
           <div>
-            <div className="flex items-center justify-between mb-6">
-              <h2 className="text-xl font-semibold text-gray-900">
-                Other Spaces
-              </h2>
+            <div className="flex items-center justify-between mb-5">
+              <div>
+                <h2 className="text-lg font-semibold text-foreground">Community Spaces</h2>
+                <p className="text-xs text-muted-foreground mt-0.5">All available spaces on the platform</p>
+              </div>
               {user?.role === "admin" && <CreateSpaceDialog />}
             </div>
 
@@ -81,17 +101,18 @@ export default function HomePage() {
               <Input
                 placeholder="Search spaces..."
                 className="w-full sm:w-80"
+                className="w-72 rounded-xl"
+                style={{ background: "var(--card)", borderColor: "var(--border)" }}
                 value={searchQuery}
                 onChange={(e) => dispatch(setSearchQuery(e.target.value))}
               />
 
               <Select
                 value={filterType}
-                onValueChange={(value: "all" | "my" | "joined") =>
-                  dispatch(setFilterType(value))
-                }
+                onValueChange={(value: "all" | "my" | "joined") => dispatch(setFilterType(value))}
               >
                 <SelectTrigger className="w-full sm:w-36">
+                <SelectTrigger className="w-36 rounded-xl" style={{ background: "var(--card)", borderColor: "var(--border)" }}>
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -103,11 +124,10 @@ export default function HomePage() {
 
               <Select
                 value={sortBy}
-                onValueChange={(value: "latest" | "name") =>
-                  dispatch(setSortBy(value))
-                }
+                onValueChange={(value: "latest" | "name") => dispatch(setSortBy(value))}
               >
-                <SelectTrigger className="w-full sm:w-36">
+             
+                <SelectTrigger className="w-36 rounded-xl sm:w-36" style={{ background: "var(--card)", borderColor: "var(--border)" }}>
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>

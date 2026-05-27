@@ -18,11 +18,11 @@ export const completeProfileSchema = z.object({
 
   registrationNumber: z
     .string()
-    .min(1, "Registration number is required.")
-    .transform((val) => Number(val))
-    .refine((num) => !isNaN(num) && num > 0, {
-      message: "Registration number must be a positive number.",
-    }),
+    .regex(
+      /^\d-\d-\d{2}-\d{3}-\d{4}$/,
+      "Registration number should be like: 5-2-48-483-2018"
+    ),
+
 
   department: z
     .string()

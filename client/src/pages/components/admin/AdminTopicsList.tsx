@@ -74,9 +74,7 @@ function AdminTopicsList() {
   const [isUpdating, setIsUpdating] = useState(false);
 
   useEffect(() => {
-    if (!isAuthenticated || user?.role !== "admin") {
-      navigate("/admin/login");
-    }
+    if (!isAuthenticated || user?.role !== "admin") navigate("/admin/login");
   }, [isAuthenticated, user, navigate]);
 
   // Fetch spaces for filter dropdown
@@ -119,7 +117,6 @@ function AdminTopicsList() {
 
   const handleDeleteConfirm = async () => {
     if (!topicToDelete) return;
-
     setIsDeleting(true);
     try {
       await dispatch(deleteTopic(topicToDelete)).unwrap();
@@ -188,34 +185,30 @@ function AdminTopicsList() {
     });
   };
 
-  if (!isAuthenticated || user?.role !== "admin") {
-    return null;
-  }
+  if (!isAuthenticated || user?.role !== "admin") return null;
 
   return (
-    <div className="flex min-h-screen bg-neutral-50">
+    <div className="flex min-h-screen" style={{ background: "var(--background)" }}>
       <AdminSidebar />
       <div className="flex-1 ml-64 p-8">
         <div className="max-w-7xl mx-auto">
-          {/* Header */}
           <div className="mb-8">
-            <h1 className="text-3xl font-bold text-gray-900">Topics List</h1>
-            <p className="text-gray-600 mt-2">
-              View and manage all topics across all spaces
-            </p>
+            <h1 className="text-2xl font-bold text-foreground tracking-tight">Topics List</h1>
+            <p className="text-muted-foreground mt-1 text-sm">View and manage all topics across all spaces</p>
           </div>
 
           {/* Search and Filter Bar */}
           <div className="mb-6 flex gap-4">
             {/* Search Input */}
             <div className="flex-1 relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4 />
               <input
                 type="text"
                 placeholder="Search topics by title..."
                 value={searchQuery}
-                onChange={handleSearch}
-                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full pl-10 pr-4 py-2.5 rounded-xl text-sm outline-none"
+                style={{ background: "var(--card)", border: "1px solid var(--border)", color: "var(--foreground)" }}
               />
             </div>
 
@@ -240,15 +233,15 @@ function AdminTopicsList() {
             </div>
           </div>
 
-          {/* Topics Table */}
-          <div className="bg-white rounded-lg shadow overflow-hidden">
+          <div className="rounded-2xl border overflow-hidden"
+            style={{ background: "var(--card)", borderColor: "var(--border)" }}>
             {loading ? (
-              <div className="flex items-center justify-center py-12">
-                <Loader2 className="animate-spin text-blue-600" size={32} />
+              <div className="flex items-center justify-center py-14">
+                <Loader2 className="animate-spin w-7 h-7" style={{ color: "var(--primary)" }} />
               </div>
             ) : topics.length === 0 ? (
               <div className="text-center py-12">
-                <p className="text-gray-500">
+                <p className="text-muted-foreground text-sm">
                   {searchQuery || selectedSpace !== "all"
                     ? "No topics found matching your filters."
                     : "No topics available yet."}
@@ -257,74 +250,52 @@ function AdminTopicsList() {
             ) : (
               <div className="overflow-x-auto">
                 <table className="w-full">
-                  <thead className="bg-gray-50 border-b border-gray-200">
+                  <thead style={{ background: "var(--background)", borderBottom: "1px solid var(--border)" }}>
                     <tr>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Topic
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Space
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Created By
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Posts
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Created
-                      </th>
-                      <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Actions
-                      </th>
+                      {["Topic", "Space", "Created By", "Posts", "Created", "Actions"].map((h, i) => (
+                        <th key={h} className={`px-6 py-3.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground ${i === 5 ? "text-right" : "text-left"}`}>
+                          {h}
+                        </th>
+                      ))}
                     </tr>
                   </thead>
-                  <tbody className="bg-white divide-y divide-gray-200">
+                  <tbody>
                     {topics.map((topic) => (
                       <tr
                         key={topic._id}
                         onClick={() => handleRowClick(topic)}
-                        className="hover:bg-gray-50 transition-colors cursor-pointer"
+                        className="transition-colors cursor-pointer"
+                        style={{ borderBottom: "1px solid var(--border)" }}
+                        onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = "var(--background)"; }}
+                        onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = "transparent"; }}
                       >
                         <td className="px-6 py-4">
-                          <div>
-                            <div className="text-sm font-medium text-gray-900">
-                              {topic.title}
-                            </div>
-                            <div className="text-sm text-gray-500 line-clamp-1">
-                              {topic.description}
-                            </div>
-                          </div>
+                          <div className="text-sm font-medium text-foreground">{topic.title}</div>
+                          <div className="text-xs text-muted-foreground line-clamp-1 mt-0.5">{topic.description}</div>
                         </td>
                         <td className="px-6 py-4">
                           {topic.space ? (
-                            <div className="flex items-center gap-2 text-sm text-gray-900">
-                              <Layers size={16} className="text-gray-400" />
+                            <div className="flex items-center gap-1.5 text-sm text-foreground">
+                              <Layers size={13} className="text-muted-foreground" />
                               {topic.space.title}
                             </div>
                           ) : (
-                            <div className="text-sm text-gray-400 italic">
-                              Space deleted
-                            </div>
+                            <span className="text-xs text-muted-foreground italic">Space deleted</span>
                           )}
                         </td>
                         <td className="px-6 py-4">
-                          <div className="text-sm text-gray-900">
-                            {topic.createdBy?.name || "Unknown"}
-                          </div>
-                          <div className="text-xs text-gray-500 capitalize">
-                            {topic.createdBy?.role || "N/A"}
-                          </div>
+                          <div className="text-sm text-foreground">{topic.createdBy?.name || "Unknown"}</div>
+                          <div className="text-xs text-muted-foreground capitalize">{topic.createdBy?.role || "N/A"}</div>
                         </td>
                         <td className="px-6 py-4">
-                          <div className="flex items-center gap-1 text-sm text-gray-600">
-                            <MessageSquare size={16} />
+                          <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
+                            <MessageSquare size={13} />
                             <span>{topic.posts?.length || 0}</span>
                           </div>
                         </td>
                         <td className="px-6 py-4">
-                          <div className="flex items-center gap-1 text-sm text-gray-600">
-                            <Calendar size={16} />
+                          <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
+                            <Calendar size={13} />
                             <span>{formatDate(topic.createdAt)}</span>
                           </div>
                         </td>
@@ -339,7 +310,7 @@ function AdminTopicsList() {
                             </button>
                             <button
                               onClick={(e) => handleDeleteClick(topic._id, e)}
-                              className="inline-flex items-center gap-1 px-3 py-1 text-sm text-red-600 hover:bg-red-50 rounded-md transition-colors"
+                              className="inline-flex items-center gap-1 px-3 py-1 text-sm text-red-600 hover:bg-red-50 rounded-lg transition-colors"
                             >
                               <Trash2 size={16} />
                               Delete
@@ -354,9 +325,8 @@ function AdminTopicsList() {
             )}
           </div>
 
-          {/* Stats */}
           {!loading && topics.length > 0 && (
-            <div className="mt-4 text-sm text-gray-600">
+            <p className="mt-3 text-xs text-muted-foreground">
               Showing {topics.length} topic{topics.length !== 1 ? "s" : ""}
               {selectedSpace !== "all" && (
                 <span className="ml-2">
@@ -364,35 +334,24 @@ function AdminTopicsList() {
                 </span>
               )}
             </div>
+            </p>
           )}
         </div>
       </div>
 
-      {/* Delete Confirmation Dialog */}
       <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Delete Topic</AlertDialogTitle>
             <AlertDialogDescription>
-              Are you sure you want to delete this topic? This action cannot be undone.
-              All posts and comments within this topic will also be deleted.
+              Are you sure you want to delete this topic? This action cannot be undone. All posts and comments within this topic will also be deleted.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel disabled={isDeleting}>Cancel</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={handleDeleteConfirm}
-              disabled={isDeleting}
-              className="bg-red-600 hover:bg-red-700"
-            >
-              {isDeleting ? (
-                <>
-                  <Loader2 className="animate-spin mr-2" size={16} />
-                  Deleting...
-                </>
-              ) : (
-                "Delete"
-              )}
+            <AlertDialogAction onClick={handleDeleteConfirm} disabled={isDeleting}
+              className="bg-red-600 hover:bg-red-700">
+              {isDeleting ? <><Loader2 className="animate-spin mr-2" size={14} />Deleting...</> : "Delete"}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

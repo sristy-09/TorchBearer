@@ -78,6 +78,18 @@ export const requestToJoinSpace = async (spaceId: string) => {
   return response.data;
 };
 
+// Cancel a pending join request
+export const cancelJoinRequest = async (spaceId: string) => {
+  const response = await api.delete(`/cancel-request/${spaceId}`);
+  return response.data;
+};
+
+// Get spaceIds where the current user has a pending join request
+export const getMyPendingSpaceRequests = async () => {
+  const response = await api.get<{ success: boolean; data: { spaceIds: string[] } }>("/my-pending-spaces");
+  return response.data;
+};
+
 // Get user notifications
 export const getUserNotifications = async (params?: {
   page?: number;

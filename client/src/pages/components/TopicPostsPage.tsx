@@ -27,19 +27,11 @@ export default function TopicPostsPage() {
   const { searchQuery, sortBy, posts } = useAppSelector((state) => state.posts);
   const currentTopic = topics.find((t) => t._id === topicId);
 
-  // Fetch posts with search query (debounced)
   useEffect(() => {
     if (!topicId) return;
-
     const timer = setTimeout(() => {
-      dispatch(
-        fetchPostsByTopic({
-          topicId,
-          keyword: searchQuery || undefined,
-        })
-      );
-    }, 500); // Debounce search by 500ms
-
+      dispatch(fetchPostsByTopic({ topicId, keyword: searchQuery || undefined }));
+    }, 500);
     return () => clearTimeout(timer);
   }, [dispatch, topicId, searchQuery]);
 
@@ -64,7 +56,7 @@ export default function TopicPostsPage() {
   }, [location.hash, posts]);
 
   return (
-    <div className="flex h-screen bg-neutral-50">
+    <div className="flex h-screen" style={{ background: "var(--background)" }}>
       <Sidebar
         isMobileOpen={isMobileSidebarOpen}
         onMobileClose={() => setIsMobileSidebarOpen(false)}
@@ -72,7 +64,7 @@ export default function TopicPostsPage() {
 
       <div className="flex-1 lg:ml-64 overflow-auto">
         {/* Header */}
-        <div className="bg-white border-b px-4 sm:px-6 lg:px-8 py-4 sm:py-6">
+        <div className="px-4 sm:px-6 lg:px-8 py-4 sm:py-6" style={{ borderBottom: "1px solid var(--border)", background: "var(--card)" }}>
           <div className="max-w-4xl mx-auto">
             <div className="flex items-center gap-2 mb-4">
               {/* Hamburger Menu for Mobile */}
@@ -87,22 +79,22 @@ export default function TopicPostsPage() {
                 variant="ghost"
                 size="sm"
                 onClick={() => navigate(`/space/${spaceId}/topics`)}
-                className="flex items-center gap-2 -ml-2"
+                className="flex items-center gap-2 -ml-2 mb-4 text-muted-foreground hover:text-foreground rounded-lg"
               >
-                <ArrowLeft size={16} />
+                <ArrowLeft size={15} />
                 <span className="hidden sm:inline">Back to Topics</span>
               </Button>
             </div>
 
             <div>
-              <h1 className="text-xl sm:text-2xl font-semibold text-gray-900">
+              <h1 className="text-2xl sm:text-2xl font-bold text-foreground tracking-tight">
                 {currentTopic?.title || "Topic Posts"}
               </h1>
-              <p className="text-sm sm:text-base text-gray-600 mt-1 line-clamp-2">
+              <p className="text-sm sm:text-base text-muted-foreground mt-1 line-clamp-2">
                 {currentTopic?.description || "Explore posts in this topic"}
               </p>
               {currentTopic?.space && (
-                <p className="text-xs sm:text-sm text-gray-500 mt-1">
+                <p className="text-xs sm:text-sm text-muted-foreground mt-1 opacity-70">
                   in {currentTopic.space.title}
                 </p>
               )}
@@ -113,9 +105,10 @@ export default function TopicPostsPage() {
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
           <div>
             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
-              <h2 className="text-lg sm:text-xl font-semibold text-gray-900">
+              <h2 className="text-lg sm:text-xl font-semibold text-foreground">
                 Discussion
               </h2>
+              <p className="text-xs text-muted-foreground mt-0.5">Share your thoughts and ideas</p>
               {topicId && <CreatePostDialog topicId={topicId} />}
             </div>
 
@@ -143,9 +136,33 @@ export default function TopicPostsPage() {
                 </SelectContent>
               </Select>
             </div>
-
-            <PostsList />
+            {topicId && <CreatePostDialog topicId={topicId} />}
           </div>
+
+          {/* Search + Filters */}
+          <div className="flex flex-wrap gap-3 items-center mb-6">
+            <Input
+              placeholder="Search posts..."
+              className="w-72 rounded-xl"
+              style={{ background: "var(--card)", borderColor: "var(--border)" }}
+              value={searchQuery}
+              onChange={(e) => dispatch(setSearchQuery(e.target.value))}
+            />
+            <Select
+              value={sortBy}
+              onValueChange={(value: "latest" | "popular") => dispatch(setSortBy(value))}
+            >
+              <SelectTrigger className="w-36 rounded-xl" style={{ background: "var(--card)", borderColor: "var(--border)" }}>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="latest">Latest</SelectItem>
+                <SelectItem value="popular">Popular</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          <PostsList />
         </div>
       </div>
     </div>

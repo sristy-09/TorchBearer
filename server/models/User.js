@@ -47,8 +47,12 @@ const userSchema = new mongoose.Schema(
     },
 
     registrationNumber: {
-      type: Number,
-    },
+  type: String,
+  match: [
+    /^\d-\d-\d{2}-\d{3}-\d{4}$/,
+    "Please provide a valid registration number.",
+  ],
+},
 
     department: {
       type: String,
