@@ -1,0 +1,415 @@
+import { useEffect, useState } from "react";
+import { useParams, useNavigate } from "react-router";
+import { useAppSelector } from "../../../store/hooks";
+import { getUserById } from "../api/userApi";
+import type { User } from "../../Auth/types/types";
+import type { Post } from "../../Post/types/post";
+import { Avatar } from "../../core/components/ui/avatar";
+import { Button } from "../../core/components/ui/button";
+import Sidebar from "../../core/components/Sidebar";
+import EditProfileDialog from "./EditProfileDialog";
+import ProfilePostCard from "../../Post/components/ProfilePostCard";
+import { apiClient } from "../../../store/Slice/authSlice";
+import {
+  ArrowLeft,
+  Pencil,
+  GraduationCap,
+  Building2,
+  Calendar,
+  Lightbulb,
+  Wrench,
+  FileText,
+  Loader2,
+  Link as LinkIcon,
+} from "lucide-react";
+import { FaFacebook, FaInstagram, FaLinkedin, FaGithub } from "react-icons/fa";
+
+const roleBadgeStyle: Record<string, { bg: string; color: string }> = {
+  admin: { bg: "rgba(239,68,68,0.1)", color: "#EF4444" },
+  student: { bg: "var(--secondary)", color: "var(--primary)" },
+  alumni: { bg: "rgba(16,185,129,0.1)", color: "#10B981" },
+};
+
+// Helper function to extract username from social media URLs
+const extractUsername = (url: string, platform: string): string => {
+  if (!url) return "";
+
+  try {
+    // Remove trailing slashes
+    const cleanUrl = url.replace(/\/$/, "");
+
+    // Extract the last part of the URL path
+    const urlObj = new URL(cleanUrl);
+    const pathParts = urlObj.pathname.split("/").filter(Boolean);
+
+    if (pathParts.length === 0) return "";
+
+    // For LinkedIn, handle /in/ or /company/ paths
+    if (platform === "linkedin") {
+      if (pathParts[0] === "in" || pathParts[0] === "company") {
+        return pathParts[1] || "";
+      }
+    }
+
+    // For most platforms, the username is the last part of the path
+    return pathParts[pathParts.length - 1] || "";
+  } catch (e) {
+    // If URL parsing fails, try to extract from string
+    const parts = url.split("/").filter(Boolean);
+    return parts[parts.length - 1] || url;
+  }
+};
+
+function DetailItem({ icon, label, value }: { icon: React.ReactNode; label: string; value: string }) {
+  return (
+    <div className="flex items-start gap-3">
+      <div className="mt-0.5 text-muted-foreground">{icon}</div>
+      <div>
+        <p className="text-[11px] text-muted-foreground font-medium uppercase tracking-wide">{label}</p>
+        <p className="text-sm text-foreground mt-0.5 font-medium">{value}</p>
+      </div>
+    </div>
+  );
+}
+
+export default function ProfilePage() {
+  const { userId } = useParams<{ userId: string }>();
+  const navigate = useNavigate();
+  const currentUser = useAppSelector((state) => state.auth.user);
+
+  const [profileUser, setProfileUser] = useState<User | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [editOpen, setEditOpen] = useState(false);
+
+  // Posts state
+  const [userPosts, setUserPosts] = useState<Post[]>([]);
+  const [postsLoading, setPostsLoading] = useState(false);
+  const [postsError, setPostsError] = useState<string | null>(null);
+
+  const isOwnProfile = !userId || userId === currentUser?._id;
+
+  useEffect(() => {
+    const load = async () => {
+      setLoading(true);
+      setError(null);
+      try {
+        if (isOwnProfile && currentUser) {
+          setProfileUser(currentUser);
+        } else if (userId) {
+          const user = await getUserById(userId);
+          setProfileUser(user);
+        }
+      } catch {
+        setError("Could not load this profile.");
+      } finally {
+        setLoading(false);
+      }
+    };
+    load();
+  }, [userId, currentUser, isOwnProfile]);
+
+  useEffect(() => {
+    if (isOwnProfile && currentUser) setProfileUser(currentUser);
+  }, [currentUser, isOwnProfile]);
+
+  // Fetch user's posts
+  useEffect(() => {
+    const fetchUserPosts = async () => {
+      if (!profileUser?._id) return;
+
+      setPostsLoading(true);
+      setPostsError(null);
+
+      try {
+        const response = await apiClient.get(`/api/posts?author=${profileUser._id}`);
+        setUserPosts(response.data.data || []);
+      } catch (err: any) {
+        console.error("Failed to fetch user posts:", err);
+        setPostsError("Failed to load posts");
+      } finally {
+        setPostsLoading(false);
+      }
+    };
+
+    fetchUserPosts();
+  }, [profileUser?._id]);
+
+  return (
+    <div className="flex h-screen" style={{ background: "var(--background)" }}>
+      <Sidebar />
+
+      <div className="flex-1 lg:ml-64 overflow-auto">
+        {/* Header */}
+        <div className="px-8 pt-7 pb-5" style={{ borderBottom: "1px solid var(--border)", background: "var(--card)" }}>
+          <div className="max-w-3xl mx-auto">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => navigate(-1)}
+              className="flex items-center gap-2 mb-4 -ml-2 text-muted-foreground hover:text-foreground rounded-lg"
+            >
+              <ArrowLeft size={15} />
+              Back
+            </Button>
+            <h1 className="text-2xl font-bold text-foreground tracking-tight">
+              {isOwnProfile ? "My Profile" : "User Profile"}
+            </h1>
+          </div>
+        </div>
+
+        <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
+          {loading && (
+            <div className="flex items-center justify-center py-20 text-muted-foreground">
+              <p className="text-sm">Loading profile...</p>
+            </div>
+          )}
+
+          {error && (
+            <div className="rounded-xl px-4 py-3 text-sm text-red-500"
+              style={{ background: "rgba(239,68,68,0.08)", border: "1px solid rgba(239,68,68,0.2)" }}>
+              {error}
+            </div>
+          )}
+
+          {!loading && !error && profileUser && (
+            <div className="space-y-5">
+              {/* Profile Card */}
+              <div className="rounded-2xl p-7 border"
+                style={{ background: "var(--card)", borderColor: "var(--border)" }}>
+                <div className="flex items-start justify-between gap-4">
+                  <div className="flex items-center gap-5">
+                    <Avatar name={profileUser.name} avatarUrl={profileUser.avatar} size="xl" />
+                    <div>
+                      <h2 className="text-xl font-bold text-foreground">{profileUser.name}</h2>
+                      <p className="text-muted-foreground text-sm mt-0.5">{profileUser.email}</p>
+                      {(() => {
+                        const badge = roleBadgeStyle[profileUser.role] || { bg: "var(--muted)", color: "var(--muted-foreground)" };
+                        return (
+                          <span className="inline-block mt-2 px-2.5 py-0.5 rounded-full text-xs font-medium capitalize"
+                            style={{ background: badge.bg, color: badge.color }}>
+                            {profileUser.role}
+                          </span>
+                        );
+                      })()}
+                    </div>
+                  </div>
+
+                  {isOwnProfile && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setEditOpen(true)}
+                      className="flex items-center gap-2 shrink-0 rounded-xl"
+                      style={{ borderColor: "var(--border)", background: "var(--background)" }}
+                    >
+                      <Pencil size={14} />
+                      Edit Profile
+                    </Button>
+                  )}
+                </div>
+              </div>
+
+              {/* Details Card */}
+              <div className="rounded-2xl p-6 border"
+                style={{ background: "var(--card)", borderColor: "var(--border)" }}>
+                <h3 className="text-sm font-semibold text-foreground mb-5 uppercase tracking-wider opacity-60">
+                  Details
+                </h3>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-5">
+                  {profileUser.department && (
+                    <DetailItem icon={<Building2 size={15} />} label="Department" value={profileUser.department} />
+                  )}
+                  {profileUser.batchYear && (
+                    <DetailItem icon={<Calendar size={15} />} label="Batch Year" value={String(profileUser.batchYear)} />
+                  )}
+                  {profileUser.role && (
+                    <DetailItem icon={<GraduationCap size={15} />} label="Role"
+                      value={profileUser.role.charAt(0).toUpperCase() + profileUser.role.slice(1)} />
+                  )}
+                </div>
+                {!profileUser.department && !profileUser.batchYear && !profileUser.role && (
+                  <p className="text-sm text-muted-foreground italic">No additional details available.</p>
+                )}
+              </div>
+
+              {/* Skills */}
+              {(profileUser.skills?.length ?? 0) > 0 && (
+                <div className="rounded-2xl p-6 border"
+                  style={{ background: "var(--card)", borderColor: "var(--border)" }}>
+                  <h3 className="text-sm font-semibold text-foreground mb-4 flex items-center gap-2 uppercase tracking-wider opacity-60">
+                    <Wrench size={14} />
+                    Skills
+                  </h3>
+                  <div className="flex flex-wrap gap-2">
+                    {profileUser.skills!.map((skill) => (
+                      <span key={skill}
+                        className="px-3 py-1 rounded-full text-sm font-medium"
+                        style={{ background: "var(--secondary)", color: "var(--primary)" }}>
+                        {skill}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Interests */}
+              {(profileUser.interests?.length ?? 0) > 0 && (
+                <div className="rounded-2xl p-6 border"
+                  style={{ background: "var(--card)", borderColor: "var(--border)" }}>
+                  <h3 className="text-sm font-semibold text-foreground mb-4 flex items-center gap-2 uppercase tracking-wider opacity-60">
+                    <Lightbulb size={14} />
+                    Interests
+                  </h3>
+                  <div className="flex flex-wrap gap-2">
+                    {profileUser.interests!.map((interest) => (
+                      <span key={interest}
+                        className="px-3 py-1 rounded-full text-sm font-medium"
+                        style={{ background: "rgba(168,85,247,0.1)", color: "#A855F7" }}>
+                        {interest}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Social Media Links */}
+              {profileUser.socialLinks &&
+                (profileUser.socialLinks.facebook ||
+                  profileUser.socialLinks.instagram ||
+                  profileUser.socialLinks.linkedin ||
+                  profileUser.socialLinks.github) && (
+                  <div className="rounded-2xl p-6 border"
+                    style={{ background: "var(--card)", borderColor: "var(--border)" }}>
+                    <h3 className="text-sm font-semibold text-foreground mb-4 flex items-center gap-2 uppercase tracking-wider opacity-60">
+                      <LinkIcon size={14} />
+                      Social Links
+                    </h3>
+                    <div className="flex flex-wrap gap-3">
+                      {profileUser.socialLinks.facebook && (
+                        <a
+                          href={profileUser.socialLinks.facebook}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="flex items-center gap-2 px-4 py-2 rounded-lg transition-colors font-medium text-sm"
+                          style={{ background: "rgba(59,130,246,0.1)", color: "#3B82F6" }}
+                          title="Facebook"
+                        >
+                          <FaFacebook size={18} className="flex-shrink-0" />
+                          <span className="truncate">@{extractUsername(profileUser.socialLinks.facebook, "facebook")}</span>
+                        </a>
+                      )}
+                      {profileUser.socialLinks.instagram && (
+                        <a
+                          href={profileUser.socialLinks.instagram}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="flex items-center gap-2 px-4 py-2 rounded-lg transition-colors font-medium text-sm"
+                          style={{ background: "rgba(236,72,153,0.1)", color: "#EC4899" }}
+                          title="Instagram"
+                        >
+                          <FaInstagram size={18} className="flex-shrink-0" />
+                          <span className="truncate">@{extractUsername(profileUser.socialLinks.instagram, "instagram")}</span>
+                        </a>
+                      )}
+                      {profileUser.socialLinks.linkedin && (
+                        <a
+                          href={profileUser.socialLinks.linkedin}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="flex items-center gap-2 px-4 py-2 rounded-lg transition-colors font-medium text-sm"
+                          style={{ background: "rgba(37,99,235,0.1)", color: "#2563EB" }}
+                          title="LinkedIn"
+                        >
+                          <FaLinkedin size={18} className="flex-shrink-0" />
+                          <span className="truncate">@{extractUsername(profileUser.socialLinks.linkedin, "linkedin")}</span>
+                        </a>
+                      )}
+                      {profileUser.socialLinks.github && (
+                        <a
+                          href={profileUser.socialLinks.github}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="flex items-center gap-2 px-4 py-2 rounded-lg transition-colors font-medium text-sm"
+                          style={{ background: "var(--secondary)", color: "var(--foreground)" }}
+                          title="GitHub"
+                        >
+                          <FaGithub size={18} className="flex-shrink-0" />
+                          <span className="truncate">@{extractUsername(profileUser.socialLinks.github, "github")}</span>
+                        </a>
+                      )}
+                    </div>
+                  </div>
+                )}
+
+              {/* User Posts Section */}
+              <div className="rounded-2xl p-6 border"
+                style={{ background: "var(--card)", borderColor: "var(--border)" }}>
+                <h3 className="text-sm font-semibold text-foreground mb-5 flex items-center gap-2 uppercase tracking-wider opacity-60">
+                  <FileText size={14} />
+                  Posts ({userPosts.length})
+                </h3>
+
+                {postsLoading && (
+                  <div className="flex items-center justify-center py-12">
+                    <Loader2 className="animate-spin text-blue-600" size={32} />
+                  </div>
+                )}
+
+                {postsError && (
+                  <div className="rounded-lg px-4 py-3 text-sm text-red-500"
+                    style={{ background: "rgba(239,68,68,0.08)", border: "1px solid rgba(239,68,68,0.2)" }}>
+                    {postsError}
+                  </div>
+                )}
+
+                {!postsLoading && !postsError && userPosts.length === 0 && (
+                  <div className="text-center py-12">
+                    <FileText className="mx-auto h-12 w-12 text-muted-foreground opacity-30 mb-3" />
+                    <p className="text-muted-foreground text-sm">
+                      {isOwnProfile
+                        ? "You haven't created any posts yet."
+                        : "This user hasn't created any posts yet."}
+                    </p>
+                  </div>
+                )}
+
+                {!postsLoading && !postsError && userPosts.length > 0 && (
+                  <div className="space-y-4">
+                    {userPosts.map((post) => (
+                      <ProfilePostCard key={post._id} post={post} />
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* Empty state */}
+              {isOwnProfile && !profileUser.skills?.length && !profileUser.interests?.length && (
+                <div className="rounded-2xl p-8 text-center border border-dashed"
+                  style={{ borderColor: "var(--border)" }}>
+                  <p className="text-sm text-muted-foreground">
+                    Add your skills and interests to help others find you.
+                  </p>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="mt-3 rounded-xl"
+                    style={{ borderColor: "var(--border)" }}
+                    onClick={() => setEditOpen(true)}
+                  >
+                    <Pencil size={13} className="mr-1.5" />
+                    Edit Profile
+                  </Button>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+      </div>
+
+      {isOwnProfile && (
+        <EditProfileDialog open={editOpen} onOpenChange={setEditOpen} />
+      )}
+    </div>
+  );
+}
