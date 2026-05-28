@@ -371,11 +371,15 @@ function AdminTopicsList() {
 
       {/* Edit Topic Dialog */}
       <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
+
         <DialogContent className="sm:max-w-525px">
+
+        <DialogContent className="sm:max-w-131.25">
+
           <DialogHeader>
             <DialogTitle>Edit Topic</DialogTitle>
             <DialogDescription>
-              Update the topic details below. Click save when you're done.
+              Update the topic details belo. Click save when you're done.
             </DialogDescription>
           </DialogHeader>
           <div className="grid gap-4 py-4">
@@ -437,6 +441,7 @@ function AdminTopicsList() {
               )}
             </Button>
           </DialogFooter>
+        </DialogContent>
         </DialogContent>
       </Dialog>
     </div >

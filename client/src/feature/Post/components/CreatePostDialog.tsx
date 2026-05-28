@@ -240,7 +240,7 @@ export default function CreatePostDialog({ topicId }: Props) {
             {validationErrors.length > 0 && (
               <div className="mt-2 p-3 bg-red-50 border border-red-200 rounded-lg">
                 <div className="flex items-start gap-2">
-                  <AlertCircle className="h-4 w-4 text-red-600 mt-0.5 flex-shrink-0" />
+                  <AlertCircle className="h-4 w-4 text-red-600 mt-0.5 shrink-0" />
                   <div className="flex-1">
                     <p className="text-sm font-medium text-red-900 mb-1">
                       Upload Errors
@@ -341,7 +341,7 @@ export default function CreatePostDialog({ topicId }: Props) {
                       key={index}
                       className="flex items-center gap-3 p-3 bg-white rounded-lg border border-gray-200 hover:border-gray-300 transition-colors group"
                     >
-                      <div className="flex-shrink-0">
+                      <div className="shrink-0">
                         {getFileIcon(file)}
                       </div>
 
@@ -350,7 +350,7 @@ export default function CreatePostDialog({ topicId }: Props) {
                           <p className="text-sm font-medium text-gray-900 truncate">
                             {file.name}
                           </p>
-                          <span className="text-xs px-1.5 py-0.5 bg-gray-100 text-gray-600 rounded flex-shrink-0">
+                          <span className="text-xs px-1.5 py-0.5 bg-gray-100 text-gray-600 rounded shrink-0">
                             {getFileTypeLabel(file)}
                           </span>
                         </div>

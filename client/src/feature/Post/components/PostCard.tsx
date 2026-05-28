@@ -87,8 +87,8 @@ const CommentItem = React.memo(({
       <div className="rounded-xl p-4" style={{ background: "var(--background)", border: "1px solid var(--border)" }}>
         <h4 className="font-semibold text-sm text-foreground">{comment.user?.name}</h4>
         <p className="text-muted-foreground text-sm mt-1.5 wrap-break-words leading-relaxed">
-          {renderTextWithMentions(comment.text)}
-        </p>
+  {renderTextWithMentions(comment.text)}
+</p>
 
         <button
           onClick={() => handleLikeComment(comment._id)}

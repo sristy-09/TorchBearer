@@ -194,7 +194,7 @@ function AdminCreateSpace() {
           {/* Success Message */}
           {submitStatus === "success" && (
             <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-lg flex items-start gap-3">
-              <CheckCircle className="text-green-600 flex-shrink-0 mt-0.5" size={20} />
+              <CheckCircle className="text-green-600 shrink-0 mt-0.5" size={20} />
               <div>
                 <h3 className="text-sm font-medium text-green-800">
                   Space created successfully!
@@ -209,7 +209,7 @@ function AdminCreateSpace() {
           {/* Error Message */}
           {submitStatus === "error" && (
             <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg flex items-start gap-3">
-              <AlertCircle className="text-red-600 flex-shrink-0 mt-0.5" size={20} />
+              <AlertCircle className="text-red-600 shrink-0 mt-0.5" size={20} />
               <div>
                 <h3 className="text-sm font-medium text-red-800">
                   Failed to create space
