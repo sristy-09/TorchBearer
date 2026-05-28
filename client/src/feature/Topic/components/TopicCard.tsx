@@ -33,7 +33,7 @@ export default function TopicCard({ topic }: Props) {
   const canModify = isOwner || isAdmin;
 
   const handleClick = () => {
-    navigate(`/space/${topic.space._id}/topic/${topic._id}/posts`);
+    navigate(`/space/${topic.space?._id}/topic/${topic._id}/posts`);
   };
 
   const handleEdit = (e: React.MouseEvent) => {

@@ -54,7 +54,10 @@ export default function EditTopicDialog({ open, onOpenChange, topic }: Props) {
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[500px]">
+
+      <DialogContent className="sm:max-w-500px">
+      <DialogContent className="sm:max-w-125">
+
         <DialogHeader>
           <DialogTitle>Edit Topic</DialogTitle>
         </DialogHeader>
@@ -96,6 +99,7 @@ export default function EditTopicDialog({ open, onOpenChange, topic }: Props) {
             </Button>
           </div>
         </form>
+      </DialogContent>
       </DialogContent>
     </Dialog>
   );

@@ -17,7 +17,7 @@ class SocketService {
 
     this.socket = io(SOCKET_URL, {
       auth: {
-        token,
+        token: this.token,
       },
       transports: ["websocket", "polling"],
     });
@@ -33,6 +33,14 @@ class SocketService {
     this.socket.on("connect_error", (error) => {
       console.error("Socket connection error:", error.message);
     });
+  }
+
+  //reconnect using stored token
+  reconnect() {
+    if(!this.token) {
+      console.error("No token available for reconnection")
+      return
+    }
   }
 
   // Disconnect socket

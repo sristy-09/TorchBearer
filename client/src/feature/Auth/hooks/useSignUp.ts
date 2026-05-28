@@ -25,7 +25,7 @@ export function useSignup() {
   };
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
+    e.preventDefault(); // Keeps form tracking state steady
     setLoading(true);
 
     const result = signupSchema.safeParse(myForm);
@@ -45,7 +45,15 @@ export function useSignup() {
       await performRegister(result.data);
       navigate("/complete-profile");
     } catch (error: unknown) {
-      alert(error instanceof Error ? error.message : "Registration failed");
+      const errorMessage = error instanceof Error ? error.message : "Registration failed";
+      
+      // FIX: Check if it's an email conflict or password issue and map it safely to state
+      if (errorMessage.toLowerCase().includes("email")) {
+        setErrors({ email: errorMessage });
+      } else {
+        // Fallback: Show password criteria errors directly under the password input
+        setErrors({ password: errorMessage });
+      }
     } finally {
       setLoading(false);
     }
@@ -53,6 +61,7 @@ export function useSignup() {
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
+    // Clears out only the error for the field currently being modified
     setErrors((prev) => ({ ...prev, [name]: undefined }));
     setMyForm((prev) => ({ ...prev, [name]: value }));
   };
