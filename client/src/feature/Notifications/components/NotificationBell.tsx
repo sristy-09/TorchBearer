@@ -57,7 +57,7 @@ export default function NotificationBell() {
 
           {/* Notification Panel */}
           <div
-            className="fixed w-96 bg-white rounded-lg shadow-xl border border-gray-200 z-50 max-h-[600px] flex flex-col"
+            className="fixed w-96 bg-white rounded-lg shadow-xl border border-gray-200 z-50 max-h-600px flex flex-col"
             style={{
               top: `${dropdownPosition.top}px`,
               left: `${dropdownPosition.left}px`,
@@ -100,7 +100,7 @@ export default function NotificationBell() {
                     >
                       <div className="flex items-start gap-3">
                         {/* Avatar */}
-                        <div className="flex-shrink-0">
+                        <div className="shrink-0">
                           {notification.from.avatar ? (
                             <img
                               src={notification.from.avatar}
@@ -126,7 +126,7 @@ export default function NotificationBell() {
 
                         {/* Unread indicator */}
                         {!notification.isRead && (
-                          <div className="flex-shrink-0">
+                          <div className="shrink-0">
                             <div className="w-2 h-2 bg-blue-600 rounded-full" />
                           </div>
                         )}

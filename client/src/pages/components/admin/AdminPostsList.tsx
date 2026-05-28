@@ -5,7 +5,7 @@ import { fetchAllPosts, deletePost } from "../../../store/Slice/postsSlice";
 import { fetchSpaces } from "../../../store/Slice/spacesSlice";
 import { fetchAllTopics } from "../../../store/Slice/topicsSlice";
 import AdminSidebar from "../../../feature/core/components/AdminSidebar";
-import { Trash2, Heart, Calendar, Search, Loader2, Layers, BookOpen, User, Filter, Menu } from "lucide-react";
+import { Trash2, Heart, Calendar, Search, Loader2, Layers, BookOpen, User, Menu } from "lucide-react";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -29,18 +29,19 @@ interface Post {
   title: string;
   description?: string;
   content: string;
+
   topic?: {
     _id: string;
     title: string;
-  };
+  } | null;
   space?: {
     _id: string;
     title: string;
-  };
+  } | null;
   author?: {
     name: string;
     role: string;
-  };
+  } | null;
   likes?: any[];
   createdAt: string;
 }
@@ -120,7 +121,7 @@ function AdminPostsList() {
     if (!postToDelete) return;
     setIsDeleting(true);
     try {
-      await dispatch(deletePost(postToDelete)).unwrap();
+      await dispatch(deletePost({id: postToDelete})).unwrap();
       setDeleteDialogOpen(false);
       setPostToDelete(null);
     } catch (error) {
@@ -178,7 +179,7 @@ function AdminPostsList() {
                 type="text"
                 placeholder="Search posts by title..."
                 value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
+                onChange={handleSearch}
                 className="w-full pl-10 pr-4 py-2.5 rounded-xl text-sm outline-none"
                 style={{ background: "var(--card)", border: "1px solid var(--border)", color: "var(--foreground)" }}
               />

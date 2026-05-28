@@ -237,7 +237,7 @@ export default function Sidebar({ isMobileOpen: _isMobileOpen = false, onMobileC
                     }}
                     title={space.title}
                   >
-                    <Hash size={18} className="flex-shrink-0" />
+                    <Hash size={18} className="shrink-0" />
                     <span className="truncate">{space.title}</span>
                   </button>
                 );
@@ -307,8 +307,8 @@ export default function Sidebar({ isMobileOpen: _isMobileOpen = false, onMobileC
       {/* Notification Popup - Rendered outside sidebar */}
       {isNotificationOpen && (
         <>
-          <div className="fixed inset-0 z-[100]" onClick={() => setIsNotificationOpen(false)} />
-          <div className="fixed left-64 top-32 w-96 rounded-2xl shadow-2xl border z-[101] max-h-[600px] flex flex-col overflow-hidden"
+          <div className="fixed inset-0 z-100" onClick={() => setIsNotificationOpen(false)} />
+          <div className="fixed left-64 top-32 w-96 rounded-2xl shadow-2xl border z-101 max-h-600px flex flex-col overflow-hidden"
             style={{ background: "var(--card)", borderColor: "var(--border)" }}>
             <div className="px-5 py-4" style={{ borderBottom: "1px solid var(--border)" }}>
               <h3 className="text-base font-semibold text-foreground">Notifications</h3>
@@ -332,7 +332,7 @@ export default function Sidebar({ isMobileOpen: _isMobileOpen = false, onMobileC
                       }}
                     >
                       <div className="flex items-start gap-3">
-                        <div className="flex-shrink-0">
+                        <div className="shrink-0">
                           {notification.from && notification.from.avatar ? (
                             <img src={notification.from.avatar} alt={notification.from.name}
                               className="w-9 h-9 rounded-full" />

@@ -13,4 +13,5 @@ export interface Topic {
     title: string;
   } | null;
   posts?: string[];
+  postsCount?: number;
 }

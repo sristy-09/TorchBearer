@@ -42,7 +42,7 @@ interface Topic {
   space?: {
     _id: string;
     title: string;
-  };
+  } | null;
   createdBy?: {
     name: string;
     role: string;
@@ -219,7 +219,7 @@ function AdminTopicsList() {
                 type="text"
                 placeholder="Search topics by title..."
                 value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
+                onChange={handleSearch}
                 className="w-full pl-10 pr-4 py-2.5 rounded-xl text-sm outline-none"
                 style={{ background: "var(--card)", border: "1px solid var(--border)", color: "var(--foreground)" }}
               />
@@ -371,7 +371,7 @@ function AdminTopicsList() {
 
       {/* Edit Topic Dialog */}
       <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
-        <DialogContent className="sm:max-w-[525px]">
+        <DialogContent className="sm:max-w-525px">
           <DialogHeader>
             <DialogTitle>Edit Topic</DialogTitle>
             <DialogDescription>
