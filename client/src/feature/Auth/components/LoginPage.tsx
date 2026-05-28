@@ -1,22 +1,26 @@
+import { useState } from "react"; 
 import { Button } from "../../core/components/ui/button";
 import { Input } from "../../core/components/ui/input";
 import { Label } from "../../core/components/ui/label";
 import { FaGoogle } from "react-icons/fa";
 import { Link } from "react-router";
 import { useLogin } from "../hooks/useLogin";
-
+import { Eye, EyeOff } from "lucide-react"; 
 
 function LoginPage() {
-  const { myForm, handleChange, handleSubmit, errors } = useLogin();
+  // 1. Destructure 'loading' from your updated useLogin hook
+  const { myForm, handleChange, handleSubmit, errors, loading } = useLogin();
   const API_URL = import.meta.env.VITE_API_URL;
+  
+  const [showPassword, setShowPassword] = useState(false);
 
   return (
     <div className="flex min-h-screen" style={{ background: "var(--background)" }}>
-
       {/* Right form panel */}
       <div className="flex-1 flex items-center justify-center px-6 py-12">
         <div className="w-full max-w-sm rounded-2xl p-8 border"
           style={{ background: "var(--card)", borderColor: "var(--border)" }}>
+          
           {/* Mobile logo */}
           <div className="flex items-center gap-2.5 mb-8 lg:hidden">
             <div className="w-8 h-8 rounded-xl flex items-center justify-center"
@@ -42,6 +46,7 @@ function LoginPage() {
                 value={myForm.email}
                 onChange={handleChange}
                 required
+                disabled={loading} // 2. Disable input during loading states
                 className="rounded-xl h-11"
                 style={{ background: "var(--background)", borderColor: "var(--border)" }}
               />
@@ -56,25 +61,39 @@ function LoginPage() {
                   Forgot password?
                 </Link>
               </div>
-              <Input
-                id="password"
-                type="password"
-                name="password"
-                value={myForm.password}
-                onChange={handleChange}
-                required
-                className="rounded-xl h-11"
-                style={{ background: "var(--background)", borderColor: "var(--border)" }}
-              />
+              
+              <div className="relative">
+                <Input
+                  id="password"
+                  type={showPassword ? "text" : "password"} 
+                  name="password"
+                  value={myForm.password}
+                  onChange={handleChange}
+                  required
+                  disabled={loading} // 3. Disable input during loading states
+                  className="rounded-xl h-11 pr-10" 
+                  style={{ background: "var(--background)", borderColor: "var(--border)" }}
+                />
+                <button
+                  type="button"
+                  disabled={loading}
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors disabled:opacity-50"
+                >
+                  {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                </button>
+              </div>
               {errors.password && <p className="text-xs text-red-500">{errors.password}</p>}
             </div>
 
+            {/* 4. Update the submit button text dynamically based on loading state */}
             <Button
               type="submit"
+              disabled={loading}
               className="w-full h-11 rounded-xl font-semibold text-white shadow-sm transition-all"
               style={{ background: "var(--primary)" }}
             >
-              Sign in
+              {loading ? "Signing in..." : "Sign in"}
             </Button>
           </form>
 
@@ -92,6 +111,7 @@ function LoginPage() {
           <Button
             onClick={() => window.open(`${API_URL}/api/auth/google`, "_self")}
             variant="outline"
+            disabled={loading} // 5. Block social login interaction if form is currently submitting
             className="w-full h-11 rounded-xl font-medium gap-2"
             style={{ borderColor: "var(--border)", background: "var(--background)" }}
           >

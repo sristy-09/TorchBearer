@@ -12,9 +12,10 @@ const AuthRoute: React.FC<AuthRouteProps> = ({ children, mode }) => {
     (state) => state.auth,
   );
 
-  // Wait for auth state to resolve before redirecting
-  // (prevents flash-redirect on page refresh while token is being validated)
-  if (loading) {
+  // Wait for auth state to resolve before redirecting on private/profile routes.
+  // Guest routes (login, signup) don't need to block — if the token turns out
+  // valid the redirect to /dashboard will happen once loading finishes.
+  if (loading && mode !== "guest") {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <p className="text-muted-foreground text-sm">Loading...</p>
