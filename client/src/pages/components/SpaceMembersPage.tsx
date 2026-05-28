@@ -104,7 +104,7 @@ export default function SpaceMembersPage() {
             <div className="flex items-center justify-between">
               <div className="min-w-0 flex-1">
                 <h1 className="text-2xl font-bold text-foreground flex items-center gap-2 truncate">
-                  <Users className="w-6 h-6 flex-shrink-0" style={{ color: "var(--primary)" }} />
+                  <Users className="w-6 h-6 shrink-0" style={{ color: "var(--primary)" }} />
                   <span className="truncate">Members of {currentSpace?.title || "Space"}</span>
                 </h1>
                 <p className="text-sm text-muted-foreground mt-1">

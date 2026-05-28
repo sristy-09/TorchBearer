@@ -1,9 +1,15 @@
 import jwt from "jsonwebtoken";
 import { User } from "../models/User.js";
 import { TokenBlacklist } from "../models/TokenBlacklist.js";
-import crypto from "crypto"
+import crypto from "crypto";
 import bcrypt from "bcryptjs";
 import { sendEmail } from "../utils/sendEmail.js";
+
+// ─── REUSABLE STRONG PASSWORD REGEX ─────────────────────────
+// Requires: 8+ chars, 1 uppercase, 1 lowercase, 1 number, 1 special char
+const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
+const passwordErrorMessage = "Password is too weak. It must be at least 8 characters long and include an uppercase letter, a lowercase letter, a number, and a special character (@$!%*?&).";
+
 /* ─── Helper: sign a JWT and send it back ───────────────────── */
 const signToken = (id) =>
   jwt.sign({ id }, process.env.JWT_SECRET, {
@@ -13,7 +19,6 @@ const signToken = (id) =>
 const sendTokenResponse = (user, statusCode, res) => {
   const token = signToken(user._id);
 
-  // Strip password from response even though select:false handles most cases
   user.password = undefined;
 
   // Set secure cookie options for production
@@ -33,15 +38,27 @@ const sendTokenResponse = (user, statusCode, res) => {
 
 /* =========================================
    1. REGISTER
-   POST /api/auth/register
-   Body: { name, email, password, role, batchYear,
-           registrationNumber, department, skills, interests }
    ========================================= */
 export const register = async (req, res) => {
   try {
     const { name, email, password } = req.body;
 
-    // Check if email already taken
+    // Check if fields exist
+    if (!email || !password || !name) {
+      return res.status(400).json({
+        success: false,
+        message: "Name, email, and password are required.",
+      });
+    }
+
+    // ENFORCE STRONG PASSWORD HERE
+    if (!passwordRegex.test(password)) {
+      return res.status(400).json({
+        success: false,
+        message: passwordErrorMessage,
+      });
+    }
+
     const existingUser = await User.findOne({ email });
     if (existingUser) {
       return res.status(409).json({
@@ -53,12 +70,11 @@ export const register = async (req, res) => {
     const user = await User.create({
       name,
       email,
-      password, // hashed automatically by pre-save hook in model
+      password, // hashed automatically by pre-save hook
     });
 
     sendTokenResponse(user, 201, res);
   } catch (error) {
-    // Mongoose validation errors → cleaner message
     if (error.name === "ValidationError") {
       const messages = Object.values(error.errors).map((e) => e.message);
       return res.status(400).json({
@@ -75,8 +91,6 @@ export const register = async (req, res) => {
 
 /* =========================================
    2. LOGIN
-   POST /api/auth/login
-   Body: { email, password }
    ========================================= */
 export const login = async (req, res) => {
   try {
@@ -89,7 +103,6 @@ export const login = async (req, res) => {
       });
     }
 
-    // Explicitly select password since it's select:false in the model
     const user = await User.findOne({ email }).select("+password");
 
     if (!user || !(await user.comparePassword(password))) {
@@ -110,12 +123,9 @@ export const login = async (req, res) => {
 
 /* =========================================
    3. LOGOUT
-   POST /api/auth/logout
-   Requires: protect middleware
    ========================================= */
 export const logout = async (req, res) => {
   try {
-    // Get token from request (set by protect middleware)
     const token = req.headers.authorization?.split(" ")[1];
 
     if (!token) {
@@ -125,11 +135,9 @@ export const logout = async (req, res) => {
       });
     }
 
-    // Decode token to get expiration time
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
     const expiresAt = new Date(decoded.exp * 1000);
 
-    // Add token to blacklist
     await TokenBlacklist.create({
       token,
       userId: req.user._id,
@@ -149,15 +157,11 @@ export const logout = async (req, res) => {
 };
 
 /* =========================================
-   4. GET ME  (current logged-in user)
-   GET /api/auth/me
-   Requires: protect middleware
+   4. GET ME
    ========================================= */
 export const getMe = async (req, res) => {
   try {
-    // req.user is attached by the protect middleware
     const user = await User.findById(req.user._id);
-
     res.status(200).json({
       success: true,
       data: { user },
@@ -172,14 +176,9 @@ export const getMe = async (req, res) => {
 
 /* =========================================
    5. UPDATE PROFILE
-   PUT /api/auth/update-profile
-   Requires: protect middleware
-   Body: { name, department, batchYear, registrationNumber,
-           skills, interests, avatar, socialLinks }
    ========================================= */
 export const updateProfile = async (req, res) => {
   try {
-    // Fields that are safe to update via this route
     const allowedFields = [
       "name",
       "department",
@@ -199,7 +198,7 @@ export const updateProfile = async (req, res) => {
     });
 
     const updatedUser = await User.findByIdAndUpdate(req.user._id, updates, {
-      returnDocument: 'after',
+      returnDocument: "after",
       runValidators: true,
     });
 
@@ -225,9 +224,6 @@ export const updateProfile = async (req, res) => {
 
 /* =========================================
    6. CHANGE PASSWORD
-   PUT /api/auth/change-password
-   Requires: protect middleware
-   Body: { currentPassword, newPassword }
    ========================================= */
 export const changePassword = async (req, res) => {
   try {
@@ -240,17 +236,16 @@ export const changePassword = async (req, res) => {
       });
     }
 
-    if (newPassword.length < 6) {
+    // ENFORCE STRONG PASSWORD HERE
+    if (!passwordRegex.test(newPassword)) {
       return res.status(400).json({
         success: false,
-        message: "New password must be at least 6 characters.",
+        message: passwordErrorMessage,
       });
     }
 
-    // Fetch user with password
     const user = await User.findById(req.user._id).select("+password");
 
-    // Verify current password
     const isMatch = await user.comparePassword(currentPassword);
     if (!isMatch) {
       return res.status(401).json({
@@ -259,10 +254,10 @@ export const changePassword = async (req, res) => {
       });
     }
 
-    user.password = newPassword; // pre-save hook will hash it
+    user.password = newPassword; 
     await user.save();
 
-    sendTokenResponse(user, 200, res); // issue a fresh token
+    sendTokenResponse(user, 200, res);
   } catch (error) {
     res.status(500).json({
       success: false,
@@ -271,6 +266,9 @@ export const changePassword = async (req, res) => {
   }
 };
 
+/* =========================================
+   FORGOT PASSWORD
+   ========================================= */
 export const forgotPassword = async (req, res) => {
   const { email } = req.body;
 
@@ -283,7 +281,6 @@ export const forgotPassword = async (req, res) => {
 
   const user = await User.findOne({ email });
 
-  // Always respond with 200 to avoid leaking whether an email exists
   if (!user) {
     return res.status(200).json({
       success: true,
@@ -299,7 +296,7 @@ export const forgotPassword = async (req, res) => {
     .digest("hex");
 
   user.resetPasswordToken = hashedToken;
-  user.resetPasswordExpire = Date.now() + 15 * 60 * 1000; // 15 minutes
+  user.resetPasswordExpire = Date.now() + 15 * 60 * 1000; 
 
   await user.save({ validateBeforeSave: false });
 
@@ -325,7 +322,6 @@ export const forgotPassword = async (req, res) => {
       message: "If that email is registered, a reset link has been sent.",
     });
   } catch (emailError) {
-    // Roll back the token so the user can try again
     user.resetPasswordToken = undefined;
     user.resetPasswordExpire = undefined;
     await user.save({ validateBeforeSave: false });
@@ -338,6 +334,9 @@ export const forgotPassword = async (req, res) => {
   }
 };
 
+/* =========================================
+   RESET PASSWORD
+   ========================================= */
 export const resetPassword = async (req, res) => {
   try {
     const { password } = req.body;
@@ -349,10 +348,11 @@ export const resetPassword = async (req, res) => {
       });
     }
 
-    if (password.length < 6) {
+    // ENFORCE STRONG PASSWORD HERE
+    if (!passwordRegex.test(password)) {
       return res.status(400).json({
         success: false,
-        message: "Password must be at least 6 characters.",
+        message: passwordErrorMessage,
       });
     }
 
@@ -373,7 +373,7 @@ export const resetPassword = async (req, res) => {
       });
     }
 
-    user.password = password; // pre-save hook will hash it
+    user.password = password; 
     user.resetPasswordToken = undefined;
     user.resetPasswordExpire = undefined;
 
@@ -392,10 +392,7 @@ export const resetPassword = async (req, res) => {
 };
 
 /* =========================================
-   7. GET ALL USERS  (alumni-only or admin use)
-   GET /api/auth/users
-   Requires: protect middleware
-   Query params: ?role=alumni  ?department=CS  ?keyword=John  ?batchYear=2024
+   7. GET ALL USERS
    ========================================= */
 export const getAllUsers = async (req, res) => {
   try {
@@ -425,8 +422,6 @@ export const getAllUsers = async (req, res) => {
 
 /* =========================================
    8. GET SINGLE USER by ID
-   GET /api/auth/users/:id
-   Requires: protect middleware
    ========================================= */
 export const getUserById = async (req, res) => {
   try {
@@ -453,10 +448,6 @@ export const getUserById = async (req, res) => {
 
 /* =========================================
    9. COMPLETE PROFILE
-   PUT /api/auth/complete-profile
-   Requires: protect middleware
-   Body: { role, batchYear, registrationNumber,
-           department, skills, interests }
    ========================================= */
 export const completeProfile = async (req, res) => {
   try {
@@ -469,7 +460,6 @@ export const completeProfile = async (req, res) => {
       interests,
     } = req.body;
 
-    // Manual validation on backend (Zod is frontend-only here)
     const errors = [];
 
     if (!role || !["student", "alumni"].includes(role)) {
@@ -486,13 +476,9 @@ export const completeProfile = async (req, res) => {
     }
 
     const regPattern = /^\d-\d-\d{2}-\d{3}-\d{4}$/;
-
-if (!regPattern.test(registrationNumber)) {
-  return res.status(400).json({
-    message:
-      "Registration number should be like: 5-2-48-483-2018",
-  });
-}
+    if (!registrationNumber || !regPattern.test(registrationNumber)) {
+      errors.push("Registration number should be like: 5-2-48-483-2018");
+    }
 
     if (!department || typeof department !== "string" || !department.trim()) {
       errors.push("Department is required.");
@@ -513,12 +499,24 @@ if (!regPattern.test(registrationNumber)) {
       });
     }
 
-    // Check if profile already completed (role already set)
+    //  1. Block re-completion first — clearest error for the current user
     const existingUser = await User.findById(req.user._id);
     if (existingUser.role) {
       return res.status(400).json({
         success: false,
         message: "Profile is already completed.",
+      });
+    }
+
+    // 2. Check if the registration number is already taken by a *different* user
+    const duplicateReg = await User.findOne({
+      registrationNumber,
+      _id: { $ne: req.user._id },
+    });
+    if (duplicateReg) {
+      return res.status(409).json({
+        success: false,
+        message: "An account with this registration number already exists.",
       });
     }
 
@@ -532,7 +530,7 @@ if (!regPattern.test(registrationNumber)) {
         skills: skills ?? [],
         interests: interests ?? [],
       },
-      { returnDocument: 'after', runValidators: true },
+      { returnDocument: "after", runValidators: true }
     );
 
     res.status(200).json({
@@ -546,6 +544,13 @@ if (!regPattern.test(registrationNumber)) {
       return res.status(400).json({
         success: false,
         message: messages.join(". "),
+      });
+    }
+    // MongoDB unique index violation (race condition safety net)
+    if (error.code === 11000 && error.keyPattern?.registrationNumber) {
+      return res.status(409).json({
+        success: false,
+        message: "An account with this registration number already exists.",
       });
     }
     res.status(500).json({

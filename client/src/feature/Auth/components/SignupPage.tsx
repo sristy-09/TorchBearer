@@ -5,19 +5,18 @@ import { Input } from "../../core/components/ui/input";
 import { useSignup } from "../hooks/useSignUp";
 import { Link } from "react-router";
 
-
 function SignUpPage() {
   const { handleSubmit, myForm, handleChange, loading, errors } = useSignup();
   const API_URL = import.meta.env.VITE_API_URL;
 
   return (
     <div className="flex min-h-screen" style={{ background: "var(--background)" }}>
-  
-
+      
       {/* Right form panel */}
       <div className="flex-1 flex items-center justify-center px-6 py-12">
         <div className="w-full max-w-sm rounded-2xl p-8 border"
           style={{ background: "var(--card)", borderColor: "var(--border)" }}>
+          
           {/* Mobile logo */}
           <div className="flex items-center gap-2.5 mb-8 lg:hidden">
             <div className="w-8 h-8 rounded-xl flex items-center justify-center"
@@ -33,6 +32,7 @@ function SignUpPage() {
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-5">
+            {/* Full Name */}
             <div className="space-y-1.5">
               <Label htmlFor="name" className="text-sm font-medium text-foreground">Full Name</Label>
               <Input
@@ -50,6 +50,7 @@ function SignUpPage() {
               {errors.name && <p className="text-xs text-red-500">{errors.name}</p>}
             </div>
 
+            {/* Email */}
             <div className="space-y-1.5">
               <Label htmlFor="email" className="text-sm font-medium text-foreground">Email</Label>
               <Input
@@ -67,6 +68,7 @@ function SignUpPage() {
               {errors.email && <p className="text-xs text-red-500">{errors.email}</p>}
             </div>
 
+            {/* Password */}
             <div className="space-y-1.5">
               <Label htmlFor="password" className="text-sm font-medium text-foreground">Password</Label>
               <Input
@@ -80,7 +82,13 @@ function SignUpPage() {
                 className="rounded-xl h-11"
                 style={{ background: "var(--background)", borderColor: "var(--border)" }}
               />
-              {errors.password && <p className="text-xs text-red-500">{errors.password}</p>}
+              
+              {/* DISPLAY WEAK PASSWORD OR CONFLICT ERRORS HERE INSTEAD OF AN ALERT */}
+              {errors.password && (
+                <p className="text-xs text-red-500 mt-2 leading-relaxed bg-red-500/10 border border-red-500/20 p-3 rounded-xl">
+                  {errors.password}
+                </p>
+              )}
             </div>
 
             <Button

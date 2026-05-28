@@ -27,7 +27,7 @@ const userSchema = new mongoose.Schema(
 
     password: {
       type: String,
-      minlength: [6, "Password must be at least 6 characters"],
+      minlength: [8, "Password must be at least 8 characters"],
       select: false,
       // No longer globally required — Google users won't have one
     },
@@ -48,6 +48,8 @@ const userSchema = new mongoose.Schema(
 
     registrationNumber: {
   type: String,
+  unique: true, //forces mongodb to block dup;icates at the database level.
+  sparse: true, //allows the field to be null/optional until profile completion
   match: [
     /^\d-\d-\d{2}-\d{3}-\d{4}$/,
     "Please provide a valid registration number.",

@@ -259,7 +259,7 @@ export default function RecommendationsSection() {
             </p>
 
             {/* Tag input */}
-            <div className="rounded-xl p-3 flex flex-wrap gap-2 items-center min-h-[52px]"
+            <div className="rounded-xl p-3 flex flex-wrap gap-2 items-center min-h-52px"
               style={{ background: "rgba(255,255,255,0.95)" }}>
               {tags.map((tag) => (
                 <TagChip key={tag} label={tag} onRemove={() => removeTag(tag)} />
@@ -271,7 +271,7 @@ export default function RecommendationsSection() {
                 onKeyDown={handleKeyDown}
                 onBlur={() => inputValue.trim() && addTag(inputValue)}
                 placeholder={tags.length === 0 ? placeholder : "Add more…"}
-                className="flex-1 min-w-[160px] text-sm outline-none bg-transparent"
+                className="flex-1 min-w-160px text-sm outline-none bg-transparent"
                 style={{ color: "#1E293B" }}
               />
             </div>

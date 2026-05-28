@@ -58,9 +58,11 @@ function AdminUsersList() {
     setRoleFilter(e.target.value);
   };
 
-  const handleDepartmentFilter = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setDepartmentFilter(e.target.value);
-  };
+  const handleDepartmentFilter = (
+  e: React.ChangeEvent<HTMLInputElement>
+) => {
+  setDepartmentFilter(e.target.value);
+};
 
   const handleBatchYearFilter = (e: React.ChangeEvent<HTMLSelectElement>) => {
     setBatchYearFilter(e.target.value);
@@ -73,21 +75,6 @@ function AdminUsersList() {
       years.push(year);
     }
     return years;
-  };
-
-
-
-  const getRoleBadgeColor = (role: string) => {
-    switch (role) {
-      case "admin":
-        return "bg-purple-100 text-purple-800";
-      case "alumni":
-        return "bg-blue-100 text-blue-800";
-      case "student":
-        return "bg-green-100 text-green-800";
-      default:
-        return "bg-gray-100 text-gray-800";
-    }
   };
 
   const handleRowClick = (userId: string) => {
@@ -138,7 +125,7 @@ function AdminUsersList() {
               <Filter className="absolute left-3.5 top-1/2 -translate-y-1/2 text-muted-foreground w-4 h-4" />
               <select
                 value={roleFilter}
-                onChange={(e) => setRoleFilter(e.target.value)}
+                onChange={handleRoleFilter}
                 className="w-full pl-10 pr-4 py-2.5 rounded-xl text-sm outline-none appearance-none"
                 style={{ background: "var(--card)", border: "1px solid var(--border)", color: "var(--foreground)" }}
               >
@@ -148,6 +135,27 @@ function AdminUsersList() {
                 <option value="student">Student</option>
               </select>
             </div>
+
+            {/* Department Filter */}
+<div className="relative">
+  <Briefcase
+    className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground"
+    size={16}
+  />
+
+  <input
+    type="text"
+    placeholder="Filter by department"
+    value={departmentFilter}
+    onChange={handleDepartmentFilter}
+    className="w-full pl-10 pr-4 py-2.5 rounded-xl text-sm outline-none"
+    style={{
+      background: "var(--card)",
+      border: "1px solid var(--border)",
+      color: "var(--foreground)",
+    }}
+  />
+</div>
 
             {/* Batch Year Filter */}
             <div className="relative">

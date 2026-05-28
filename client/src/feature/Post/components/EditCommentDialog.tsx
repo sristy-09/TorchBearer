@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import {
   Dialog,
   DialogContent,
@@ -43,7 +43,7 @@ export default function EditCommentDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[500px]">
+      <DialogContent className="sm:max-w-125">
         <DialogHeader>
           <DialogTitle>Edit Comment</DialogTitle>
           <DialogDescription>
@@ -56,7 +56,7 @@ export default function EditCommentDialog({
             value={text}
             onChange={(e) => setText(e.target.value)}
             placeholder="Write your comment..."
-            className="w-full min-h-[120px] border border-gray-300 px-3 py-2 rounded-md text-sm outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-y"
+            className="w-full min-h-30 border border-gray-300 px-3 py-2 rounded-md text-sm outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-y"
             autoFocus
           />
         </div>

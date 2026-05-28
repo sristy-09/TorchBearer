@@ -295,7 +295,7 @@ export default function ProfilePage() {
                           style={{ background: "rgba(59,130,246,0.1)", color: "#3B82F6" }}
                           title="Facebook"
                         >
-                          <FaFacebook size={18} className="flex-shrink-0" />
+                          <FaFacebook size={18} className="shrink-0" />
                           <span className="truncate">@{extractUsername(profileUser.socialLinks.facebook, "facebook")}</span>
                         </a>
                       )}
@@ -308,7 +308,7 @@ export default function ProfilePage() {
                           style={{ background: "rgba(236,72,153,0.1)", color: "#EC4899" }}
                           title="Instagram"
                         >
-                          <FaInstagram size={18} className="flex-shrink-0" />
+                          <FaInstagram size={18} className="shrink-0" />
                           <span className="truncate">@{extractUsername(profileUser.socialLinks.instagram, "instagram")}</span>
                         </a>
                       )}
@@ -321,7 +321,7 @@ export default function ProfilePage() {
                           style={{ background: "rgba(37,99,235,0.1)", color: "#2563EB" }}
                           title="LinkedIn"
                         >
-                          <FaLinkedin size={18} className="flex-shrink-0" />
+                          <FaLinkedin size={18} className="shrink-0" />
                           <span className="truncate">@{extractUsername(profileUser.socialLinks.linkedin, "linkedin")}</span>
                         </a>
                       )}
@@ -334,7 +334,7 @@ export default function ProfilePage() {
                           style={{ background: "var(--secondary)", color: "var(--foreground)" }}
                           title="GitHub"
                         >
-                          <FaGithub size={18} className="flex-shrink-0" />
+                          <FaGithub size={18} className="shrink-0" />
                           <span className="truncate">@{extractUsername(profileUser.socialLinks.github, "github")}</span>
                         </a>
                       )}

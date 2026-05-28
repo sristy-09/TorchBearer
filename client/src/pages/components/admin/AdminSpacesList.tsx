@@ -176,7 +176,7 @@ function AdminSpacesList() {
                 type="text"
                 placeholder="Search spaces by title..."
                 value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
+                onChange={handleSearch}
                 className="w-full pl-10 pr-4 py-2.5 rounded-xl text-sm outline-none transition-colors"
                 style={{
                   background: "var(--card)",
@@ -314,7 +314,7 @@ function AdminSpacesList() {
 
       {/* Edit Space Dialog */}
       <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
-        <DialogContent className="sm:max-w-[525px]">
+        <DialogContent className="sm:max-w-131.25">
           <DialogHeader>
             <DialogTitle>Edit Space</DialogTitle>
             <DialogDescription>

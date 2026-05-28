@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router";
-import { useAppDispatch, useAppSelector } from "../../../store/hooks";
+import { useAppDispatch } from "../../../store/hooks";
 import { completeUserProfile } from "../../../store/Slice/authSlice";
 import type {
   CompleteProfileFormType,
@@ -42,7 +42,7 @@ export function useCompleteProfile() {
     "AI/ML",
   ];
 
-  const { loading } = useAppSelector((state) => state.auth);
+  const [loading, setLoading] = useState(false);
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
 
@@ -201,6 +201,7 @@ export function useCompleteProfile() {
       return;
     }
 
+    setLoading(true);
     const action = await dispatch(
       completeUserProfile({
         role: result.data.role,
@@ -211,11 +212,21 @@ export function useCompleteProfile() {
         interests: result.data.interests,
       }),
     );
+    setLoading(false);
 
     if (completeUserProfile.fulfilled.match(action)) {
       navigate("/dashboard");
     } else {
-      alert((action.payload as string) ?? "Failed to complete profile.");
+      const errorMessage = (action.payload as string) ?? "Failed to complete profile.";
+      // Map registration number conflict to the field, everything else as a general error
+      if (errorMessage.toLowerCase().includes("registration number")) {
+        setErrors({ registrationNumber: errorMessage });
+      } else if (errorMessage.toLowerCase().includes("already completed")) {
+        // Profile already done — just send them to dashboard
+        navigate("/dashboard");
+      } else {
+        setErrors({ role: errorMessage }); // fallback: show at top of form
+      }
     }
   };
 

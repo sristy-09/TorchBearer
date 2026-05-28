@@ -11,6 +11,7 @@ export function useLogin() {
     password: "",
   });
   const [errors, setErrors] = useState<FormErrors>({});
+  const [loading, setLoading] = useState(false); // Added loading state support
 
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
@@ -25,6 +26,7 @@ export function useLogin() {
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    setLoading(true); // Disable buttons while sending request
 
     const result = loginSchema.safeParse(myForm);
     if (!result.success) {
@@ -33,12 +35,14 @@ export function useLogin() {
         email: fieldErrors.email?.[0],
         password: fieldErrors.password?.[0],
       });
+      setLoading(false);
       return;
     }
     setErrors({});
 
     try {
       const response = await performLogin(result.data);
+      
       // Check if user has completed their profile (has role)
       if (!response.data.user.role) {
         navigate("/complete-profile");
@@ -46,7 +50,19 @@ export function useLogin() {
         navigate("/dashboard");
       }
     } catch (error: unknown) {
-      alert(error instanceof Error ? error.message : "Login failed");
+      const errorMessage = error instanceof Error ? error.message : "Login failed";
+
+      // Dynamically display the error based on what failed
+      if (errorMessage.toLowerCase().includes("email") || errorMessage.toLowerCase().includes("user not found")) {
+        setErrors({ email: errorMessage });
+      } else if (errorMessage.toLowerCase().includes("password")) {
+        setErrors({ password: errorMessage });
+      } else {
+        // Fallback for general errors (like "Invalid credentials") - put it on password field or create a global one
+        setErrors({ password: errorMessage });
+      }
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -61,5 +77,6 @@ export function useLogin() {
     handleSubmit,
     myForm,
     errors,
+    loading, // Make sure to return loading so your login button can show a "Logging in..." state
   };
 }
