@@ -61,7 +61,7 @@ export default function EditSpaceDialog({ open, onOpenChange, space }: Props) {
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[500px]">
+      <DialogContent className="sm:max-w-125">
         <DialogHeader>
           <DialogTitle>Edit Space</DialogTitle>
         </DialogHeader>
