@@ -5,7 +5,7 @@ import { fetchAllPosts, deletePost } from "../../../store/Slice/postsSlice";
 import { fetchSpaces } from "../../../store/Slice/spacesSlice";
 import { fetchAllTopics } from "../../../store/Slice/topicsSlice";
 import AdminSidebar from "../../../feature/core/components/AdminSidebar";
-import { Trash2, Heart, Calendar, Search, Loader2, Layers, BookOpen, User, Filter, Menu } from "lucide-react";
+import { Trash2, Heart, Calendar, Search, Loader2, Layers, BookOpen, User, Menu } from "lucide-react";
 import {
   AlertDialog,
   AlertDialogAction,
