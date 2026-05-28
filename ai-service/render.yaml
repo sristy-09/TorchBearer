@@ -3,17 +3,26 @@ services:
     name: ai-recommendation-service
     runtime: python
     plan: free
+    rootDir: ai-service
 
     buildCommand: "pip install -r requirements.txt"
 
     startCommand: "uvicorn main:app --host 0.0.0.0 --port $PORT"
 
+    healthCheckPath: /health
+
     envVars:
       - key: PYTHON_VERSION
-        value: 3.12.9
+        value: "3.12"
 
       - key: MONGO_URI
         sync: false
 
       - key: MONGO_DB_NAME
         value: test
+
+      - key: EXPRESS_BACKEND_URL
+        sync: false
+
+      - key: FRONTEND_URL
+        sync: false
